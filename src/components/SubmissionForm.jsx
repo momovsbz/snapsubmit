@@ -122,7 +122,7 @@ export default function SubmissionForm({ onSubmit, loading, onStatusCheck, onFaq
                 }}
                 autoComplete="off"
                 inputMode="text"
-                className="w-full bg-secondary/30 border border-border rounded-xl pl-10 pr-4 py-3.5 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/40 transition-all text-sm text-base"
+                className="w-full bg-secondary/30 border border-border rounded-xl pl-10 pr-4 py-3.5 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/40 transition-all text-base"
               />
             </div>
             {errors.snapchat && (
@@ -178,7 +178,7 @@ export default function SubmissionForm({ onSubmit, loading, onStatusCheck, onFaq
                 onChange={handleTelChange}
                 autoComplete="tel"
                 inputMode="numeric"
-                className="flex-1 bg-transparent py-3.5 text-foreground placeholder:text-muted-foreground focus:outline-none text-sm text-base min-w-0"
+                className="flex-1 bg-transparent py-3.5 text-foreground placeholder:text-muted-foreground focus:outline-none text-base min-w-0"
               />
             </div>
             {errors.telephone && (
