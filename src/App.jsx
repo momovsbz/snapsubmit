@@ -17,6 +17,7 @@ const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
   const [clientIP, setClientIP] = useState(null);
   const [isBlacklisted, setIsBlacklisted] = useState(false);
+  const [isVPN, setIsVPN] = useState(false);
   const [isCheckingBlacklist, setIsCheckingBlacklist] = useState(true);
 
   // Check IP blacklist and VPN on app load
@@ -25,11 +26,12 @@ const AuthenticatedApp = () => {
       try {
         const res = await base44.functions.invoke("getClientIP", {});
         const ip = res?.data?.ip;
-        const isVPN = res?.data?.isVPN;
+        const vpn = res?.data?.isVPN;
         setClientIP(ip);
 
         // Block VPNs directly
-        if (isVPN) {
+        if (vpn) {
+          setIsVPN(true);
           setIsBlacklisted(true);
           setIsCheckingBlacklist(false);
           return;
@@ -57,7 +59,7 @@ const AuthenticatedApp = () => {
     );
   }
 
-  // Block blacklisted IPs
+  // Block blacklisted IPs and VPNs
   if (isBlacklisted) {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-background px-4">
@@ -65,8 +67,14 @@ const AuthenticatedApp = () => {
           <div className="bg-card border border-destructive/30 rounded-2xl px-6 py-10 shadow-xl">
             <div className="text-5xl mb-4">🚫</div>
             <h1 className="font-heading text-2xl font-bold text-destructive mb-2">Accès refusé</h1>
-            <p className="text-muted-foreground text-sm mb-2">Votre adresse IP a été bloquée.</p>
-            <p className="text-muted-foreground text-xs break-all">{clientIP}</p>
+            {isVPN ? (
+              <p className="text-muted-foreground text-sm">Veuillez enlever votre VPN pour continuer.</p>
+            ) : (
+              <>
+                <p className="text-muted-foreground text-sm mb-2">Votre adresse IP a été bloquée.</p>
+                <p className="text-muted-foreground text-xs break-all">{clientIP}</p>
+              </>
+            )}
           </div>
         </div>
       </div>
