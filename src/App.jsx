@@ -39,7 +39,7 @@ const AuthenticatedApp = () => {
 
         const saved = localStorage.getItem("snap_blacklist");
         const blacklist = saved ? JSON.parse(saved) : [];
-        const blocked = blacklist.some(item => item.type === "ip" && item.value === ip);
+        const blocked = blacklist.some(item => item.type === "ip" && item.value.trim() === ip?.trim());
         setIsBlacklisted(blocked);
       } catch (error) {
         console.error("Error checking blacklist:", error);
