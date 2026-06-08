@@ -173,7 +173,7 @@ export default function SubmissionForm({ onSubmit, loading, onStatusCheck, onFaq
               <div className="w-px h-5 bg-border flex-shrink-0" />
               <input
                 type="tel"
-                placeholder="06 06 06 06 06"
+                placeholder="Votre numéro"
                 value={formatTel(form.telephone)}
                 onChange={handleTelChange}
                 autoComplete="tel"
