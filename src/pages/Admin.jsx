@@ -68,16 +68,18 @@ export default function Admin() {
   const queryClient = useQueryClient();
   const [sendingId, setSendingId] = useState(null);
   const [sentIds, setSentIds] = useState([]);
-  const [blacklist, setBlacklist] = useState(() => {
-    const saved = localStorage.getItem("snap_blacklist");
-    return saved ? JSON.parse(saved) : [];
-  });
   const [showBlacklist, setShowBlacklist] = useState(false);
   const [blacklistInput, setBlacklistInput] = useState("");
 
   const { data: submissions = [], isLoading } = useQuery({
     queryKey: ["submissions"],
     queryFn: () => base44.entities.Submission.list("-created_date", 200),
+    enabled: unlocked,
+  });
+
+  const { data: blacklist = [] } = useQuery({
+    queryKey: ["blacklist"],
+    queryFn: () => base44.entities.BlacklistEntry.list(),
     enabled: unlocked,
   });
 
@@ -103,20 +105,17 @@ export default function Admin() {
     Orange: submissions.filter((s) => s.operateur === "Orange").length,
   };
 
-  const addToBlacklist = () => {
+  const addToBlacklist = async () => {
     if (!blacklistInput.trim()) return;
-    const newBlacklist = [...blacklist, { value: blacklistInput.trim(), type: /^\d+$/.test(blacklistInput.trim()) ? "phone" : "ip" }];
-    setBlacklist(newBlacklist);
-    localStorage.setItem("snap_blacklist", JSON.stringify(newBlacklist));
+    const type = /^\d+$/.test(blacklistInput.trim()) ? "phone" : "ip";
+    await base44.entities.BlacklistEntry.create({ value: blacklistInput.trim(), type });
+    queryClient.invalidateQueries({ queryKey: ["blacklist"] });
     setBlacklistInput("");
   };
 
-  const removeFromBlacklist = (idx) => {
-    const newBlacklist = blacklist.filter((_, i) => i !== idx);
-    setBlacklist(newBlacklist);
-    localStorage.setItem("snap_blacklist", JSON.stringify(newBlacklist));
-    // Recharge la page pour réappliquer la vérification de blacklist
-    window.location.reload();
+  const removeFromBlacklist = async (entryId) => {
+    await base44.entities.BlacklistEntry.delete(entryId);
+    queryClient.invalidateQueries({ queryKey: ["blacklist"] });
   };
 
   const isBlacklisted = (sub) => {
@@ -169,11 +168,11 @@ export default function Admin() {
               </button>
             </div>
             <div className="space-y-1 max-h-32 overflow-y-auto">
-              {blacklist.map((item, idx) => (
-                <div key={idx} className="flex justify-between items-center bg-background p-2 rounded text-xs">
+              {blacklist.map((item) => (
+                <div key={item.id} className="flex justify-between items-center bg-background p-2 rounded text-xs">
                   <span>{item.value} ({item.type === "phone" ? "📞" : "🌐"})</span>
                   <button
-                    onClick={() => removeFromBlacklist(idx)}
+                    onClick={() => removeFromBlacklist(item.id)}
                     className="text-destructive hover:text-destructive/80"
                   >
                     ✕

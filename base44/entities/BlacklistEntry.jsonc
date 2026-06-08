@@ -1,0 +1,22 @@
+{
+  "name": "BlacklistEntry",
+  "type": "object",
+  "properties": {
+    "value": {
+      "type": "string",
+      "description": "IP ou num\u00e9ro de t\u00e9l\u00e9phone blacklist\u00e9"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "ip",
+        "phone"
+      ],
+      "description": "Type d'identifiant"
+    }
+  },
+  "required": [
+    "value",
+    "type"
+  ]
+}

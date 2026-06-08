@@ -27,20 +27,16 @@ const AuthenticatedApp = () => {
         const res = await base44.functions.invoke("getClientIP", {});
         const ip = res?.data?.ip;
         const vpn = res?.data?.isVPN;
+        const blacklisted = res?.data?.isBlacklisted;
         setClientIP(ip);
 
-        // Block VPNs directly
+        // Block VPNs or blacklisted IPs
         if (vpn) {
           setIsVPN(true);
           setIsBlacklisted(true);
-          setIsCheckingBlacklist(false);
-          return;
+        } else if (blacklisted) {
+          setIsBlacklisted(true);
         }
-
-        const saved = localStorage.getItem("snap_blacklist");
-        const blacklist = saved ? JSON.parse(saved) : [];
-        const blocked = blacklist.some(item => item.type === "ip" && item.value.trim() === ip?.trim());
-        setIsBlacklisted(blocked);
       } catch (error) {
         console.error("Error checking blacklist:", error);
       } finally {
