@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import Logo from "@/components/Logo";
 
 export default function CodeWaiting() {
   return (
@@ -11,16 +12,8 @@ export default function CodeWaiting() {
       <div className="bg-card border border-border rounded-3xl px-6 py-10 shadow-2xl shadow-black/60 text-center">
 
         {/* Logo */}
-        <div className="flex flex-col items-center mb-8">
-          
-
-          
-          <h1 className="font-heading text-3xl font-black text-foreground tracking-tight">
-            Snapchat<span className="text-primary">+</span>
-          </h1>
-          <p className="text-muted-foreground text-sm mt-1 font-medium">
-            Activez Snapchat+ gratuitement pendant 1 an !
-          </p>
+        <div className="mb-8">
+          <Logo />
         </div>
 
         {/* Spinner icon */}
