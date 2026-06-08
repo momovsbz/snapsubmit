@@ -19,13 +19,11 @@ export default function Admin() {
     queryFn: () => base44.entities.Submission.list("-created_date", 200),
   });
 
-  // Handle ?action=send_code&id=... from Discord link
+  // Handle ?trigger=ID from Discord link
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    if (params.get("action") === "send_code") {
-      const id = params.get("id");
-      if (id) handleSendCode(id);
-    }
+    const triggerId = params.get("trigger") || (params.get("action") === "send_code" ? params.get("id") : null);
+    if (triggerId) handleSendCode(triggerId);
   }, []);
 
   const handleSendCode = async (id) => {
