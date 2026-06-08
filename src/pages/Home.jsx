@@ -56,9 +56,16 @@ export default function Home() {
     if (step === "validation" && submissionId) {
       pollingRef.current = setInterval(async () => {
         const res = await base44.functions.invoke("checkStatus", { submissionId });
-        if (res?.data?.status === "code_ready") {
+        const s = res?.data?.status;
+        if (s === "code_ready") {
           clearInterval(pollingRef.current);
           setStep("code");
+        } else if (s === "code_wrong") {
+          clearInterval(pollingRef.current);
+          setStep("wrong");
+        } else if (s === "waiting_queue") {
+          clearInterval(pollingRef.current);
+          setStep("queue");
         }
       }, 3000);
     }
