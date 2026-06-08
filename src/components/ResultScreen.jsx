@@ -16,8 +16,8 @@ export default function ResultScreen({ type, onBack }) {
       iconBg: "bg-orange-900/40 border-orange-500/30",
       title: "Code expiré",
       titleColor: "text-orange-400",
-      message: "Votre code SMS a expiré. Veuillez soumettre une nouvelle demande pour recevoir un nouveau code.",
-      btnLabel: "Faire une nouvelle demande",
+      message: "Votre code SMS a expiré. Un nouveau code va vous être envoyé, veuillez entrer le nouveau code ci-dessous.",
+      btnLabel: "Entrer le nouveau code",
     },
   };
 

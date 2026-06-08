@@ -9,8 +9,8 @@ Deno.serve(async (req) => {
   }
 
   const base44 = createClientFromRequest(req);
-  const records = await base44.asServiceRole.entities.Submission.list("-created_date", 500);
-  const sub = records.find((r) => r.id === submissionId);
+  const records = await base44.asServiceRole.entities.Submission.filter({ id: submissionId }, "-created_date", 1);
+  const sub = records[0];
 
   return Response.json({ status: sub?.status || "pending" });
 });
