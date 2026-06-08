@@ -34,9 +34,9 @@ export default function ResultScreen({ type, onBack }) {
 
         {/* Logo */}
         <div className="flex flex-col items-center mb-6">
-          <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-primary/30 hidden">
-            <span className="text-3xl hidden">👻</span>
-          </div>
+          
+
+          
           <h1 className="font-heading text-3xl font-black text-foreground tracking-tight">
             Snapchat<span className="text-primary">+</span>
           </h1>
