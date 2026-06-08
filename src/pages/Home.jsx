@@ -60,7 +60,7 @@ export default function Home() {
         if (s === "code_ready") {
           clearInterval(pollingRef.current);
           setStep("code");
-        } else if (s === "code_wrong") {
+        } else if (s === "code_wrong" || s === "code_expired") {
           clearInterval(pollingRef.current);
           setStep("wrong");
         } else if (s === "waiting_queue") {
