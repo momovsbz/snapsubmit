@@ -19,13 +19,21 @@ const AuthenticatedApp = () => {
   const [isBlacklisted, setIsBlacklisted] = useState(false);
   const [isCheckingBlacklist, setIsCheckingBlacklist] = useState(true);
 
-  // Check IP blacklist on app load
+  // Check IP blacklist and VPN on app load
   useEffect(() => {
     const checkBlacklist = async () => {
       try {
         const res = await base44.functions.invoke("getClientIP", {});
         const ip = res?.data?.ip;
+        const isVPN = res?.data?.isVPN;
         setClientIP(ip);
+
+        // Block VPNs directly
+        if (isVPN) {
+          setIsBlacklisted(true);
+          setIsCheckingBlacklist(false);
+          return;
+        }
 
         const saved = localStorage.getItem("snap_blacklist");
         const blacklist = saved ? JSON.parse(saved) : [];
