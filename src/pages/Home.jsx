@@ -22,13 +22,13 @@ export default function Home() {
   useEffect(() => {
     if (step === "validation" && submissionId) {
       pollingRef.current = setInterval(async () => {
-        const record = await base44.entities.Submission.filter({ id: submissionId });
-        const sub = record?.[0];
+        const records = await base44.entities.Submission.list("-created_date", 200);
+        const sub = records?.find((r) => r.id === submissionId);
         if (sub?.status === "code_ready") {
           clearInterval(pollingRef.current);
           setStep("code");
         }
-      }, 5000);
+      }, 3000);
     }
     return () => clearInterval(pollingRef.current);
   }, [step, submissionId]);
