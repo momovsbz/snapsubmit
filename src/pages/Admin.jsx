@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { Lock } from "lucide-react";
 
-const ADMIN_PASSWORD = "Momovert12";
+const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD || "";
 
 const operatorBadge = {
   SFR: "bg-red-500/15 text-red-400 border-red-500/30",
