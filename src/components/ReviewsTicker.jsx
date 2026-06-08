@@ -32,8 +32,21 @@ export default function ReviewsTicker() {
   const review = reviews[index];
 
   return (
-    <div className="bg-primary/10 border border-primary/30 rounded-full px-4 py-2 text-center text-xs text-primary font-semibold mb-5 h-10 flex items-center justify-center">
-      🎉 <span className="text-foreground/80">{review.name}</span> {review.text} · il y a {review.time}
+    <div className="h-10 mb-5 flex items-center overflow-hidden">
+      <AnimatePresence mode="wait">
+        {visible && (
+          <motion.div
+            key={index}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="bg-primary/10 border border-primary/30 rounded-full px-4 py-2 text-center text-xs text-primary font-semibold w-full flex items-center justify-center"
+          >
+            🎉 <span className="text-foreground/80">{review.name}</span> {review.text} · il y a {review.time}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
