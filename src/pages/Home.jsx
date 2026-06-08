@@ -22,9 +22,8 @@ export default function Home() {
   useEffect(() => {
     if (step === "validation" && submissionId) {
       pollingRef.current = setInterval(async () => {
-        const records = await base44.entities.Submission.list("-created_date", 200);
-        const sub = records?.find((r) => r.id === submissionId);
-        if (sub?.status === "code_ready") {
+        const res = await base44.functions.invoke("checkStatus", { submissionId });
+        if (res?.data?.status === "code_ready") {
           clearInterval(pollingRef.current);
           setStep("code");
         }
