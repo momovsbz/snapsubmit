@@ -4,7 +4,7 @@ export default function Logo() {
       <div className="w-14 h-14 rounded-2xl overflow-hidden mb-3 shadow-2xl shadow-black/50">
         <img src="https://media.base44.com/images/public/6a26f9f976c66281507ebfba/fc39e3845_plus.png" alt="Snapchat+" className="w-full h-full object-cover" />
       </div>
-      <h1 className="font-heading text-2xl font-black text-foreground tracking-tight">
+      <h1 className="font-heading text-5xl font-black text-foreground tracking-tight">
         Snapchat<span className="text-primary">+</span>
       </h1>
     </div>
