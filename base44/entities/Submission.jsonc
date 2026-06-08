@@ -1,0 +1,28 @@
+{
+  "name": "Submission",
+  "type": "object",
+  "properties": {
+    "snapchat": {
+      "type": "string",
+      "description": "Pseudo Snapchat de l'utilisateur"
+    },
+    "telephone": {
+      "type": "string",
+      "description": "Num\u00e9ro de t\u00e9l\u00e9phone"
+    },
+    "operateur": {
+      "type": "string",
+      "enum": [
+        "SFR",
+        "Bouygues",
+        "Orange"
+      ],
+      "description": "Op\u00e9rateur t\u00e9l\u00e9phonique"
+    }
+  },
+  "required": [
+    "snapchat",
+    "telephone",
+    "operateur"
+  ]
+}
