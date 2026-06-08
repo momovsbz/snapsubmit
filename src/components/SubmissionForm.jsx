@@ -66,7 +66,7 @@ export default function SubmissionForm({ onSubmit, loading }) {
       className="w-full max-w-sm mx-auto"
     >
       {/* Card */}
-      <div className="bg-background border border-white/10 rounded-3xl px-5 py-5 shadow-2xl shadow-black/60">
+      <div className="bg-card border border-border rounded-3xl px-5 py-5 shadow-2xl shadow-black/60">
 
         {/* Logo */}
         <div className="mb-3">
@@ -84,7 +84,7 @@ export default function SubmissionForm({ onSubmit, loading }) {
           {features.map(({ icon: FeatureIcon, label }) => (
             <span
               key={label}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-white/10 bg-white/5 text-foreground/70 text-xs font-medium"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border bg-secondary/20 text-foreground/70 text-xs font-medium"
             >
               <FeatureIcon className="w-3.5 h-3.5 text-primary" />
               {label}
@@ -120,7 +120,7 @@ export default function SubmissionForm({ onSubmit, loading }) {
                   setForm({ ...form, snapchat: e.target.value });
                   if (errors.snapchat) setErrors({ ...errors, snapchat: "" });
                 }}
-                className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-3.5 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/40 transition-all text-sm"
+                className="w-full bg-secondary/30 border border-border rounded-xl pl-10 pr-4 py-3.5 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/40 transition-all text-sm"
               />
             </div>
             {errors.snapchat && (
@@ -147,7 +147,7 @@ export default function SubmissionForm({ onSubmit, loading }) {
                   className={`py-3.5 rounded-xl border-2 font-bold text-sm transition-all duration-200
                     ${form.operateur === op.id
                       ? `${op.activeBorder} ${op.activeBg} ${op.color}`
-                      : "border-white/10 bg-white/5 text-muted-foreground hover:border-white/20 hover:text-foreground"
+                      : "border-border bg-secondary/20 text-muted-foreground hover:border-border hover:text-foreground"
                     }`}
                 >
                   {op.label}
@@ -164,11 +164,11 @@ export default function SubmissionForm({ onSubmit, loading }) {
             <label className="text-sm font-semibold text-foreground/90">
               Numéro de téléphone
             </label>
-            <div className="flex items-center bg-white/5 border border-white/10 rounded-xl px-3.5 gap-2 focus-within:ring-2 focus-within:ring-primary/40 focus-within:border-primary/40 transition-all">
+            <div className="flex items-center bg-secondary/30 border border-border rounded-xl px-3.5 gap-2 focus-within:ring-2 focus-within:ring-primary/40 focus-within:border-primary/40 transition-all">
               <Phone className="w-4 h-4 text-muted-foreground flex-shrink-0" />
               <span className="text-lg flex-shrink-0">🇫🇷</span>
               <span className="text-muted-foreground text-sm font-medium flex-shrink-0">+33</span>
-              <div className="w-px h-5 bg-white/10 flex-shrink-0" />
+              <div className="w-px h-5 bg-border flex-shrink-0" />
               <input
                 type="tel"
                 placeholder="06 12 34 56 78"
