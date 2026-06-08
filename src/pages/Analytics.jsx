@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
 import { useState } from "react";
-import { Lock, TrendingUp, Clock, Users, LogOut, BarChart3, PieChart, Activity, Eye, AlertCircle, CheckCircle2, Zap } from "lucide-react";
+import { Lock, TrendingUp, Clock, Users, LogOut, BarChart3, PieChart, Activity, Eye, AlertCircle, CheckCircle2, Zap, Power } from "lucide-react";
 import { LineChart, Line, BarChart, Bar, PieChart as PieChartComponent, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 
 const ADMIN_PASSWORD = "31HDZhdbzh2873&";
@@ -144,13 +144,22 @@ export default function Analytics() {
             </h1>
             <p className="text-muted-foreground text-sm">Statistiques et conversions en temps réel</p>
           </div>
-          <button
-            onClick={() => setUnlocked(false)}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-muted text-muted-foreground hover:bg-muted/80 text-sm transition-colors"
-          >
-            <LogOut className="w-4 h-4" />
-            Déconnexion
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => alert("⏳ Aucun admin disponible\n\nLes administrateurs sont actuellement absents. Les demandes prendront beaucoup plus de temps à être traitées.")}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-500/20 text-amber-400 border border-amber-500/30 hover:bg-amber-500/30 text-sm font-medium transition-colors"
+            >
+              <Power className="w-4 h-4" />
+              Tester pas d'admin
+            </button>
+            <button
+              onClick={() => setUnlocked(false)}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-muted text-muted-foreground hover:bg-muted/80 text-sm transition-colors"
+            >
+              <LogOut className="w-4 h-4" />
+              Déconnexion
+            </button>
+          </div>
         </div>
 
         {/* Filter par opérateur */}
