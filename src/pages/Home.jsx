@@ -4,6 +4,7 @@ import SubmissionForm from "@/components/SubmissionForm";
 import SuccessScreen from "@/components/SuccessScreen";
 import CodeVerification from "@/components/CodeVerification";
 import CodeWaiting from "@/components/CodeWaiting";
+import WaitingQueue from "@/components/WaitingQueue";
 import VerificationSuccess from "@/components/VerificationSuccess";
 import ResultScreen from "@/components/ResultScreen";
 
@@ -79,6 +80,9 @@ export default function Home() {
         } else if (s === "code_expired") {
           clearInterval(pollingRef.current);
           setStep("expired");
+        } else if (s === "waiting_queue") {
+          clearInterval(pollingRef.current);
+          setStep("queue");
         }
       }, 3000);
     }
@@ -124,6 +128,7 @@ export default function Home() {
         {step === "validation" && <SuccessScreen data={submittedData} />}
         {step === "code"       && <CodeVerification data={submittedData} onSubmit={handleCodeSubmit} loading={loading} />}
         {step === "waiting"    && <CodeWaiting />}
+        {step === "queue"      && <WaitingQueue />}
         {step === "verified"   && <VerificationSuccess data={submittedData} />}
         {step === "triggerAction" && (
           <div className="text-center text-muted-foreground text-sm py-10">Traitement en cours...</div>

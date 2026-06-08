@@ -26,7 +26,8 @@
         "code_ready",
         "code_valid",
         "code_wrong",
-        "code_expired"
+        "code_expired",
+        "waiting_queue"
       ],
       "default": "pending",
       "description": "Statut de la demande"

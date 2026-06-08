@@ -12,6 +12,7 @@ Deno.serve(async (req) => {
     valid: "code_valid",
     wrong: "code_wrong",
     expired: "code_expired",
+    wait: "waiting_queue",
     // legacy: keep backward compat
     code_ready: "code_ready",
   };
