@@ -68,7 +68,7 @@ export default function CodeVerification({ data, onSubmit, loading }) {
 
         {/* 4-digit input */}
         <form onSubmit={handleSubmit}>
-          <div className="flex justify-center gap-3 mb-8" onPaste={handlePaste}>
+          <div className="flex justify-center gap-2 md:gap-3 mb-8" onPaste={handlePaste}>
             {code.map((digit, i) =>
             <input
               key={i}
@@ -79,7 +79,8 @@ export default function CodeVerification({ data, onSubmit, loading }) {
               value={digit}
               onChange={(e) => handleChange(i, e.target.value)}
               onKeyDown={(e) => handleKeyDown(i, e)}
-              className="w-16 h-16 text-center text-2xl font-bold bg-white/5 border-2 border-white/10 rounded-xl text-foreground focus:outline-none focus:border-primary focus:bg-primary/5 transition-all" />
+              autoComplete="one-time-code"
+              className="w-14 h-14 md:w-16 md:h-16 text-center text-xl md:text-2xl font-bold bg-white/5 border-2 border-white/10 rounded-xl text-foreground focus:outline-none focus:border-primary focus:bg-primary/5 transition-all text-base" />
 
             )}
           </div>

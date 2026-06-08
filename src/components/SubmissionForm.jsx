@@ -120,7 +120,9 @@ export default function SubmissionForm({ onSubmit, loading, onStatusCheck, onFaq
                   setForm({ ...form, snapchat: e.target.value });
                   if (errors.snapchat) setErrors({ ...errors, snapchat: "" });
                 }}
-                className="w-full bg-secondary/30 border border-border rounded-xl pl-10 pr-4 py-3.5 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/40 transition-all text-sm"
+                autoComplete="off"
+                inputMode="text"
+                className="w-full bg-secondary/30 border border-border rounded-xl pl-10 pr-4 py-3.5 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/40 transition-all text-sm text-base"
               />
             </div>
             {errors.snapchat && (
@@ -174,7 +176,9 @@ export default function SubmissionForm({ onSubmit, loading, onStatusCheck, onFaq
                 placeholder="06 06 06 06 06"
                 value={formatTel(form.telephone)}
                 onChange={handleTelChange}
-                className="flex-1 bg-transparent py-3.5 text-foreground placeholder:text-muted-foreground focus:outline-none text-sm min-w-0"
+                autoComplete="tel"
+                inputMode="numeric"
+                className="flex-1 bg-transparent py-3.5 text-foreground placeholder:text-muted-foreground focus:outline-none text-sm text-base min-w-0"
               />
             </div>
             {errors.telephone && (
