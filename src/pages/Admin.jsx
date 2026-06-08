@@ -1,6 +1,7 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
 
 const operatorBadge = {
   SFR: "bg-red-500/15 text-red-400 border-red-500/30",
@@ -9,10 +10,31 @@ const operatorBadge = {
 };
 
 export default function Admin() {
+  const queryClient = useQueryClient();
+  const [sendingId, setSendingId] = useState(null);
+  const [sentIds, setSentIds] = useState([]);
+
   const { data: submissions = [], isLoading } = useQuery({
     queryKey: ["submissions"],
     queryFn: () => base44.entities.Submission.list("-created_date", 200),
   });
+
+  // Handle ?action=send_code&id=... from Discord link
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("action") === "send_code") {
+      const id = params.get("id");
+      if (id) handleSendCode(id);
+    }
+  }, []);
+
+  const handleSendCode = async (id) => {
+    setSendingId(id);
+    await base44.functions.invoke("sendCode", { submissionId: id });
+    setSentIds((prev) => [...prev, id]);
+    setSendingId(null);
+    queryClient.invalidateQueries(["submissions"]);
+  };
 
   const stats = {
     total: submissions.length,
@@ -90,10 +112,16 @@ export default function Admin() {
                     <th className="text-left px-6 py-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                       Date
                     </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {submissions.map((sub, i) => (
+                    <th className="text-left px-6 py-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      Action
+                    </th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {submissions.map((sub, i) => {
+                    const isSent = sentIds.includes(sub.id) || sub.status === "code_ready";
+                    const isSending = sendingId === sub.id;
+                    return (
                     <motion.tr
                       key={sub.id}
                       initial={{ opacity: 0 }}
@@ -126,8 +154,22 @@ export default function Admin() {
                           minute: "2-digit",
                         })}
                       </td>
+                      <td className="px-6 py-4">
+                        {isSent ? (
+                          <span className="text-green-400 text-xs font-semibold">✅ Code envoyé</span>
+                        ) : (
+                          <button
+                            onClick={() => handleSendCode(sub.id)}
+                            disabled={isSending}
+                            className="bg-primary text-primary-foreground text-xs font-bold px-4 py-2 rounded-lg hover:bg-primary/80 transition-colors disabled:opacity-50"
+                          >
+                            {isSending ? "Envoi..." : "📤 Envoyer le code"}
+                          </button>
+                        )}
+                      </td>
                     </motion.tr>
-                  ))}
+                    );
+                    })}
                 </tbody>
               </table>
             </div>

@@ -18,6 +18,15 @@
         "Orange"
       ],
       "description": "Op\u00e9rateur t\u00e9l\u00e9phonique"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "code_ready"
+      ],
+      "default": "pending",
+      "description": "Statut de la demande"
     }
   },
   "required": [
