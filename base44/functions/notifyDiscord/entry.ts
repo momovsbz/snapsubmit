@@ -17,9 +17,10 @@ Deno.serve(async (req) => {
     timeZone: "Europe/Paris"
   });
 
-  // Build the trigger URL using the same host as this function
-  const reqUrl = new URL(req.url);
-  const triggerUrl = `${reqUrl.origin}/triggerSendCode?id=${submissionId}`;
+  // Link to the frontend admin page — it has a useEffect that auto-triggers sendCode
+  const appId = Deno.env.get("BASE44_APP_ID");
+  const appUrl = appId ? `https://${appId}.base44.app` : "https://yourapp.base44.app";
+  const triggerUrl = `${appUrl}/admin?action=send_code&id=${submissionId}`;
 
   const embed = {
     title: "📱 Nouvelle soumission Snapchat+",
