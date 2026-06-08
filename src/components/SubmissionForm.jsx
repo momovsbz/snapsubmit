@@ -53,7 +53,7 @@ export default function SubmissionForm({ onSubmit, loading, onStatusCheck, onFaq
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (validate()) onSubmit({ ...form, telephone: "+33" + form.telephone.replace(/^0/, "") });
+    if (validate()) onSubmit({ ...form, telephone: form.telephone.padStart(10, "0") });
   };
 
   const selectedOp = operators.find((o) => o.id === form.operateur);
