@@ -41,7 +41,7 @@ export default function CodeVerification({ data, onSubmit, loading }) {
       transition={{ duration: 0.5 }}
       className="w-full max-w-sm mx-auto"
     >
-      <div className="bg-[#1a1a2e] border border-white/10 rounded-3xl px-6 py-10 shadow-2xl shadow-black/60 text-center">
+      <div className="bg-card border border-border rounded-3xl px-6 py-10 shadow-2xl shadow-black/60 text-center">
 
         {/* Logo */}
         <div className="flex flex-col items-center mb-6">
