@@ -32,7 +32,7 @@ export default function ReviewsTicker() {
   const review = reviews[index];
 
   return (
-    <div className="mb-5 flex items-center overflow-hidden">
+    <div className="mb-5 flex items-center overflow-hidden h-11">
       <AnimatePresence mode="wait">
         {visible && (
           <motion.div
