@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, AtSign, Phone, AlertTriangle, Star, Eye, Rocket, Zap, ChevronRight } from "lucide-react";
+import { motion } from "framer-motion";
+import { AtSign, Phone, AlertTriangle, Star, Eye, Rocket, Zap, ChevronRight, ChevronDown } from "lucide-react";
 
 const operators = [
-  { id: "SFR", label: "SFR", color: "text-red-400" },
-  { id: "Bouygues", label: "Bouygues Telecom", color: "text-blue-400" },
-  { id: "Orange", label: "Orange", color: "text-orange-400" },
+  { id: "SFR", label: "SFR", color: "text-red-400", activeBorder: "border-red-500/60", activeBg: "bg-red-500/10" },
+  { id: "Bouygues", label: "Bouygues", color: "text-blue-400", activeBorder: "border-blue-500/60", activeBg: "bg-blue-500/10" },
+  { id: "Orange", label: "Orange", color: "text-orange-400", activeBorder: "border-orange-400/60", activeBg: "bg-orange-400/10" },
 ];
 
 const features = [
@@ -18,7 +18,7 @@ const features = [
 export default function SubmissionForm({ onSubmit, loading }) {
   const [form, setForm] = useState({ snapchat: "", telephone: "", operateur: "" });
   const [errors, setErrors] = useState({});
-  const [operatorOpen, setOperatorOpen] = useState(false);
+
 
   const validate = () => {
     const newErrors = {};
@@ -38,6 +38,10 @@ export default function SubmissionForm({ onSubmit, loading }) {
 
   const handleTelChange = (e) => {
     let val = e.target.value.replace(/[^\d]/g, "").slice(0, 10);
+    // Only allow starting with 06 or 07
+    if (val.length >= 2 && val !== "06" && val !== "07" && !val.startsWith("06") && !val.startsWith("07")) {
+      return;
+    }
     setForm({ ...form, telephone: val });
     if (errors.telephone) setErrors({ ...errors, telephone: "" });
   };
@@ -84,12 +88,12 @@ export default function SubmissionForm({ onSubmit, loading }) {
 
         {/* Features pills */}
         <div className="flex flex-wrap gap-2 justify-center mb-5">
-          {features.map(({ icon: Icon, label }) => (
+          {features.map(({ icon: FeatureIcon, label }) => (
             <span
               key={label}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-white/10 bg-white/5 text-foreground/70 text-xs font-medium"
             >
-              <Icon className="w-3.5 h-3.5 text-primary" />
+              <FeatureIcon className="w-3.5 h-3.5 text-primary" />
               {label}
             </span>
           ))}
@@ -136,45 +140,26 @@ export default function SubmissionForm({ onSubmit, loading }) {
             <label className="text-sm font-semibold text-foreground/90">
               Opérateur mobile
             </label>
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => setOperatorOpen(!operatorOpen)}
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-sm flex items-center justify-between transition-all focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/40"
-              >
-                {selectedOp ? (
-                  <span className={`font-semibold ${selectedOp.color}`}>{selectedOp.label}</span>
-                ) : (
-                  <span className="text-muted-foreground">Choisir votre opérateur</span>
-                )}
-                <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${operatorOpen ? "rotate-180" : ""}`} />
-              </button>
-              <AnimatePresence>
-                {operatorOpen && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -8 }}
-                    transition={{ duration: 0.15 }}
-                    className="absolute z-50 w-full mt-1 bg-[#1e1e35] border border-white/10 rounded-xl overflow-hidden shadow-xl"
-                  >
-                    {operators.map((op) => (
-                      <button
-                        key={op.id}
-                        type="button"
-                        onClick={() => {
-                          setForm({ ...form, operateur: op.id });
-                          setOperatorOpen(false);
-                          if (errors.operateur) setErrors({ ...errors, operateur: "" });
-                        }}
-                        className={`w-full px-4 py-3 text-left text-sm font-semibold hover:bg-white/5 transition-colors ${op.color}`}
-                      >
-                        {op.label}
-                      </button>
-                    ))}
-                  </motion.div>
-                )}
-              </AnimatePresence>
+            <div className="grid grid-cols-3 gap-2">
+              {operators.map((op) => (
+                <motion.button
+                  key={op.id}
+                  type="button"
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => {
+                    setForm({ ...form, operateur: op.id });
+                    if (errors.operateur) setErrors({ ...errors, operateur: "" });
+                  }}
+                  className={`py-3.5 rounded-xl border-2 font-bold text-sm transition-all duration-200
+                    ${form.operateur === op.id
+                      ? `${op.activeBorder} ${op.activeBg} ${op.color}`
+                      : "border-white/10 bg-white/5 text-muted-foreground hover:border-white/20 hover:text-foreground"
+                    }`}
+                >
+                  {op.label}
+                </motion.button>
+              ))}
             </div>
             {errors.operateur && (
               <p className="text-destructive text-xs font-medium">{errors.operateur}</p>
