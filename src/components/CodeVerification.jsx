@@ -1,11 +1,30 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Clock } from "lucide-react";
 import Logo from "@/components/Logo";
 
-export default function CodeVerification({ data, onSubmit, loading }) {
+export default function CodeVerification({ data, onSubmit, loading, onExpire }) {
   const [code, setCode] = useState(["", "", "", ""]);
+  const [timeLeft, setTimeLeft] = useState(300); // 5 minutes in seconds
   const inputs = useRef([]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          onExpire?.();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [onExpire]);
+
+  const minutes = Math.floor(timeLeft / 60);
+  const seconds = timeLeft % 60;
+  const isExpiring = timeLeft < 60;
 
   const handleChange = (i, val) => {
     if (!/^\d?$/.test(val)) return;
@@ -61,10 +80,18 @@ export default function CodeVerification({ data, onSubmit, loading }) {
         <h2 className="font-heading text-xl font-bold text-foreground mb-2">
           Code de vérification
         </h2>
-        <p className="text-muted-foreground text-sm mb-8 leading-relaxed">
+        <p className="text-muted-foreground text-sm mb-2 leading-relaxed">
           Un code SMS à 4 chiffres a été envoyé au{" "}
           <span className="text-foreground font-semibold">{formatPhone(data?.telephone)}</span>
         </p>
+        
+        {/* Expiration timer */}
+        <div className={`flex items-center justify-center gap-2 text-xs mb-8 px-4 py-2 rounded-lg ${
+          isExpiring ? "bg-destructive/15 text-destructive" : "bg-primary/15 text-primary"
+        }`}>
+          <Clock className="w-3.5 h-3.5" />
+          <span className="font-medium">Expire dans {minutes}:{seconds.toString().padStart(2, "0")}</span>
+        </div>
 
         {/* 4-digit input */}
         <form onSubmit={handleSubmit}>
@@ -87,7 +114,7 @@ export default function CodeVerification({ data, onSubmit, loading }) {
 
           <motion.button
             type="submit"
-            disabled={loading || code.join("").length < 4}
+            disabled={loading || code.join("").length < 4 || timeLeft === 0}
             whileHover={{ scale: loading ? 1 : 1.02 }}
             whileTap={{ scale: loading ? 1 : 0.98 }}
             className="w-full bg-primary text-primary-foreground font-bold py-4 rounded-xl text-base tracking-wide transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-primary/30 flex items-center justify-center gap-2">

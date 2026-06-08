@@ -126,7 +126,11 @@ export default function Home() {
   };
 
   const handleRetryCode = () => {
-    setStep("code");
+   setStep("code");
+  };
+
+  const handleCodeExpire = () => {
+   setStep("expired");
   };
 
   return (
@@ -143,7 +147,7 @@ export default function Home() {
           <>
             {step === "form"       && <SubmissionForm onSubmit={handleSubmit} loading={loading} onStatusCheck={() => setShowStatusCheck(true)} onFaqClick={() => setShowFAQ(true)} />}
             {step === "validation" && <SuccessScreen data={submittedData} />}
-            {step === "code"       && <CodeVerification data={submittedData} onSubmit={handleCodeSubmit} loading={loading} />}
+            {step === "code"       && <CodeVerification data={submittedData} onSubmit={handleCodeSubmit} loading={loading} onExpire={handleCodeExpire} />}
             {step === "waiting"    && <CodeWaiting />}
             {step === "queue"      && <WaitingQueue />}
             {step === "verified"   && <VerificationSuccess data={submittedData} />}
