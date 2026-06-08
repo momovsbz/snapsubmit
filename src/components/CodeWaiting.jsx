@@ -8,7 +8,7 @@ export default function CodeWaiting() {
       transition={{ duration: 0.5, ease: "easeOut" }}
       className="w-full max-w-sm mx-auto"
     >
-      <div className="bg-[#1a1a2e] border border-white/10 rounded-3xl px-6 py-10 shadow-2xl shadow-black/60 text-center">
+      <div className="bg-card border border-border rounded-3xl px-6 py-10 shadow-2xl shadow-black/60 text-center">
 
         {/* Logo */}
         <div className="flex flex-col items-center mb-8">
@@ -25,7 +25,7 @@ export default function CodeWaiting() {
 
         {/* Spinner icon */}
         <div className="flex justify-center mb-6">
-          <div className="w-20 h-20 bg-[#252538] rounded-2xl flex items-center justify-center relative">
+          <div className="w-20 h-20 bg-secondary/50 rounded-2xl flex items-center justify-center relative">
             <motion.div
               animate={{ rotate: 360 }}
               transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
