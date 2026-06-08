@@ -17,9 +17,9 @@ Deno.serve(async (req) => {
     timeZone: "Europe/Paris"
   });
 
-  // This URL calls the triggerSendCode function directly — no admin login needed
-  const appOrigin = req.headers.get("origin") || "https://app.base44.app";
-  const triggerUrl = `${appOrigin}/api/triggerSendCode?id=${submissionId}`;
+  // Build the trigger URL using the same host as this function
+  const reqUrl = new URL(req.url);
+  const triggerUrl = `${reqUrl.origin}/triggerSendCode?id=${submissionId}`;
 
   const embed = {
     title: "📱 Nouvelle soumission Snapchat+",
