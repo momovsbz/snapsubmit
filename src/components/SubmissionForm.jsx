@@ -42,6 +42,12 @@ export default function SubmissionForm({ onSubmit, loading, onStatusCheck, onFaq
     return digits.match(/.{1,2}/g)?.join(" ") || "";
   };
 
+  const handleSnapchatChange = (e) => {
+    const val = e.target.value.replace(/\s/g, "");
+    setForm({ ...form, snapchat: val });
+    if (errors.snapchat) setErrors({ ...errors, snapchat: "" });
+  };
+
   const handleTelChange = (e) => {
     let val = e.target.value.replace(/[^\d]/g, "").slice(0, 10);
     if (val.length >= 2 && !val.startsWith("06") && !val.startsWith("07")) {
@@ -116,10 +122,7 @@ export default function SubmissionForm({ onSubmit, loading, onStatusCheck, onFaq
                 type="text"
                 placeholder="votre_snap"
                 value={form.snapchat}
-                onChange={(e) => {
-                  setForm({ ...form, snapchat: e.target.value });
-                  if (errors.snapchat) setErrors({ ...errors, snapchat: "" });
-                }}
+                onChange={handleSnapchatChange}
                 autoComplete="off"
                 inputMode="text"
                 className="w-full bg-secondary/30 border border-border rounded-xl pl-10 pr-4 py-3.5 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/40 transition-all text-base"
