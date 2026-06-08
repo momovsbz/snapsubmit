@@ -34,7 +34,7 @@ export default function Home() {
         const res = await base44.functions.invoke("checkStatus", { submissionId });
         if (res?.data?.status === "code_ready") {
           clearInterval(pollingRef.current);
-          setStep("verified");
+          setStep("code");
         }
       }, 3000);
     }
@@ -53,7 +53,7 @@ export default function Home() {
 
   const handleCodeSubmit = async (code) => {
     setLoading(true);
-    setStep("success");
+    setStep("verified");
     setLoading(false);
   };
 
