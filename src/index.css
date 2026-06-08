@@ -12,7 +12,7 @@
     --card-foreground: 0 0% 98%;
     --popover: 250 12% 10%;
     --popover-foreground: 0 0% 98%;
-    --primary: 45 100% 55%;
+    --primary: 350 100% 60%;
     --primary-foreground: 0 0% 5%;
     --secondary: 250 10% 16%;
     --secondary-foreground: 0 0% 90%;
@@ -32,12 +32,12 @@
     --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
     --sidebar-background: 250 12% 8%;
     --sidebar-foreground: 0 0% 90%;
-    --sidebar-primary: 45 100% 55%;
+    --sidebar-primary: 350 100% 60%;
     --sidebar-primary-foreground: 0 0% 5%;
     --sidebar-accent: 250 10% 14%;
     --sidebar-accent-foreground: 0 0% 90%;
     --sidebar-border: 250 10% 18%;
-    --sidebar-ring: 45 100% 55%;
+    --sidebar-ring: 350 100% 60%;
   }
 
   .dark {
@@ -47,7 +47,7 @@
     --card-foreground: 0 0% 98%;
     --popover: 250 12% 10%;
     --popover-foreground: 0 0% 98%;
-    --primary: 45 100% 55%;
+    --primary: 350 100% 60%;
     --primary-foreground: 0 0% 5%;
     --secondary: 250 10% 16%;
     --secondary-foreground: 0 0% 90%;
@@ -59,10 +59,10 @@
     --destructive-foreground: 0 0% 98%;
     --border: 250 10% 18%;
     --input: 250 10% 14%;
-    --ring: 45 100% 55%;
+    --ring: 350 100% 60%;
     --sidebar-background: 250 12% 8%;
     --sidebar-foreground: 0 0% 90%;
-    --sidebar-primary: 45 100% 55%;
+    --sidebar-primary: 350 100% 60%;
     --sidebar-primary-foreground: 0 0% 5%;
     --sidebar-accent: 250 10% 14%;
     --sidebar-accent-foreground: 0 0% 90%;
