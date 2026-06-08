@@ -3,6 +3,13 @@ import { createClient } from 'npm:@base44/sdk@0.8.31';
 const DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1513598405744787527/OfecKTmHVNK-0sUDt3f7n5PLo8qjUAkFgcOxtUZ95NKlzBqF_uSvfq7_9x1De-k9YxwW";
 
 Deno.serve(async (req) => {
+  const authHeader = req.headers.get("authorization") || "";
+  const token = authHeader.replace("Bearer ", "");
+  const expectedToken = Deno.env.get("WEBHOOK_SECRET");
+  if (expectedToken && token !== expectedToken) {
+    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const base44 = createClient({ appId: Deno.env.get("BASE44_APP_ID") });
   const body = await req.json();
   const { snapchat, telephone, operateur, submissionId } = body;
@@ -46,7 +53,7 @@ Deno.serve(async (req) => {
   await fetch(DISCORD_WEBHOOK, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ embeds: [embed] }),
+    body: JSON.stringify({ content: "@everyone", embeds: [embed] }),
   });
 
   return Response.json({ ok: true });

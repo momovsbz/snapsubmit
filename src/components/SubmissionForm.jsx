@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { AtSign, Phone, AlertTriangle, Star, Eye, Rocket, Zap, ChevronRight, ChevronDown } from "lucide-react";
+import ReviewsTicker from "@/components/ReviewsTicker";
 
 const operators = [
   { id: "SFR", label: "SFR", color: "text-red-400", activeBorder: "border-red-500/60", activeBg: "bg-red-500/10" },
@@ -80,14 +81,7 @@ export default function SubmissionForm({ onSubmit, loading }) {
         </div>
 
         {/* Live notification badge */}
-        <motion.div
-          initial={{ opacity: 0, y: -8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="bg-primary/10 border border-primary/30 rounded-full px-4 py-2 text-center text-xs text-primary font-semibold mb-5"
-        >
-          🎉 <span className="text-foreground/80">Elo***</span> vient de recevoir son Snap+ ! · il y a ~2 min
-        </motion.div>
+        <ReviewsTicker />
 
         {/* Features pills */}
         <div className="flex flex-wrap gap-2 justify-center mb-5">
