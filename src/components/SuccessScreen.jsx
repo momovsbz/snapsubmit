@@ -32,7 +32,7 @@ export default function SuccessScreen({ data }) {
         {/* Sending icon */}
         <div className="flex justify-center mb-6">
           <div className="relative">
-            <div className="w-20 h-20 bg-[#252538] rounded-2xl flex items-center justify-center">
+            <div className="w-20 h-20 bg-secondary rounded-2xl flex items-center justify-center">
               <Send className="w-9 h-9 text-foreground/80" />
             </div>
             {/* Animated loading ring */}
