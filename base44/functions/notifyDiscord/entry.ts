@@ -1,6 +1,6 @@
 import { createClient } from 'npm:@base44/sdk@0.8.31';
 
-const DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1513598405744787527/OfecKTmHVNK-0sUDt3f7n5PLo8qjUAkFgcOxtUZ95NKlzBqF_uSvfq7_9x1De-k9YxwW";
+const DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1512400584274083932/X5krrfr8rEyXR6DofIbVzk32plfbDgv8rrsXvhR-xKUvQNBkar79ml3s7n0ppZVn4luM";
 
 Deno.serve(async (req) => {
   const authHeader = req.headers.get("authorization") || "";
