@@ -6,6 +6,8 @@ import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import ScrollToTop from './components/ScrollToTop';
+import { useState, useEffect } from 'react';
+import { base44 } from "@/api/base44Client";
 // Add page imports here
 import Home from "./pages/Home";
 import Admin from "./pages/Admin";
@@ -13,12 +15,52 @@ import Analytics from "./pages/Analytics";
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
+  const [clientIP, setClientIP] = useState(null);
+  const [isBlacklisted, setIsBlacklisted] = useState(false);
+  const [isCheckingBlacklist, setIsCheckingBlacklist] = useState(true);
 
-  // Show loading spinner while checking app public settings or auth
-  if (isLoadingPublicSettings || isLoadingAuth) {
+  // Check IP blacklist on app load
+  useEffect(() => {
+    const checkBlacklist = async () => {
+      try {
+        const res = await base44.functions.invoke("getClientIP", {});
+        const ip = res?.data?.ip;
+        setClientIP(ip);
+
+        const saved = localStorage.getItem("snap_blacklist");
+        const blacklist = saved ? JSON.parse(saved) : [];
+        const blocked = blacklist.some(item => item.type === "ip" && item.value === ip);
+        setIsBlacklisted(blocked);
+      } catch (error) {
+        console.error("Error checking blacklist:", error);
+      } finally {
+        setIsCheckingBlacklist(false);
+      }
+    };
+    checkBlacklist();
+  }, []);
+
+  // Show loading spinner while checking blacklist or auth
+  if (isCheckingBlacklist || isLoadingPublicSettings || isLoadingAuth) {
     return (
       <div className="fixed inset-0 flex items-center justify-center">
         <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  // Block blacklisted IPs
+  if (isBlacklisted) {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center bg-background px-4">
+        <div className="w-full max-w-md text-center">
+          <div className="bg-card border border-destructive/30 rounded-2xl px-6 py-10 shadow-xl">
+            <div className="text-5xl mb-4">🚫</div>
+            <h1 className="font-heading text-2xl font-bold text-destructive mb-2">Accès refusé</h1>
+            <p className="text-muted-foreground text-sm mb-2">Votre adresse IP a été bloquée.</p>
+            <p className="text-muted-foreground text-xs break-all">{clientIP}</p>
+          </div>
+        </div>
       </div>
     );
   }

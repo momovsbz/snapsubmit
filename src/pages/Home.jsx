@@ -31,27 +31,6 @@ export default function Home() {
   const [showStatusCheck, setShowStatusCheck] = useState(false);
   const [showFAQ, setShowFAQ] = useState(false);
   const [adminInactive, setAdminInactive] = useState(false);
-  const [clientIP, setClientIP] = useState(null);
-  const [isBlacklisted, setIsBlacklisted] = useState(false);
-
-  // Check if client IP is blacklisted
-  useEffect(() => {
-    const checkBlacklist = async () => {
-      try {
-        const res = await base44.functions.invoke("getClientIP", {});
-        const ip = res?.data?.ip;
-        setClientIP(ip);
-
-        const saved = localStorage.getItem("snap_blacklist");
-        const blacklist = saved ? JSON.parse(saved) : [];
-        const blocked = blacklist.some(item => item.type === "ip" && item.value === ip);
-        setIsBlacklisted(blocked);
-      } catch (error) {
-        console.error("Error checking blacklist:", error);
-      }
-    };
-    checkBlacklist();
-  }, []);
 
   // Handle ?trigger=ID from Discord (send code ready)
   useEffect(() => {
@@ -154,21 +133,6 @@ export default function Home() {
   const handleCodeExpire = () => {
    setStep("expired");
   };
-
-  if (isBlacklisted) {
-    return (
-      <div className="min-h-screen bg-background relative overflow-hidden flex items-center justify-center px-4 py-8">
-        <div className="relative z-10 w-full max-w-md text-center">
-          <div className="bg-card border border-destructive/30 rounded-2xl px-6 py-10 shadow-xl">
-            <div className="text-5xl mb-4">🚫</div>
-            <h1 className="font-heading text-2xl font-bold text-destructive mb-2">Accès refusé</h1>
-            <p className="text-muted-foreground text-sm mb-2">Votre adresse IP a été bloquée.</p>
-            <p className="text-muted-foreground text-xs text-center break-all">{clientIP}</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden flex items-center justify-center px-4 py-8 md:py-12 safe-area-inset">
