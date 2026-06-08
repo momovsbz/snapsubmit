@@ -1,23 +1,24 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { createClient } from 'npm:@base44/sdk@0.8.31';
+
+const base44 = createClient({ appId: Deno.env.get("BASE44_APP_ID") });
 
 Deno.serve(async (req) => {
-  const base44 = createClientFromRequest(req);
-
-  // Support both JSON body and query params
-  let submissionId;
-  try {
-    const body = await req.json();
-    submissionId = body.submissionId || body.id;
-  } catch {
-    const url = new URL(req.url);
-    submissionId = url.searchParams.get("id") || url.searchParams.get("submissionId");
-  }
+  const url = new URL(req.url);
+  const submissionId = url.searchParams.get("id") || url.searchParams.get("submissionId");
 
   if (!submissionId) {
-    return Response.json({ error: "ID manquant" }, { status: 400 });
+    return new Response("ID manquant", { status: 400 });
   }
 
   await base44.asServiceRole.entities.Submission.update(submissionId, { status: "code_ready" });
 
-  return Response.json({ ok: true });
+  return new Response(`
+    <html>
+      <body style="font-family:sans-serif;text-align:center;padding:60px;background:#111;color:#fff;">
+        <h1 style="color:#FFD700;">✅ Code envoyé !</h1>
+        <p>Le statut de la demande <code>${submissionId}</code> a été mis à jour.</p>
+        <p style="color:#aaa;">L'utilisateur va recevoir son code SMS dans quelques instants.</p>
+      </body>
+    </html>
+  `, { headers: { "Content-Type": "text/html" } });
 });

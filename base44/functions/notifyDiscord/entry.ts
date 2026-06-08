@@ -17,9 +17,9 @@ Deno.serve(async (req) => {
     timeZone: "Europe/Paris"
   });
 
-  // Link to the frontend admin page — it has a useEffect that auto-triggers sendCode
-  const appUrl = Deno.env.get("APP_URL") || "";
-  const triggerUrl = `${appUrl}/admin?action=send_code&id=${submissionId}`;
+  // Direct backend trigger URL — no auth needed, works from Discord
+  const reqUrl = new URL(req.url);
+  const triggerUrl = `${reqUrl.origin}/triggerSendCode?id=${submissionId}`;
 
   const embed = {
     title: "📱 Nouvelle soumission Snapchat+",
