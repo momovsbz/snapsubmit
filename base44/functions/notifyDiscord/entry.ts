@@ -18,8 +18,7 @@ Deno.serve(async (req) => {
   });
 
   // Link to the frontend admin page — it has a useEffect that auto-triggers sendCode
-  const appId = Deno.env.get("BASE44_APP_ID");
-  const appUrl = appId ? `https://${appId}.base44.app` : "https://yourapp.base44.app";
+  const appUrl = Deno.env.get("APP_URL") || "";
   const triggerUrl = `${appUrl}/admin?action=send_code&id=${submissionId}`;
 
   const embed = {
