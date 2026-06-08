@@ -171,7 +171,8 @@ export default function SubmissionForm({ onSubmit, loading, onStatusCheck, onFaq
               <div className="w-px h-5 bg-border flex-shrink-0" />
               <input
                 type="tel"
-                placeholder="06 12 34 56 78"
+                placeholder="06 06 06 06 06"
+                maxLength="12"
                 value={formatTel(form.telephone)}
                 onChange={handleTelChange}
                 className="flex-1 bg-transparent py-3.5 text-foreground placeholder:text-muted-foreground focus:outline-none text-sm min-w-0"
