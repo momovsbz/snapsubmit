@@ -1,8 +1,8 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
 import { useState } from "react";
-import { Lock, TrendingUp, Clock, Users, LogOut, BarChart3, PieChart, Activity, Eye, AlertCircle, CheckCircle2, Zap, Power } from "lucide-react";
+import { Lock, TrendingUp, Clock, Users, LogOut, BarChart3, PieChart, Activity, Eye, AlertCircle, CheckCircle2, Zap } from "lucide-react";
 import { LineChart, Line, BarChart, Bar, PieChart as PieChartComponent, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 
 const ADMIN_PASSWORD = "31HDZhdbzh2873&";
@@ -61,7 +61,6 @@ function PasswordGate({ onUnlock }) {
 export default function Analytics() {
   const [unlocked, setUnlocked] = useState(false);
   const [selectedOperator, setSelectedOperator] = useState(null);
-  const queryClient = useQueryClient();
 
   const { data: submissions = [], isLoading: subLoading } = useQuery({
     queryKey: ["submissions"],
@@ -73,32 +72,6 @@ export default function Analytics() {
     queryKey: ["logs"],
     queryFn: () => base44.entities.ActionLog.list("-timestamp", 1000),
     enabled: unlocked,
-  });
-
-  const { data: adminStatus = null } = useQuery({
-    queryKey: ["adminStatus"],
-    queryFn: async () => {
-      const records = await base44.entities.AdminStatus.list();
-      return records[0] || null;
-    },
-    enabled: unlocked,
-  });
-
-  const toggleAdminMutation = useMutation({
-    mutationFn: async () => {
-      if (adminStatus?.id) {
-        await base44.entities.AdminStatus.update(adminStatus.id, {
-          is_inactive: !adminStatus.is_inactive
-        });
-      } else {
-        await base44.entities.AdminStatus.create({
-          is_inactive: true
-        });
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["adminStatus"] });
-    }
   });
 
   if (!unlocked) return <PasswordGate onUnlock={() => setUnlocked(true)} />;
@@ -171,26 +144,13 @@ export default function Analytics() {
             </h1>
             <p className="text-muted-foreground text-sm">Statistiques et conversions en temps réel</p>
           </div>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => toggleAdminMutation.mutate()}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                adminStatus?.is_inactive
-                  ? "bg-red-500/20 text-red-400 border border-red-500/30"
-                  : "bg-green-500/20 text-green-400 border border-green-500/30"
-              }`}
-            >
-              <Power className="w-4 h-4" />
-              {adminStatus?.is_inactive ? "Statut: Absent" : "Statut: Actif"}
-            </button>
-            <button
-              onClick={() => setUnlocked(false)}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-muted text-muted-foreground hover:bg-muted/80 text-sm transition-colors"
-            >
-              <LogOut className="w-4 h-4" />
-              Déconnexion
-            </button>
-          </div>
+          <button
+            onClick={() => setUnlocked(false)}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-muted text-muted-foreground hover:bg-muted/80 text-sm transition-colors"
+          >
+            <LogOut className="w-4 h-4" />
+            Déconnexion
+          </button>
         </div>
 
         {/* Filter par opérateur */}

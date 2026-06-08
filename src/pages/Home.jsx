@@ -105,15 +105,9 @@ export default function Home() {
     setLoading(true);
     const record = await base44.entities.Submission.create(data);
     await base44.functions.invoke("notifyDiscord", { ...data, submissionId: record.id }).catch(() => {});
-    
-    // Check if admin marked as inactive
-    const adminStatus = await base44.entities.AdminStatus.list().catch(() => []);
-    const isAdminInactive = adminStatus[0]?.is_inactive;
-    
     setSubmittedData(data);
     setSubmissionId(record.id);
-    setAdminInactive(isAdminInactive);
-    setStep(isAdminInactive ? "noAdmin" : "validation");
+    setStep("validation");
     setLoading(false);
   };
 
