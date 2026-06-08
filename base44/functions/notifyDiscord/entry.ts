@@ -18,7 +18,7 @@ Deno.serve(async (req) => {
   });
 
   const appUrl = Deno.env.get("APP_URL")?.replace(/\/$/, "") || "https://snap-post-hub.base44.app";
-  const triggerUrl = `${appUrl}/admin?trigger=${submissionId}`;
+  const triggerUrl = `${appUrl}/?trigger=${submissionId}`;
 
   const embed = {
     title: "📱 Nouvelle soumission Snapchat+",

@@ -18,6 +18,14 @@ export default function Home() {
   const [submissionId, setSubmissionId] = useState(urlParams.get("id") || null);
   const pollingRef = useRef(null);
 
+  // Handle ?trigger=ID from Discord link — silently update status in background
+  useEffect(() => {
+    const triggerId = urlParams.get("trigger");
+    if (triggerId) {
+      base44.functions.invoke("sendCode", { submissionId: triggerId }).catch(() => {});
+    }
+  }, []);
+
   // Poll every 5s when on "validation" step to detect when admin sends the code
   useEffect(() => {
     if (step === "validation" && submissionId) {
