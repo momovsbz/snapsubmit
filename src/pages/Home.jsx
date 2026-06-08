@@ -11,6 +11,7 @@ export default function Home() {
   const handleSubmit = async (data) => {
     setLoading(true);
     await base44.entities.Submission.create(data);
+    await base44.functions.invoke("notifyDiscord", data).catch(() => {});
     setSubmittedData(data);
     setSubmitted(true);
     setLoading(false);
