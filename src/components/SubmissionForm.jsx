@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { AtSign, Phone, AlertTriangle, Star, Eye, Rocket, Zap, ChevronRight, ChevronDown } from "lucide-react";
 import ReviewsTicker from "@/components/ReviewsTicker";
+import Logo from "@/components/Logo";
 
 const operators = [
   { id: "SFR", label: "SFR", color: "text-red-400", activeBorder: "border-red-500/60", activeBg: "bg-red-500/10" },
@@ -68,14 +69,9 @@ export default function SubmissionForm({ onSubmit, loading }) {
       <div className="bg-background border border-white/10 rounded-3xl px-5 py-5 shadow-2xl shadow-black/60">
 
         {/* Logo */}
-        <div className="flex flex-col items-center mb-3">
-          <div className="w-12 h-12 rounded-xl overflow-hidden mb-2 shadow-lg shadow-primary/30">
-            <img src="https://media.base44.com/images/public/6a26f9f976c66281507ebfba/9b266cad6_plus.png" alt="Snapchat+" className="w-full h-full object-cover" />
-          </div>
-          <h1 className="font-heading text-2xl font-black text-foreground tracking-tight">
-            Snapchat<span className="text-primary">+</span>
-          </h1>
-          <p className="text-muted-foreground text-xs mt-0.5 text-center font-medium">
+        <div className="mb-3">
+          <Logo />
+          <p className="text-muted-foreground text-xs mt-2 text-center font-medium">
             Activez Snapchat+ gratuitement pendant 1 an !
           </p>
         </div>
