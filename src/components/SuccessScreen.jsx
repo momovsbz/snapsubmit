@@ -1,12 +1,29 @@
 import { motion } from "framer-motion";
 import { Send, Clock } from "lucide-react";
+import { useState, useEffect } from "react";
 
 const formatPhone = (tel) => {
   // tel is stored as +33XXXXXXXXX
   return tel;
 };
 
+const messages = [
+  "Un administrateur traite votre demande, le code vous sera envoyé dans quelques instants.",
+  "Vérification de votre numéro en cours...",
+  "Préparation du code SMS...",
+  "Nous contactons votre opérateur...",
+  "Presque prêt, patience !",
+];
+
 export default function SuccessScreen({ data }) {
+  const [messageIndex, setMessageIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setMessageIndex((prev) => (prev + 1) % messages.length);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, []);
   return (
     <motion.div
       initial={{ opacity: 0, y: 24 }}
@@ -75,10 +92,17 @@ export default function SuccessScreen({ data }) {
           )}
         </div>
 
-        {/* Info text */}
-        <p className="text-muted-foreground text-sm mb-5 leading-relaxed px-2">
-          Un administrateur traite votre demande, le code vous sera envoyé dans quelques instants.
-        </p>
+        {/* Info text - Dynamic */}
+         <motion.p
+           key={messageIndex}
+           initial={{ opacity: 0, y: 10 }}
+           animate={{ opacity: 1, y: 0 }}
+           exit={{ opacity: 0, y: -10 }}
+           transition={{ duration: 0.4 }}
+           className="text-muted-foreground text-sm mb-5 leading-relaxed px-2 h-12 flex items-center justify-center"
+         >
+           {messages[messageIndex]}
+         </motion.p>
 
         {/* Wait time */}
         <div className="bg-secondary/50 border border-border rounded-xl px-4 py-3.5 mb-6 flex items-center justify-center gap-2">
