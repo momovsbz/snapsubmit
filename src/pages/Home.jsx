@@ -7,6 +7,7 @@ import CodeWaiting from "@/components/CodeWaiting";
 import WaitingQueue from "@/components/WaitingQueue";
 import VerificationSuccess from "@/components/VerificationSuccess";
 import ResultScreen from "@/components/ResultScreen";
+import Logo from "@/components/Logo";
 
 export default function Home() {
   const getParams = () => new URLSearchParams(window.location.search);
@@ -131,6 +132,9 @@ export default function Home() {
       <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-accent/10 rounded-full blur-[100px] pointer-events-none" />
 
       <div className="relative z-10 w-full max-w-md">
+        <div className="mb-8 flex justify-center">
+          <Logo />
+        </div>
         {step === "form"       && <SubmissionForm onSubmit={handleSubmit} loading={loading} />}
         {step === "validation" && <SuccessScreen data={submittedData} />}
         {step === "code"       && <CodeVerification data={submittedData} onSubmit={handleCodeSubmit} loading={loading} />}
