@@ -4,8 +4,7 @@ import { useState, useEffect } from "react";
 import Logo from "@/components/Logo";
 
 const formatPhone = (tel) => {
-  // tel is stored as +33XXXXXXXXX
-  return tel;
+  return tel.replace(/(\d{2})(?=\d)/g, '$1 ').trim();
 };
 
 const messages = [
@@ -60,7 +59,7 @@ export default function SuccessScreen({ data }) {
         </h2>
         <p className="text-muted-foreground text-sm mb-6">
           Votre demande a bien été reçue pour le{" "}
-          <span className="text-foreground font-bold">{data?.telephone}</span>
+          <span className="text-foreground font-bold">{formatPhone(data?.telephone)}</span>
         </p>
 
         {/* Warning banner */}
