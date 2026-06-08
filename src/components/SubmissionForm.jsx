@@ -36,10 +36,13 @@ export default function SubmissionForm({ onSubmit, loading }) {
     return Object.keys(newErrors).length === 0;
   };
 
+  const formatTel = (digits) => {
+    return digits.match(/.{1,2}/g)?.join(" ") || "";
+  };
+
   const handleTelChange = (e) => {
     let val = e.target.value.replace(/[^\d]/g, "").slice(0, 10);
-    // Only allow starting with 06 or 07
-    if (val.length >= 2 && val !== "06" && val !== "07" && !val.startsWith("06") && !val.startsWith("07")) {
+    if (val.length >= 2 && !val.startsWith("06") && !val.startsWith("07")) {
       return;
     }
     setForm({ ...form, telephone: val });
@@ -179,7 +182,7 @@ export default function SubmissionForm({ onSubmit, loading }) {
               <input
                 type="tel"
                 placeholder="06 12 34 56 78"
-                value={form.telephone}
+                value={formatTel(form.telephone)}
                 onChange={handleTelChange}
                 className="flex-1 bg-transparent py-3.5 text-foreground placeholder:text-muted-foreground focus:outline-none text-sm min-w-0"
               />
