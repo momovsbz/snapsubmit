@@ -1,0 +1,40 @@
+{
+  "name": "ActionLog",
+  "type": "object",
+  "properties": {
+    "submission_id": {
+      "type": "string",
+      "description": "ID de la soumission"
+    },
+    "action": {
+      "type": "string",
+      "enum": [
+        "submitted",
+        "code_sent",
+        "code_verified",
+        "code_wrong",
+        "code_expired",
+        "waiting_queue",
+        "rejected"
+      ],
+      "description": "Type d'action"
+    },
+    "details": {
+      "type": "object",
+      "description": "D\u00e9tails additionnels (navigateur, device, IP, etc.)"
+    },
+    "admin_user": {
+      "type": "string",
+      "description": "ID de l'admin qui a effectu\u00e9 l'action (si applicable)"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp de l'action"
+    }
+  },
+  "required": [
+    "submission_id",
+    "action"
+  ]
+}

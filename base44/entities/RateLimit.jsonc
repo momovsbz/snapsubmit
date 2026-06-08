@@ -1,0 +1,37 @@
+{
+  "name": "RateLimit",
+  "type": "object",
+  "properties": {
+    "identifier": {
+      "type": "string",
+      "description": "IP ou num\u00e9ro de t\u00e9l\u00e9phone"
+    },
+    "identifier_type": {
+      "type": "string",
+      "enum": [
+        "ip",
+        "phone"
+      ],
+      "description": "Type d'identifiant"
+    },
+    "count": {
+      "type": "integer",
+      "default": 0,
+      "description": "Nombre de soumissions"
+    },
+    "last_submission": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Derni\u00e8re soumission"
+    },
+    "window_start": {
+      "type": "string",
+      "format": "date-time",
+      "description": "D\u00e9but de la fen\u00eatre de rate limiting (24h)"
+    }
+  },
+  "required": [
+    "identifier",
+    "identifier_type"
+  ]
+}

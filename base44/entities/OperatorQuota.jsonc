@@ -1,0 +1,43 @@
+{
+  "name": "OperatorQuota",
+  "type": "object",
+  "properties": {
+    "operator": {
+      "type": "string",
+      "enum": [
+        "SFR",
+        "Bouygues",
+        "Orange"
+      ],
+      "description": "Op\u00e9rateur"
+    },
+    "active_count": {
+      "type": "integer",
+      "default": 0,
+      "description": "Nombre de soumissions actives"
+    },
+    "max_active": {
+      "type": "integer",
+      "default": 100,
+      "description": "Nombre maximal de soumissions actives"
+    },
+    "daily_limit": {
+      "type": "integer",
+      "default": 500,
+      "description": "Limite quotidienne"
+    },
+    "daily_count": {
+      "type": "integer",
+      "default": 0,
+      "description": "Nombre de soumissions aujourd'hui"
+    },
+    "reset_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date du dernier reset du compteur quotidien"
+    }
+  },
+  "required": [
+    "operator"
+  ]
+}

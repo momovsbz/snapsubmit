@@ -31,6 +31,32 @@
       ],
       "default": "pending",
       "description": "Statut de la demande"
+    },
+    "code_sent_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp d'envoi du code"
+    },
+    "ip_address": {
+      "type": "string",
+      "description": "Adresse IP du demandeur"
+    },
+    "country": {
+      "type": "string",
+      "description": "Pays d\u00e9tect\u00e9 par g\u00e9olocalisation"
+    },
+    "browser": {
+      "type": "string",
+      "description": "Navigateur utilis\u00e9"
+    },
+    "device_type": {
+      "type": "string",
+      "enum": [
+        "phone",
+        "tablet",
+        "desktop"
+      ],
+      "description": "Type d'appareil"
     }
   },
   "required": [
