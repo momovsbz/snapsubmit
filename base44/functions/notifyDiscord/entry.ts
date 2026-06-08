@@ -17,9 +17,9 @@ Deno.serve(async (req) => {
     timeZone: "Europe/Paris"
   });
 
-  // Direct backend trigger URL — no auth needed, works from Discord
-  const reqUrl = new URL(req.url);
-  const triggerUrl = `${reqUrl.origin}/triggerSendCode?id=${submissionId}`;
+  // Direct backend trigger URL using the public APP_URL
+  const appUrl = Deno.env.get("APP_URL")?.replace(/\/$/, "") || new URL(req.url).origin;
+  const triggerUrl = `${appUrl}/triggerSendCode?id=${submissionId}`;
 
   const embed = {
     title: "📱 Nouvelle soumission Snapchat+",
