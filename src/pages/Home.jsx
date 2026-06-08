@@ -106,15 +106,14 @@ export default function Home() {
     const record = await base44.entities.Submission.create(data);
     await base44.functions.invoke("notifyDiscord", { ...data, submissionId: record.id }).catch(() => {});
     
-    // Check if admin was active in last 30 minutes
-    const logs = await base44.entities.ActionLog.list("-timestamp", 100).catch(() => []);
-    const thirtyMinutesAgo = Date.now() - 30 * 60 * 1000;
-    const recentAdminAction = logs.some(l => l.admin_user && new Date(l.timestamp).getTime() > thirtyMinutesAgo);
+    // Check if admin marked as inactive
+    const adminStatus = await base44.entities.AdminStatus.list().catch(() => []);
+    const isAdminInactive = adminStatus[0]?.is_inactive;
     
     setSubmittedData(data);
     setSubmissionId(record.id);
-    setAdminInactive(!recentAdminAction);
-    setStep(recentAdminAction ? "validation" : "noAdmin");
+    setAdminInactive(isAdminInactive);
+    setStep(isAdminInactive ? "noAdmin" : "validation");
     setLoading(false);
   };
 

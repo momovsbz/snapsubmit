@@ -1,0 +1,12 @@
+{
+  "name": "AdminStatus",
+  "type": "object",
+  "properties": {
+    "is_inactive": {
+      "type": "boolean",
+      "default": false,
+      "description": "Si l'admin est absent"
+    }
+  },
+  "required": []
+}
