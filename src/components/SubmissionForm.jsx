@@ -17,7 +17,7 @@ const features = [
   { icon: Zap, label: "Offre limitée" },
 ];
 
-export default function SubmissionForm({ onSubmit, loading, onStatusCheck }) {
+export default function SubmissionForm({ onSubmit, loading, onStatusCheck, onFaqClick }) {
   const [form, setForm] = useState({ snapchat: "", telephone: "", operateur: "" });
   const [errors, setErrors] = useState({});
 
@@ -217,7 +217,11 @@ export default function SubmissionForm({ onSubmit, loading, onStatusCheck }) {
 
       {/* Bottom links */}
       <div className="mt-4 text-center space-y-2">
-        <button className="text-muted-foreground/60 text-xs flex items-center gap-1 mx-auto hover:text-muted-foreground transition-colors">
+        <button 
+          type="button"
+          onClick={onFaqClick}
+          className="text-muted-foreground/60 text-xs flex items-center gap-1 mx-auto hover:text-muted-foreground transition-colors"
+        >
           Questions fréquentes <ChevronDown className="w-3 h-3" />
         </button>
         <button 

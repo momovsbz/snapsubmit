@@ -21,7 +21,7 @@ export default function StatusCheck({ onBack }) {
   const handleCheck = async (e) => {
     e.preventDefault();
     if (!submissionId.trim()) {
-      setError("Veuillez entrer un ID de demande");
+      setError("Veuillez entrer votre numéro de téléphone");
       return;
     }
 
@@ -57,14 +57,14 @@ export default function StatusCheck({ onBack }) {
           Suivre ma demande
         </h2>
         <p className="text-muted-foreground text-xs text-center mb-6">
-          Entrez l'ID de votre demande pour vérifier son statut
+          Entrez votre numéro de téléphone pour vérifier son statut
         </p>
 
         <form onSubmit={handleCheck} className="space-y-4">
           <div>
             <input
               type="text"
-              placeholder="ID de demande"
+              placeholder="06 12 34 56 78"
               value={submissionId}
               onChange={(e) => {
                 setSubmissionId(e.target.value);
@@ -108,7 +108,7 @@ export default function StatusCheck({ onBack }) {
         )}
 
         <p className="text-muted-foreground/40 text-xs text-center mt-6">
-          L'ID de votre demande vous a été fourni après votre inscription
+          Entrez le numéro de téléphone utilisé lors de votre inscription
         </p>
       </div>
     </motion.div>
