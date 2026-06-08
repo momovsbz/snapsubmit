@@ -23,7 +23,10 @@
       "type": "string",
       "enum": [
         "pending",
-        "code_ready"
+        "code_ready",
+        "code_valid",
+        "code_wrong",
+        "code_expired"
       ],
       "default": "pending",
       "description": "Statut de la demande"
