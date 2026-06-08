@@ -120,7 +120,7 @@ export default function Admin() {
   const isBlacklisted = (sub) => {
     return blacklist.some(item => 
       (item.type === "phone" && sub.telephone === item.value) ||
-      (item.type === "ip" && sub.created_by_id === item.value)
+      (item.type === "ip" && sub.ip_address === item.value)
     );
   };
 
