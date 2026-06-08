@@ -102,7 +102,7 @@ export default function SubmissionForm({ onSubmit, loading }) {
           <p className="text-xs leading-relaxed text-foreground/80">
             Disponible uniquement pour les numéros{" "}
             <span className="text-red-400 font-bold">SFR</span>,{" "}
-            <span className="text-blue-400 font-bold">Bouygues Telecom</span> et{" "}
+            <span className="text-blue-300 font-bold">Bouygues Telecom</span> et{" "}
             <span className="text-orange-400 font-bold">Orange</span>{" "}
             — tous les autres opérateurs ne fonctionnent pas
           </p>
