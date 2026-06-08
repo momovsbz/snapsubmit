@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { XCircle, Clock } from "lucide-react";
+import Logo from "@/components/Logo";
 
 export default function ResultScreen({ type, onBack }) {
   const config = {
@@ -33,13 +34,8 @@ export default function ResultScreen({ type, onBack }) {
       <div className="bg-card border border-border rounded-3xl px-6 py-10 shadow-2xl shadow-black/60 text-center">
 
         {/* Logo */}
-        <div className="flex flex-col items-center mb-6">
-          
-
-          
-          <h1 className="font-heading text-3xl font-black text-foreground tracking-tight">
-            Snapchat<span className="text-primary">+</span>
-          </h1>
+        <div className="mb-6">
+          <Logo />
         </div>
 
         {/* Icon */}
