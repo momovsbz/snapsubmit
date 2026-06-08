@@ -18,6 +18,16 @@ export default function StatusCheck({ onBack }) {
     waiting_queue: "En attente de traitement",
   };
 
+  const formatPhone = (digits) => {
+    return digits.match(/.{1,2}/g)?.join(" ") || "";
+  };
+
+  const handlePhoneChange = (e) => {
+    let val = e.target.value.replace(/[^\d]/g, "").slice(0, 10);
+    setSubmissionId(val);
+    setError("");
+  };
+
   const handleCheck = async (e) => {
     e.preventDefault();
     if (!submissionId.trim()) {
@@ -65,11 +75,8 @@ export default function StatusCheck({ onBack }) {
             <input
               type="text"
               placeholder="06 06 06 06 06"
-              value={submissionId}
-              onChange={(e) => {
-                setSubmissionId(e.target.value);
-                setError("");
-              }}
+              value={formatPhone(submissionId)}
+              onChange={handlePhoneChange}
               className="w-full bg-secondary/30 border border-border rounded-xl px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/40 transition-all text-sm"
             />
             {error && (
