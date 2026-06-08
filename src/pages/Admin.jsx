@@ -115,6 +115,8 @@ export default function Admin() {
     const newBlacklist = blacklist.filter((_, i) => i !== idx);
     setBlacklist(newBlacklist);
     localStorage.setItem("snap_blacklist", JSON.stringify(newBlacklist));
+    // Recharge la page pour réappliquer la vérification de blacklist
+    window.location.reload();
   };
 
   const isBlacklisted = (sub) => {
