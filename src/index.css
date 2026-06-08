@@ -6,25 +6,25 @@
 
 @layer base {
   :root {
-    --background: 0 0% 0%;
-    --foreground: 0 0% 98%;
-    --card: 250 12% 10%;
-    --card-foreground: 0 0% 98%;
-    --popover: 250 12% 10%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 48 100% 50%;
-    --primary-foreground: 0 0% 5%;
-    --secondary: 250 10% 16%;
+    --background: 0 0% 5%;
+    --foreground: 0 0% 100%;
+    --card: 0 0% 8%;
+    --card-foreground: 0 0% 100%;
+    --popover: 0 0% 8%;
+    --popover-foreground: 0 0% 100%;
+    --primary: 45 100% 50%;
+    --primary-foreground: 0 0% 0%;
+    --secondary: 0 0% 12%;
     --secondary-foreground: 0 0% 90%;
-    --muted: 250 10% 14%;
-    --muted-foreground: 250 5% 55%;
-    --accent: 280 80% 60%;
-    --accent-foreground: 0 0% 98%;
+    --muted: 0 0% 10%;
+    --muted-foreground: 0 0% 60%;
+    --accent: 45 100% 50%;
+    --accent-foreground: 0 0% 0%;
     --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 250 10% 18%;
-    --input: 250 10% 14%;
-    --ring: 45 100% 55%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 15%;
+    --input: 0 0% 10%;
+    --ring: 45 100% 50%;
     --radius: 0.75rem;
     --font-heading: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
     --font-body: 'Inter', ui-sans-serif, system-ui, sans-serif;
@@ -41,25 +41,25 @@
   }
 
   .dark {
-    --background: 0 0% 0%;
-    --foreground: 0 0% 98%;
-    --card: 250 12% 10%;
-    --card-foreground: 0 0% 98%;
-    --popover: 250 12% 10%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 45 96% 55%;
-    --primary-foreground: 0 0% 5%;
-    --secondary: 250 10% 16%;
+    --background: 0 0% 5%;
+    --foreground: 0 0% 100%;
+    --card: 0 0% 8%;
+    --card-foreground: 0 0% 100%;
+    --popover: 0 0% 8%;
+    --popover-foreground: 0 0% 100%;
+    --primary: 45 100% 50%;
+    --primary-foreground: 0 0% 0%;
+    --secondary: 0 0% 12%;
     --secondary-foreground: 0 0% 90%;
-    --muted: 250 10% 14%;
-    --muted-foreground: 250 5% 55%;
-    --accent: 280 80% 60%;
-    --accent-foreground: 0 0% 98%;
+    --muted: 0 0% 10%;
+    --muted-foreground: 0 0% 60%;
+    --accent: 45 100% 50%;
+    --accent-foreground: 0 0% 0%;
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 250 10% 18%;
-    --input: 250 10% 14%;
-    --ring: 45 100% 55%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 15%;
+    --input: 0 0% 10%;
+    --ring: 45 100% 50%;
     --sidebar-background: 250 12% 8%;
     --sidebar-foreground: 0 0% 90%;
     --sidebar-primary: 45 100% 55%;
