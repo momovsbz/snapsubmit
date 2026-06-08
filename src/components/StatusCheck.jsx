@@ -64,7 +64,7 @@ export default function StatusCheck({ onBack }) {
           <div>
             <input
               type="text"
-              placeholder="06 12 34 56 78"
+              placeholder="06 06 06 06 06"
               value={submissionId}
               onChange={(e) => {
                 setSubmissionId(e.target.value);
