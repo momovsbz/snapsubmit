@@ -7,13 +7,13 @@ export default function WaitingQueue() {
       initial={{ opacity: 0, y: 24 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: "easeOut" }}
-      className="w-full max-w-sm mx-auto"
-    >
+      className="w-full max-w-sm mx-auto">
+      
       <div className="bg-card border border-border rounded-3xl px-6 py-10 shadow-2xl shadow-black/60 text-center">
 
         {/* Logo */}
         <div className="flex flex-col items-center mb-6">
-          <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-primary/30">
+          <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-primary/30 hidden">
             <span className="text-3xl">👻</span>
           </div>
           <h1 className="font-heading text-3xl font-black text-foreground tracking-tight">
@@ -44,14 +44,14 @@ export default function WaitingQueue() {
 
         {/* Dots loader */}
         <div className="flex justify-center gap-2 mb-5">
-          {[0, 1, 2].map((i) => (
-            <motion.div
-              key={i}
-              className="w-2.5 h-2.5 rounded-full bg-primary/50"
-              animate={{ opacity: [0.3, 1, 0.3] }}
-              transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.25 }}
-            />
-          ))}
+          {[0, 1, 2].map((i) =>
+          <motion.div
+            key={i}
+            className="w-2.5 h-2.5 rounded-full bg-primary/50"
+            animate={{ opacity: [0.3, 1, 0.3] }}
+            transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.25 }} />
+
+          )}
         </div>
 
         {/* Wait time */}
@@ -79,6 +79,6 @@ export default function WaitingQueue() {
           L'abonnement est disponible uniquement pour les utilisateurs éligibles.
         </p>
       </div>
-    </motion.div>
-  );
+    </motion.div>);
+
 }
