@@ -9,29 +9,11 @@ Deno.serve(async (req) => {
                req.socket?.remoteAddress ||
                "unknown";
 
-    // Get geolocation using IPQualityScore
-    let isVPN = false;
-    let country = "";
-    try {
-      const apiKey = Deno.env.get("IPQUALITYSCORE_KEY");
-      const response = await fetch(`https://ipqualityscore.com/api/json/ip/${ip}?key=${apiKey}`);
-      if (response.ok) {
-        const data = await response.json();
-        isVPN = data.is_vpn === true;
-        country = data.country_code || "";
-      }
-    } catch (e) {
-      console.error("Geolocation error:", e.message);
-    }
-
     // Check if IP is blacklisted in database
     const blacklistEntries = await base44.asServiceRole.entities.BlacklistEntry.list();
     const isBlacklisted = blacklistEntries.some(entry => entry.value.trim() === ip?.trim());
 
-    // Block US IPs
-    const isBlockedCountry = country === "US";
-
-    return Response.json({ ip, isVPN, isBlacklisted: isBlacklisted || isBlockedCountry, country });
+    return Response.json({ ip, isBlacklisted });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
