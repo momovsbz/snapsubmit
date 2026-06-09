@@ -9,6 +9,19 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Données manquantes' }, { status: 400 });
     }
 
+    // Verify operator
+    const operatorCheck = await base44.asServiceRole.functions.invoke('verifyOperator', { 
+      telephone, 
+      operateur 
+    });
+
+    if (!operatorCheck?.data?.isValid) {
+      return Response.json({ 
+        error: `Numéro ${operatorCheck?.data?.actualOperator || 'inconnu'}, pas ${operateur}`,
+        allowed: false 
+      }, { status: 400 });
+    }
+
     // Get client IP
     const ip = req.headers.get('x-forwarded-for')?.split(',')[0].trim() ||
                req.headers.get('cf-connecting-ip') ||
