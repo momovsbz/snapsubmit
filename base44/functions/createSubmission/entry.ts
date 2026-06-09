@@ -18,6 +18,19 @@ Deno.serve(async (req) => {
     
     ip = ip.trim();
 
+    // Extract browser and device from user-agent
+    const userAgent = req.headers.get('user-agent') || '';
+    let browser = 'Inconnu';
+    let device = '💻 PC';
+    
+    if (userAgent.includes('Chrome')) browser = 'Chrome';
+    else if (userAgent.includes('Safari')) browser = 'Safari';
+    else if (userAgent.includes('Firefox')) browser = 'Firefox';
+    else if (userAgent.includes('Edge')) browser = 'Edge';
+    
+    if (userAgent.includes('Mobile') || userAgent.includes('Android')) device = '📱 Téléphone';
+    else if (userAgent.includes('iPad')) device = '📱 Tablette';
+
     // Geolocate the IP
     let country = 'France';
     let city = 'Inconnue';
@@ -52,7 +65,9 @@ Deno.serve(async (req) => {
       submissionId: submission.id,
       ip,
       country,
-      city
+      city,
+      browser,
+      device
     }).catch(() => {});
 
     return Response.json({ ok: true, submissionId: submission.id });

