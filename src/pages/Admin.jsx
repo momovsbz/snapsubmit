@@ -95,6 +95,7 @@ export default function Admin() {
   const [showBlacklist, setShowBlacklist] = useState(false);
   const [blacklistInput, setBlacklistInput] = useState("");
   const [adminInactive, setAdminInactive] = useState(false);
+  const [actionSuccess, setActionSuccess] = useState(false);
 
   const { data: submissions = [], isLoading } = useQuery({
     queryKey: ["submissions"],
@@ -136,6 +137,8 @@ export default function Admin() {
     if (success) {
       setSentIds((prev) => [...prev, id]);
       queryClient.invalidateQueries(["submissions"]);
+      setActionSuccess(true);
+      setTimeout(() => setActionSuccess(false), 3000);
     }
     setSendingId(null);
   };
@@ -173,6 +176,20 @@ export default function Admin() {
   };
 
   if (!unlocked) return <PasswordGate onUnlock={() => setUnlocked(true)} />;
+
+  if (actionSuccess) return (
+    <div className="min-h-screen bg-background flex items-center justify-center px-4">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="bg-card border border-border rounded-2xl px-10 py-14 text-center shadow-2xl shadow-black/40 max-w-sm w-full"
+      >
+        <div className="text-6xl mb-5">✅</div>
+        <h2 className="font-heading text-2xl font-bold text-foreground mb-2">Action effectuée</h2>
+        <p className="text-muted-foreground text-sm">Le statut de l'utilisateur a bien été mis à jour.</p>
+      </motion.div>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-background px-4 py-10">
