@@ -93,7 +93,7 @@ export default function Home() {
           clearInterval(pollingRef.current);
           setStep("queue");
         }
-      }, 3000);
+      }, 1500);
     }
     return () => clearInterval(pollingRef.current);
   }, [step, submissionId]);
@@ -117,7 +117,7 @@ export default function Home() {
           clearInterval(pollingRef.current);
           setStep("queue");
         }
-      }, 3000);
+      }, 1500);
     }
     return () => clearInterval(pollingRef.current);
   }, [step, submissionId]);
