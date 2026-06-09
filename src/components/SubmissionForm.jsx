@@ -65,17 +65,7 @@ export default function SubmissionForm({ onSubmit, loading, onStatusCheck, onFaq
     
     if (!validate()) return;
 
-    try {
-      const res = await base44.functions.invoke("createSubmission", { ...form, telephone: form.telephone.padStart(10, "0") });
-      onSubmit({ ...form, telephone: form.telephone.padStart(10, "0") });
-    } catch (error) {
-      const errorMsg = error.response?.data?.error || error.message || "Une erreur s'est produite";
-      if (errorMsg.includes("Attends") || errorMsg.includes("Limite")) {
-        setRateLimitError(errorMsg);
-      } else {
-        alert(errorMsg);
-      }
-    }
+    onSubmit({ ...form, telephone: form.telephone.padStart(10, "0") });
   };
 
   const selectedOp = operators.find((o) => o.id === form.operateur);

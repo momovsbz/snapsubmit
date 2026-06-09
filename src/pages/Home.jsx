@@ -113,7 +113,11 @@ export default function Home() {
       setStep("validation");
     } catch (error) {
       // Rate limit or other error
-      alert(error.response?.data?.error || "Une erreur s'est produite");
+      const errorMsg = error.response?.data?.error || "Une erreur s'est produite";
+      if (errorMsg.includes("Attends") || errorMsg.includes("Limite")) {
+        // This will be handled by the parent component or shown as an alert
+      }
+      alert(errorMsg);
     }
     setLoading(false);
   };
