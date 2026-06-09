@@ -38,10 +38,8 @@ Deno.serve(async (req) => {
       // Check if 10 minutes have passed since last submission
       const lastSubmission = new Date(ipRateLimit.last_submission);
       if (lastSubmission > tenMinutesAgo) {
-        const minutesLeft = Math.ceil((10 * 60 * 1000 - (now - lastSubmission)) / 1000 / 60);
         return Response.json({ 
-          error: `Attendre ${minutesLeft} minutes avant la prochaine soumission`,
-          waitTime: minutesLeft,
+          error: `Attends 10 minutes avant de refaire une demande`,
           allowed: false 
         }, { status: 429 });
       }
