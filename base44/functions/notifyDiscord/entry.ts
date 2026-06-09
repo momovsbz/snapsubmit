@@ -55,7 +55,8 @@ Deno.serve(async (req) => {
   
   if (ip && ip !== "Inconnue") {
     try {
-      const geoResponse = await fetch("https://ipapi.co/" + ip + "/json/");
+      const apiKey = Deno.env.get("IPQUALITYSCORE_KEY");
+      const geoResponse = await fetch(`https://ipqualityscore.com/api/json/ip/${ip}?apikey=${apiKey}`);
       if (geoResponse.ok) {
         const geoData = await geoResponse.json();
         country = geoData.country_name || "France";
