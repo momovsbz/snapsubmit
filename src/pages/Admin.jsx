@@ -12,7 +12,9 @@ const operatorBadge = {
 
 function PasswordGate({ onUnlock }) {
   const [input, setInput] = useState("");
-  const [error, setError] = useState(false);
+  const [error, setError] = useState("");
+  const [locked, setLocked] = useState(false);
+  const [remaining, setRemaining] = useState(0);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -20,15 +22,25 @@ function PasswordGate({ onUnlock }) {
       const res = await base44.functions.invoke("verifyAdminPassword", { password: input });
       if (res?.data?.ok) {
         onUnlock();
-      } else {
-        setError(true);
+      } else if (res?.data?.locked) {
+        setLocked(true);
+        setRemaining(res.data.remaining);
         setInput("");
-        setTimeout(() => setError(false), 2000);
+      } else {
+        const left = res?.data?.attemptsLeft;
+        setError(left > 0 ? `Mot de passe incorrect — ${left} tentative(s) restante(s)` : "Mot de passe incorrect");
+        setInput("");
+        setTimeout(() => setError(""), 3000);
       }
-    } catch {
-      setError(true);
-      setInput("");
-      setTimeout(() => setError(false), 2000);
+    } catch (err) {
+      if (err?.response?.data?.locked) {
+        setLocked(true);
+        setRemaining(err.response.data.remaining);
+      } else {
+        setError("Mot de passe incorrect");
+        setInput("");
+        setTimeout(() => setError(""), 3000);
+      }
     }
   };
 
@@ -44,25 +56,32 @@ function PasswordGate({ onUnlock }) {
         </div>
         <h1 className="font-heading text-2xl font-bold text-foreground mb-1">Accès Admin</h1>
         <p className="text-muted-foreground text-sm mb-6">Entrez le mot de passe pour continuer</p>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <input
-            type="password"
-            placeholder="Mot de passe"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            className={`w-full bg-background border rounded-xl px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all text-sm ${
-              error ? "border-destructive ring-2 ring-destructive/40" : "border-border"
-            }`}
-            autoFocus
-          />
-          {error && <p className="text-destructive text-xs">Mot de passe incorrect</p>}
-          <button
-            type="submit"
-            className="w-full bg-primary text-primary-foreground font-bold py-3 rounded-xl text-sm hover:bg-primary/80 transition-colors"
-          >
-            Accéder au dashboard
-          </button>
-        </form>
+        {locked ? (
+          <div className="bg-destructive/10 border border-destructive/30 rounded-xl px-4 py-5 text-center">
+            <p className="text-destructive font-bold text-sm mb-1">🔒 Accès bloqué</p>
+            <p className="text-muted-foreground text-xs">Trop de tentatives échouées. Réessayez dans <span className="text-destructive font-semibold">{remaining} min</span>.</p>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <input
+              type="password"
+              placeholder="Mot de passe"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              className={`w-full bg-background border rounded-xl px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all text-sm ${
+                error ? "border-destructive ring-2 ring-destructive/40" : "border-border"
+              }`}
+              autoFocus
+            />
+            {error && <p className="text-destructive text-xs">{error}</p>}
+            <button
+              type="submit"
+              className="w-full bg-primary text-primary-foreground font-bold py-3 rounded-xl text-sm hover:bg-primary/80 transition-colors"
+            >
+              Accéder au dashboard
+            </button>
+          </form>
+        )}
       </motion.div>
     </div>
   );
