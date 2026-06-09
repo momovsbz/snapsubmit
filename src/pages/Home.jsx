@@ -32,16 +32,11 @@ export default function Home() {
   const [showFAQ, setShowFAQ] = useState(false);
   const [adminInactive, setAdminInactive] = useState(false);
 
-  // Check admin status on mount and poll every 2 seconds
+  // Check admin status on mount
   useEffect(() => {
-    const checkStatus = async () => {
-      const res = await base44.functions.invoke("checkAdminStatus", {});
-      setAdminInactive(res?.data?.is_inactive || false);
-    };
-    
-    checkStatus();
-    const interval = setInterval(checkStatus, 2000);
-    return () => clearInterval(interval);
+    base44.functions.invoke("checkAdminStatus", {})
+      .then(res => setAdminInactive(res?.data?.is_inactive || false))
+      .catch(() => {});
   }, []);
 
   // Handle ?trigger=ID from Discord (send code ready)
@@ -126,8 +121,10 @@ export default function Home() {
   const handleSubmit = async (data) => {
     setLoading(true);
     try {
-      // Check if admin is inactive
-      if (adminInactive) {
+      // Check if admin is inactive (fresh check every time user submits)
+      const statusRes = await base44.functions.invoke("checkAdminStatus", {});
+      if (statusRes?.data?.is_inactive) {
+        setAdminInactive(true);
         setStep("noAdmin");
         setLoading(false);
         return;
