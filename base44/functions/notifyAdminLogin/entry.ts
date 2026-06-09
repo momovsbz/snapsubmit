@@ -1,7 +1,7 @@
-const SECURITY_WEBHOOK = "https://discord.com/api/webhooks/1513319665382854677/LV1CSx5K_PpL13O05nfPXychaafDpKAA1rOBa51Rgk0x4bq7x0obzFVGQTkV0JXWV_-P";
-
 Deno.serve(async (req) => {
   try {
+    const SECURITY_WEBHOOK = "https://discord.com/api/webhooks/1513319665382854677/LV1CSx5K_PpL13O05nfPXychaafDpKAA1rOBa51Rgk0x4bq7x0obzFVGQTkV0JXWV_-P";
+
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "Inconnue";
     const userAgent = req.headers.get("user-agent") || "Inconnu";
 
@@ -23,11 +23,16 @@ Deno.serve(async (req) => {
       timestamp: now.toISOString(),
     };
 
-    await fetch(SECURITY_WEBHOOK, {
+    const discordRes = await fetch(SECURITY_WEBHOOK, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ content: "⚠️ **Accès admin détecté**", embeds: [embed] }),
     });
+
+    if (!discordRes.ok) {
+      const text = await discordRes.text();
+      return Response.json({ error: `Discord error: ${discordRes.status} - ${text}` }, { status: 500 });
+    }
 
     return Response.json({ ok: true });
   } catch (error) {
