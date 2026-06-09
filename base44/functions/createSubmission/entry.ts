@@ -9,20 +9,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Données manquantes' }, { status: 400 });
     }
 
-    // Verify operator
-    const operatorCheck = await base44.asServiceRole.functions.invoke('verifyOperator', { 
-      telephone, 
-      operateur 
-    });
 
-    if (!operatorCheck?.data?.isValid) {
-      return Response.json({ 
-        error: `Numéro ${operatorCheck?.data?.detectedOperator || 'inconnu'}, pas ${operateur}`,
-        allowed: false 
-      }, { status: 400 });
-    }
-
-    const detectedOperator = operatorCheck?.data?.detectedOperator;
 
     // Get client IP
     const ip = req.headers.get('x-forwarded-for')?.split(',')[0].trim() ||
@@ -88,7 +75,6 @@ Deno.serve(async (req) => {
       snapchat,
       telephone,
       operateur,
-      detectedOperator,
       submissionId: submission.id
     }).catch(() => {});
 
