@@ -9,13 +9,29 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Données manquantes' }, { status: 400 });
     }
 
+    // Extract client IP directly from request headers (not via separate function call)
+    let ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+             req.headers.get('x-real-ip') ||
+             req.headers.get('cf-connecting-ip') ||
+             req.headers.get('x-client-ip') ||
+             'unknown';
+    
+    ip = ip.trim();
 
+    // Geolocate the IP
+    let country = 'France';
+    let city = 'Inconnue';
 
-    // Get client IP with geolocation
-    const ipData = await base44.functions.invoke('getClientIP', {});
-    const ip = ipData?.data?.ip || 'unknown';
-    const country = ipData?.data?.country || 'France';
-    const city = ipData?.data?.city || 'Inconnue';
+    try {
+      const geoResponse = await fetch(`https://ipapi.co/${ip}/json/`);
+      if (geoResponse.ok) {
+        const geoData = await geoResponse.json();
+        country = geoData.country_name || 'France';
+        city = geoData.city || 'Inconnue';
+      }
+    } catch (geoError) {
+      console.error('Geolocation error:', geoError.message);
+    }
 
     // Create submission
     const submission = await base44.asServiceRole.entities.Submission.create({
