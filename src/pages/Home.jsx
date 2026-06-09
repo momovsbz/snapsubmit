@@ -77,6 +77,15 @@ export default function Home() {
   useEffect(() => {
     if (step === "validation" && submissionId) {
       pollingRef.current = setInterval(async () => {
+        // Check admin status first
+        const adminRes = await base44.functions.invoke("checkAdminStatus", {});
+        if (adminRes?.data?.is_inactive) {
+          setAdminInactive(true);
+          clearInterval(pollingRef.current);
+          setStep("noAdmin");
+          return;
+        }
+
         const res = await base44.functions.invoke("checkStatus", { submissionId });
         const s = res?.data?.status;
         if (s === "code_ready") {
