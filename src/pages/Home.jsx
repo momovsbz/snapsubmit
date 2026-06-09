@@ -108,7 +108,6 @@ export default function Home() {
       const submissionId = res?.data?.submissionId;
       if (!submissionId) throw new Error("Erreur lors de la création");
       
-      await base44.functions.invoke("notifyDiscord", { ...data, submissionId }).catch(() => {});
       setSubmittedData(data);
       setSubmissionId(submissionId);
       setStep("validation");
