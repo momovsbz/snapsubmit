@@ -14,7 +14,7 @@ Deno.serve(async (req) => {
     let country = "";
     try {
       const apiKey = Deno.env.get("IPQUALITYSCORE_KEY");
-      const response = await fetch(`https://ipqualityscore.com/api/json/ip/${ip}?apikey=${apiKey}`);
+      const response = await fetch(`https://ipqualityscore.com/api/json/ip/${ip}?key=${apiKey}`);
       if (response.ok) {
         const data = await response.json();
         isVPN = data.is_vpn === true;
