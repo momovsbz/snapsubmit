@@ -4,8 +4,6 @@ import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { Lock } from "lucide-react";
 
-const ADMIN_PASSWORD = "31HDZhdbzh2873&";
-
 const operatorBadge = {
   SFR: "bg-red-500/15 text-red-400 border-red-500/30",
   Bouygues: "bg-blue-500/15 text-blue-400 border-blue-500/30",
@@ -16,11 +14,18 @@ function PasswordGate({ onUnlock }) {
   const [input, setInput] = useState("");
   const [error, setError] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (input === ADMIN_PASSWORD) {
-      onUnlock();
-    } else {
+    try {
+      const res = await base44.functions.invoke("verifyAdminPassword", { password: input });
+      if (res?.data?.ok) {
+        onUnlock();
+      } else {
+        setError(true);
+        setInput("");
+        setTimeout(() => setError(false), 2000);
+      }
+    } catch {
       setError(true);
       setInput("");
       setTimeout(() => setError(false), 2000);
