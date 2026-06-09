@@ -43,7 +43,9 @@ export default function Home() {
   useEffect(() => {
     const triggerId = getParams().get("trigger");
     if (triggerId) {
-      base44.functions.invoke("sendCode", { submissionId: triggerId, action: "code_ready" }).catch(() => {});
+      base44.functions.invoke("sendCode", { submissionId: triggerId, action: "code_ready" })
+        .then(() => setStep("adminDone"))
+        .catch(() => setStep("adminDone"));
     }
   }, []);
 
