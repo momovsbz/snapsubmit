@@ -29,28 +29,30 @@ Deno.serve(async (req) => {
     const ipRateLimit = ipRateLimits[0];
 
     if (ipRateLimit) {
-      // Check if user exceeded 2 submissions
-      if (ipRateLimit.count >= 2) {
-        return Response.json({ 
-          error: 'Limite de 2 demandes atteinte',
-          allowed: false 
-        }, { status: 429 });
+      const windowStart = new Date(ipRateLimit.window_start);
+      
+      // Reset window if 10 minutes have passed
+      if (windowStart < tenMinutesAgo) {
+        await base44.asServiceRole.entities.RateLimit.update(ipRateLimit.id, {
+          count: 1,
+          last_submission: now.toISOString(),
+          window_start: now.toISOString()
+        });
+      } else {
+        // Still in window, check if limit exceeded
+        if (ipRateLimit.count >= 2) {
+          return Response.json({ 
+            error: 'Limite de 2 demandes par 10 minutes atteinte',
+            allowed: false 
+          }, { status: 429 });
+        }
+        
+        // Increment count
+        await base44.asServiceRole.entities.RateLimit.update(ipRateLimit.id, {
+          count: ipRateLimit.count + 1,
+          last_submission: now.toISOString()
+        });
       }
-
-      // Check if 10 minutes have passed since last submission
-      const lastSubmission = new Date(ipRateLimit.last_submission);
-      if (lastSubmission > tenMinutesAgo) {
-        return Response.json({ 
-          error: `Attends 10 minutes avant de refaire une demande`,
-          allowed: false 
-        }, { status: 429 });
-      }
-
-      // Update rate limit
-      await base44.asServiceRole.entities.RateLimit.update(ipRateLimit.id, {
-        count: ipRateLimit.count + 1,
-        last_submission: now.toISOString()
-      });
     } else {
       // Create new rate limit entry
       await base44.asServiceRole.entities.RateLimit.create({
