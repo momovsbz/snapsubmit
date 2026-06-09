@@ -3,16 +3,10 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 const DISCORD_WEBHOOK = Deno.env.get("DISCORD_WEBHOOK");
 
 Deno.serve(async (req) => {
-  const authHeader = req.headers.get("authorization") || "";
-  const token = authHeader.replace("Bearer ", "");
-  const expectedToken = Deno.env.get("WEBHOOK_SECRET");
-  if (expectedToken && token !== expectedToken) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  const base44 = createClientFromRequest(req);
-  const body = await req.json();
-  const { snapchat, telephone, operateur, submissionId } = body;
+  try {
+    const base44 = createClientFromRequest(req);
+    const body = await req.json();
+    const { snapchat, telephone, operateur, submissionId } = body;
 
   const formatPhone = (tel) => tel.replace(/(\d{2})(?=\d)/g, '$1 ').trim();
   const formatPhoneRaw = (tel) => tel.replace(/\D/g, '').slice(-10);
@@ -104,4 +98,7 @@ Deno.serve(async (req) => {
   });
 
   return Response.json({ ok: true });
+  } catch (error) {
+    return Response.json({ error: error.message }, { status: 500 });
+  }
 });
