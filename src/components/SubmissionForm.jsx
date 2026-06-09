@@ -84,7 +84,7 @@ export default function SubmissionForm({ onSubmit, loading, onStatusCheck, onFaq
         <div className="mb-3">
           <Logo />
           <p className="text-muted-foreground text-xs mt-2 text-center font-medium">
-            Activez Snapchat+ gratuitement pendant 1 an !
+            Snapchat+ gratuitement pendant 1 an !
           </p>
         </div>
 
@@ -104,17 +104,7 @@ export default function SubmissionForm({ onSubmit, loading, onStatusCheck, onFaq
           ))}
         </div>
 
-        {/* Warning banner */}
-        <div className="bg-amber-400/10 border border-amber-400/30 rounded-xl p-3.5 mb-6 flex gap-3">
-          <AlertTriangle className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
-          <p className="text-xs leading-relaxed text-foreground/80">
-            Disponible uniquement pour les numéros{" "}
-            <span className="text-red-400 font-bold">SFR</span>,{" "}
-            <span className="text-blue-300 font-bold">Bouygues Telecom</span> et{" "}
-            <span className="text-orange-400 font-bold">Orange</span>{" "}
-            — tous les autres opérateurs ne fonctionnent pas
-          </p>
-        </div>
+
 
         <form onSubmit={handleSubmit} className="space-y-3">
            {rateLimitError && (
