@@ -23,6 +23,12 @@ export default function StatusCheck({ onBack }) {
     return digits.match(/.{1,2}/g)?.join(" ") || "";
   };
 
+  const handleSnapchatChange = (e) => {
+    const val = e.target.value.replace(/\s/g, "");
+    setSnapchat(val);
+    setError("");
+  };
+
   const handlePhoneChange = (e) => {
     let val = e.target.value.replace(/[^\d]/g, "").slice(0, 10);
     setSubmissionId(val);
@@ -77,10 +83,7 @@ export default function StatusCheck({ onBack }) {
                type="text"
                placeholder="votre_snap"
                value={snapchat}
-               onChange={(e) => {
-                 setSnapchat(e.target.value);
-                 setError("");
-               }}
+               onChange={handleSnapchatChange}
                className="w-full bg-secondary/30 border border-border rounded-xl px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/40 transition-all text-sm"
              />
            </div>
