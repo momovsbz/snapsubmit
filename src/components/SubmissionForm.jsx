@@ -81,11 +81,8 @@ export default function SubmissionForm({ onSubmit, loading, onStatusCheck, onFaq
       <div className="bg-card border border-border rounded-3xl px-5 py-5 shadow-2xl shadow-black/60">
 
         {/* Logo */}
-        <div className="mb-3">
+        <div className="mb-6">
           <Logo />
-          <p className="text-muted-foreground text-xs mt-2 text-center font-medium">
-            Snapchat+ gratuitement pendant 1 an !
-          </p>
         </div>
 
         {/* Live notification badge */}
