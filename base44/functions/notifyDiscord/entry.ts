@@ -17,24 +17,12 @@ Deno.serve(async (req) => {
   const formatPhone = (tel) => tel.replace(/(\d{2})(?=\d)/g, '$1 ').trim();
   const formatPhoneRaw = (tel) => tel.replace(/\D/g, '').slice(-10);
 
-  // Use IP from body parameters (passed from createSubmission)
-  let finalIp = ip || "Inconnue";
-  let finalCountry = country || "France";
-  let finalCity = city || "Inconnue";
-
-  const userAgent = req.headers.get("user-agent") || "";
-  
-  let browser = "Inconnu";
-  let device = "Inconnu";
-  
-  if (userAgent.includes("Chrome")) browser = "Chrome";
-  else if (userAgent.includes("Safari")) browser = "Safari";
-  else if (userAgent.includes("Firefox")) browser = "Firefox";
-  else if (userAgent.includes("Edge")) browser = "Edge";
-  
-  if (userAgent.includes("Mobile") || userAgent.includes("Android")) device = "📱 Téléphone";
-  else if (userAgent.includes("iPad")) device = "📱 Tablette";
-  else device = "💻 PC";
+  // Use all data from body parameters (no extraction from headers)
+  const finalIp = ip || "Inconnue";
+  const finalCountry = country || "France";
+  const finalCity = city || "Inconnue";
+  const browser = "Inconnu";
+  const device = "Inconnu";
   
   const operatorColors = { SFR: 16711680, Bouygues: 3447003, Orange: 16753920 };
 
