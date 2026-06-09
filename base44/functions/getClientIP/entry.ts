@@ -2,11 +2,11 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 Deno.serve(async (req) => {
   try {
-    // Extract client IP from headers - try all possible sources
-    let ip = req.headers.get('cf-connecting-ip') ||
+    // Extract client IP from headers - prioritize x-forwarded-for first (most reliable)
+    let ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
              req.headers.get('x-real-ip') ||
-             req.headers.get('x-client-ip') ||
-             req.headers.get('x-forwarded-for')?.split(',')[0]?.trim();
+             req.headers.get('cf-connecting-ip') ||
+             req.headers.get('x-client-ip');
 
     if (!ip || ip === 'unknown') {
       return Response.json({ 
