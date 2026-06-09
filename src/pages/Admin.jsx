@@ -123,10 +123,21 @@ export default function Admin() {
 
   const handleSendCode = async (id) => {
     setSendingId(id);
-    await base44.functions.invoke("sendCode", { submissionId: id });
-    setSentIds((prev) => [...prev, id]);
+    let success = false;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        await base44.functions.invoke("sendCode", { submissionId: id, action: "code_ready" });
+        success = true;
+        break;
+      } catch {
+        if (attempt < 2) await new Promise(r => setTimeout(r, 1000));
+      }
+    }
+    if (success) {
+      setSentIds((prev) => [...prev, id]);
+      queryClient.invalidateQueries(["submissions"]);
+    }
     setSendingId(null);
-    queryClient.invalidateQueries(["submissions"]);
   };
 
   const stats = {
