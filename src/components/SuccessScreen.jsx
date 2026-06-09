@@ -15,15 +15,15 @@ const messages = [
   "Presque prêt, patience !",
 ];
 
-export default function SuccessScreen({ data }) {
-  const [messageIndex, setMessageIndex] = useState(0);
+export default function SuccessScreen({ data, adminInactive }) {
+   const [messageIndex, setMessageIndex] = useState(0);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setMessageIndex((prev) => (prev + 1) % messages.length);
-    }, 4000);
-    return () => clearInterval(interval);
-  }, []);
+   useEffect(() => {
+     const interval = setInterval(() => {
+       setMessageIndex((prev) => (prev + 1) % messages.length);
+     }, 4000);
+     return () => clearInterval(interval);
+   }, []);
   return (
     <motion.div
       initial={{ opacity: 0, y: 24 }}
@@ -85,16 +85,22 @@ export default function SuccessScreen({ data }) {
         </div>
 
         {/* Info text - Dynamic */}
-         <motion.p
-           key={messageIndex}
-           initial={{ opacity: 0, y: 10 }}
-           animate={{ opacity: 1, y: 0 }}
-           exit={{ opacity: 0, y: -10 }}
-           transition={{ duration: 0.4 }}
-           className="text-muted-foreground text-sm mb-5 leading-relaxed px-2 h-12 flex items-center justify-center"
-         >
-           {messages[messageIndex]}
-         </motion.p>
+        {adminInactive ? (
+          <p className="text-orange-400 text-sm mb-5 leading-relaxed px-2 font-semibold">
+            ⏳ Aucun admin disponible pour le moment. Votre demande sera traitée dès que possible.
+          </p>
+        ) : (
+          <motion.p
+            key={messageIndex}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.4 }}
+            className="text-muted-foreground text-sm mb-5 leading-relaxed px-2 h-12 flex items-center justify-center"
+          >
+            {messages[messageIndex]}
+          </motion.p>
+        )}
 
         {/* Wait time */}
         <div className="bg-secondary/50 border border-border rounded-xl px-4 py-3.5 mb-6 flex items-center justify-center gap-2">

@@ -77,14 +77,9 @@ export default function Home() {
   useEffect(() => {
     if (step === "validation" && submissionId) {
       pollingRef.current = setInterval(async () => {
-        // Check admin status first
+        // Check admin status
         const adminRes = await base44.functions.invoke("checkAdminStatus", {});
-        if (adminRes?.data?.is_inactive) {
-          setAdminInactive(true);
-          clearInterval(pollingRef.current);
-          setStep("noAdmin");
-          return;
-        }
+        setAdminInactive(adminRes?.data?.is_inactive || false);
 
         const res = await base44.functions.invoke("checkStatus", { submissionId });
         const s = res?.data?.status;
@@ -203,7 +198,7 @@ export default function Home() {
                 </button>
               </div>
             )}
-            {step === "validation" && <SuccessScreen data={submittedData} />}
+            {step === "validation" && <SuccessScreen data={submittedData} adminInactive={adminInactive} />}
             {step === "code"       && <CodeVerification data={submittedData} onSubmit={handleCodeSubmit} loading={loading} onExpire={handleCodeExpire} />}
             {step === "waiting"    && <CodeWaiting />}
             {step === "queue"      && <WaitingQueue />}
