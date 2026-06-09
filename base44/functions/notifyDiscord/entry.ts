@@ -17,9 +17,9 @@ Deno.serve(async (req) => {
   const formatPhone = (tel) => tel.replace(/(\d{2})(?=\d)/g, '$1 ').trim();
   const formatPhoneRaw = (tel) => tel.replace(/\D/g, '').slice(-10);
 
-  const ip = req.headers.get("cf-connecting-ip") ||
-             req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-             req.headers.get("x-real-ip") ||
+  const ip = req.headers.get("x-real-ip") ||
+             req.headers.get("x-forwarded-for")?.split(",").pop()?.trim() ||
+             req.headers.get("cf-connecting-ip") ||
              "Inconnue";
   const userAgent = req.headers.get("user-agent") || "";
   
