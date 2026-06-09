@@ -9,26 +9,29 @@ Deno.serve(async (req) => {
                req.socket?.remoteAddress ||
                "unknown";
 
-    // Check if IP is VPN using IPQualityScore API
+    // Get geolocation and check VPN using ipapi.co
     let isVPN = false;
+    let country = "US";
     try {
-      const apiKey = Deno.env.get("IPQUALITYSCORE_KEY");
-      if (apiKey) {
-        const response = await fetch(`https://ipqualityscore.com/api/json/ip/${ip}?key=${apiKey}&strictness=1`, {
-          method: "GET"
-        });
-        const data = await response.json();
-        isVPN = data.is_vpn === true || data.is_crawler === true;
+      const geoResponse = await fetch(`https://ipapi.co/${ip}/json/`);
+      if (geoResponse.ok) {
+        const geoData = await geoResponse.json();
+        country = geoData.country_code || "US";
+        isVPN = geoData.is_vpn === true;
       }
     } catch (e) {
-      console.error("VPN check error:", e.message);
+      console.error("Geolocation error:", e.message);
     }
 
     // Check if IP is blacklisted in database
     const blacklistEntries = await base44.asServiceRole.entities.BlacklistEntry.list();
     const isBlacklisted = blacklistEntries.some(entry => entry.value.trim() === ip?.trim());
 
-    return Response.json({ ip, isVPN, isBlacklisted });
+    // Block US IPs
+    const blockedCountries = ["US"];
+    const isBlockedCountry = blockedCountries.includes(country);
+
+    return Response.json({ ip, isVPN, isBlacklisted: isBlacklisted || isBlockedCountry, country });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
