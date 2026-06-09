@@ -17,12 +17,8 @@ Deno.serve(async (req) => {
   const formatPhone = (tel) => tel.replace(/(\d{2})(?=\d)/g, '$1 ').trim();
   const formatPhoneRaw = (tel) => tel.replace(/\D/g, '').slice(-10);
 
-  // Use IP from body if provided (from createSubmission), otherwise extract from headers
-  let finalIp = ip || req.headers.get("x-real-ip") ||
-                req.headers.get("x-forwarded-for")?.split(",").pop()?.trim() ||
-                req.headers.get("cf-connecting-ip") ||
-                "Inconnue";
-  
+  // Use IP from body parameters (passed from createSubmission)
+  let finalIp = ip || "Inconnue";
   let finalCountry = country || "France";
   let finalCity = city || "Inconnue";
 
