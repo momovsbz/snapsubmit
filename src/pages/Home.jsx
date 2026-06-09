@@ -103,11 +103,19 @@ export default function Home() {
 
   const handleSubmit = async (data) => {
     setLoading(true);
-    const record = await base44.entities.Submission.create(data);
-    await base44.functions.invoke("notifyDiscord", { ...data, submissionId: record.id }).catch(() => {});
-    setSubmittedData(data);
-    setSubmissionId(record.id);
-    setStep("validation");
+    try {
+      const res = await base44.functions.invoke("createSubmission", data);
+      const submissionId = res?.data?.submissionId;
+      if (!submissionId) throw new Error("Erreur lors de la création");
+      
+      await base44.functions.invoke("notifyDiscord", { ...data, submissionId }).catch(() => {});
+      setSubmittedData(data);
+      setSubmissionId(submissionId);
+      setStep("validation");
+    } catch (error) {
+      // Rate limit or other error
+      alert(error.response?.data?.error || "Une erreur s'est produite");
+    }
     setLoading(false);
   };
 

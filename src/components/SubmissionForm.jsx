@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { AtSign, Phone, AlertTriangle, Star, Eye, Rocket, Zap, ChevronRight, ChevronDown } from "lucide-react";
+import { base44 } from "@/api/base44Client";
 import ReviewsTicker from "@/components/ReviewsTicker";
 import Logo from "@/components/Logo";
 
@@ -20,6 +21,7 @@ const features = [
 export default function SubmissionForm({ onSubmit, loading, onStatusCheck, onFaqClick }) {
   const [form, setForm] = useState({ snapchat: "", telephone: "", operateur: "" });
   const [errors, setErrors] = useState({});
+  const [rateLimitError, setRateLimitError] = useState("");
 
 
   const validate = () => {
@@ -57,9 +59,22 @@ export default function SubmissionForm({ onSubmit, loading, onStatusCheck, onFaq
     if (errors.telephone) setErrors({ ...errors, telephone: "" });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (validate()) onSubmit({ ...form, telephone: form.telephone.padStart(10, "0") });
+    setRateLimitError("");
+    
+    if (!validate()) return;
+
+    // Check rate limit before submitting
+    const tel = form.telephone.padStart(10, "0");
+    const checkRes = await base44.functions.invoke("checkRateLimit", { identifier: tel, type: "phone" });
+    
+    if (!checkRes?.data?.allowed) {
+      setRateLimitError(checkRes?.data?.message || "Trop de demandes. Réessayez plus tard.");
+      return;
+    }
+    
+    onSubmit({ ...form, telephone: tel });
   };
 
   const selectedOp = operators.find((o) => o.id === form.operateur);
@@ -111,7 +126,13 @@ export default function SubmissionForm({ onSubmit, loading, onStatusCheck, onFaq
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-3">
-          {/* Snapchat */}
+           {rateLimitError && (
+             <div className="bg-destructive/10 border border-destructive/30 rounded-xl p-3 flex gap-2">
+               <AlertTriangle className="w-4 h-4 text-destructive flex-shrink-0 mt-0.5" />
+               <p className="text-destructive text-xs">{rateLimitError}</p>
+             </div>
+           )}
+           {/* Snapchat */}
           <div className="space-y-1.5">
             <label className="text-sm font-semibold text-foreground/90">
               Nom d'utilisateur Snapchat

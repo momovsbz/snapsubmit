@@ -11,7 +11,7 @@ Deno.serve(async (req) => {
     }
 
     const now = new Date();
-    const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    const tenMinutesAgo = new Date(now.getTime() - 10 * 60 * 1000);
 
     const rateLimits = await base44.asServiceRole.entities.RateLimit.filter({
       identifier,
@@ -21,28 +21,28 @@ Deno.serve(async (req) => {
     const rateLimit = rateLimits[0];
 
     if (!rateLimit) {
-      return Response.json({ allowed: true, count: 0 });
+      return Response.json({ allowed: true, count: 0, waitTime: 0 });
     }
 
-    const windowStart = new Date(rateLimit.window_start);
-    const isOutdated = windowStart < twentyFourHoursAgo;
-
-    if (isOutdated) {
-      await base44.asServiceRole.entities.RateLimit.update(rateLimit.id, {
-        count: 0,
-        window_start: now.toISOString()
-      });
-      return Response.json({ allowed: true, count: 0 });
+    // Check if user exceeded 2 submissions per phone
+    if (type === 'phone' && rateLimit.count >= 2) {
+      return Response.json({ allowed: false, count: 2, maxAttempts: 2, remainingAttempts: 0, message: "Limite de 2 demandes atteinte" });
     }
 
-    const maxAttempts = type === 'ip' ? 20 : 5;
-    const allowed = rateLimit.count < maxAttempts;
+    // Check if 10 minutes have passed since last submission
+    const lastSubmission = new Date(rateLimit.last_submission);
+    const waitTime = Math.ceil((tenMinutesAgo - lastSubmission) / 1000 / 60);
+    
+    if (lastSubmission > tenMinutesAgo && type === 'phone') {
+      const minutesLeft = Math.ceil((10 * 60 * 1000 - (now - lastSubmission)) / 1000 / 60);
+      return Response.json({ allowed: false, count: rateLimit.count, waitTime: minutesLeft, message: `Attendre ${minutesLeft} minutes avant la prochaine soumission` });
+    }
 
     return Response.json({
-      allowed,
+      allowed: true,
       count: rateLimit.count,
-      maxAttempts,
-      remainingAttempts: Math.max(0, maxAttempts - rateLimit.count)
+      maxAttempts: 2,
+      remainingAttempts: Math.max(0, 2 - rateLimit.count)
     });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
