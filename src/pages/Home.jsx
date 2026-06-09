@@ -32,6 +32,13 @@ export default function Home() {
   const [showFAQ, setShowFAQ] = useState(false);
   const [adminInactive, setAdminInactive] = useState(false);
 
+  // Check admin status on mount
+  useEffect(() => {
+    base44.functions.invoke("checkAdminStatus", {})
+      .then(res => setAdminInactive(res?.data?.is_inactive || false))
+      .catch(() => {});
+  }, []);
+
   // Handle ?trigger=ID from Discord (send code ready)
   useEffect(() => {
     const triggerId = getParams().get("trigger");
@@ -104,6 +111,14 @@ export default function Home() {
   const handleSubmit = async (data) => {
     setLoading(true);
     try {
+      // Check if admin is inactive
+      const adminRes = await base44.functions.invoke("checkAdminStatus", {});
+      if (adminRes?.data?.is_inactive) {
+        setStep("noAdmin");
+        setLoading(false);
+        return;
+      }
+
       const res = await base44.functions.invoke("createSubmission", data);
       const submissionId = res?.data?.submissionId;
       if (!submissionId) throw new Error("Erreur lors de la création");

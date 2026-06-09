@@ -70,6 +70,7 @@ export default function Admin() {
   const [sentIds, setSentIds] = useState([]);
   const [showBlacklist, setShowBlacklist] = useState(false);
   const [blacklistInput, setBlacklistInput] = useState("");
+  const [adminInactive, setAdminInactive] = useState(false);
 
   const { data: submissions = [], isLoading } = useQuery({
     queryKey: ["submissions"],
@@ -85,6 +86,12 @@ export default function Admin() {
 
   useEffect(() => {
     if (!unlocked) return;
+    
+    // Load admin status
+    base44.functions.invoke("checkAdminStatus", {})
+      .then(res => setAdminInactive(res?.data?.is_inactive || false))
+      .catch(() => {});
+    
     const params = new URLSearchParams(window.location.search);
     const triggerId = params.get("trigger") || (params.get("action") === "send_code" ? params.get("id") : null);
     if (triggerId) handleSendCode(triggerId);
@@ -118,6 +125,11 @@ export default function Admin() {
     queryClient.invalidateQueries({ queryKey: ["blacklist"] });
   };
 
+  const toggleAdminStatus = async () => {
+    await base44.functions.invoke("toggleAdminStatus", { is_inactive: !adminInactive });
+    setAdminInactive(!adminInactive);
+  };
+
   const isBlacklisted = (sub) => {
     return blacklist.some(item => 
       (item.type === "phone" && sub.telephone === item.value) ||
@@ -130,19 +142,31 @@ export default function Admin() {
   return (
     <div className="min-h-screen bg-background px-4 py-10">
       <div className="max-w-4xl mx-auto">
-        <div className="mb-10 flex justify-between items-start">
+        <div className="mb-10 flex justify-between items-start gap-4">
           <div>
             <h1 className="font-heading text-3xl font-bold text-foreground">
               Admin <span className="text-primary">Snap+</span>
             </h1>
             <p className="text-muted-foreground text-sm mt-1">Toutes les soumissions reçues</p>
           </div>
-          <button
-            onClick={() => setShowBlacklist(!showBlacklist)}
-            className="bg-destructive/20 text-destructive border border-destructive/40 px-4 py-2 rounded-lg text-xs font-bold hover:bg-destructive/30 transition-colors"
-          >
-            🚫 Blacklist ({blacklist.length})
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={toggleAdminStatus}
+              className={`px-4 py-2 rounded-lg text-xs font-bold transition-colors border ${
+                adminInactive
+                  ? "bg-orange-500/20 text-orange-400 border-orange-500/40 hover:bg-orange-500/30"
+                  : "bg-green-500/20 text-green-400 border-green-500/40 hover:bg-green-500/30"
+              }`}
+            >
+              {adminInactive ? "🔴 Absent" : "🟢 Actif"}
+            </button>
+            <button
+              onClick={() => setShowBlacklist(!showBlacklist)}
+              className="bg-destructive/20 text-destructive border border-destructive/40 px-4 py-2 rounded-lg text-xs font-bold hover:bg-destructive/30 transition-colors"
+            >
+              🚫 Blacklist ({blacklist.length})
+            </button>
+          </div>
         </div>
 
         {showBlacklist && (
