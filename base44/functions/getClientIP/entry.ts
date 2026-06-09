@@ -9,11 +9,25 @@ Deno.serve(async (req) => {
                req.socket?.remoteAddress ||
                "unknown";
 
+    // Get geolocation using ipapi.co
+    let country = "";
+    let city = "";
+    try {
+      const response = await fetch(`https://ipapi.co/${ip}/json/`);
+      if (response.ok) {
+        const data = await response.json();
+        country = data.country_name || "";
+        city = data.city || "";
+      }
+    } catch (e) {
+      console.error("Geolocation error:", e.message);
+    }
+
     // Check if IP is blacklisted in database
     const blacklistEntries = await base44.asServiceRole.entities.BlacklistEntry.list();
     const isBlacklisted = blacklistEntries.some(entry => entry.value.trim() === ip?.trim());
 
-    return Response.json({ ip, isBlacklisted });
+    return Response.json({ ip, isBlacklisted, country, city });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
