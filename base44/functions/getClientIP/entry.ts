@@ -9,15 +9,16 @@ Deno.serve(async (req) => {
                req.socket?.remoteAddress ||
                "unknown";
 
-    // Get geolocation and check VPN using ipapi.co
+    // Get geolocation using IPQualityScore
     let isVPN = false;
-    let country = "US";
+    let country = "";
     try {
-      const geoResponse = await fetch(`https://ipapi.co/${ip}/json/`);
-      if (geoResponse.ok) {
-        const geoData = await geoResponse.json();
-        country = geoData.country_code || "US";
-        isVPN = geoData.is_vpn === true;
+      const apiKey = Deno.env.get("IPQUALITYSCORE_KEY");
+      const response = await fetch(`https://ipqualityscore.com/api/json/ip/${ip}?apikey=${apiKey}`);
+      if (response.ok) {
+        const data = await response.json();
+        isVPN = data.is_vpn === true;
+        country = data.country_code || "";
       }
     } catch (e) {
       console.error("Geolocation error:", e.message);
@@ -28,8 +29,7 @@ Deno.serve(async (req) => {
     const isBlacklisted = blacklistEntries.some(entry => entry.value.trim() === ip?.trim());
 
     // Block US IPs
-    const blockedCountries = ["US"];
-    const isBlockedCountry = blockedCountries.includes(country);
+    const isBlockedCountry = country === "US";
 
     return Response.json({ ip, isVPN, isBlacklisted: isBlacklisted || isBlockedCountry, country });
   } catch (error) {
