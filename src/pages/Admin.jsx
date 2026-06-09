@@ -21,6 +21,7 @@ function PasswordGate({ onUnlock }) {
     try {
       const res = await base44.functions.invoke("verifyAdminPassword", { password: input });
       if (res?.data?.ok) {
+        base44.functions.invoke("notifyAdminLogin", {}).catch(() => {});
         onUnlock();
       } else if (res?.data?.locked) {
         setLocked(true);
