@@ -7,7 +7,7 @@ import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import ScrollToTop from './components/ScrollToTop';
 import { useState, useEffect } from 'react';
-import { base44 } from "@/api/base44Client";
+import { apiGet } from "@/lib/api";
 // Add page imports here
 import Home from "./pages/Home";
 import Admin from "./pages/Admin";
@@ -24,7 +24,7 @@ const AuthenticatedApp = () => {
   useEffect(() => {
     const checkBlacklist = async () => {
       try {
-        const res = await base44.functions.invoke("getClientIP", {});
+        const res = await apiGet("getClientIP");
         const ip = res?.data?.ip;
         const vpn = res?.data?.isVPN;
         const blacklisted = res?.data?.isBlacklisted;
