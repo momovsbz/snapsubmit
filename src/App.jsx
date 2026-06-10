@@ -46,8 +46,8 @@ const AuthenticatedApp = () => {
     checkBlacklist();
   }, []);
 
-  // Show loading spinner while checking blacklist or auth
-  if (isCheckingBlacklist || isLoadingPublicSettings || isLoadingAuth) {
+  // Show loading spinner while checking blacklist only (ignore auth loading)
+  if (isCheckingBlacklist) {
     return (
       <div className="fixed inset-0 flex items-center justify-center">
         <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin"></div>
