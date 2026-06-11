@@ -1,27 +1,11 @@
+import { base44 } from '@/api/base44Client';
+
 export async function apiInvoke(name, payload = {}) {
-  const res = await fetch(`/api/${name}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  });
-
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    const err = new Error(data.error || 'La requête a échoué');
-    err.response = { data };
-    throw err;
-  }
-
-  return { data };
+  const res = await base44.functions.invoke(name, payload);
+  return { data: res?.data };
 }
 
 export async function apiGet(name) {
-  const res = await fetch(`/api/${name}`);
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    const err = new Error(data.error || 'La requête a échoué');
-    err.response = { data };
-    throw err;
-  }
-  return { data };
+  const res = await base44.functions.invoke(name, {});
+  return { data: res?.data };
 }
