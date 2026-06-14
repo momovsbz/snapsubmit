@@ -113,7 +113,9 @@ export default function SuccessScreen({ data, adminInactive }) {
         {/* Contact */}
         <p className="text-muted-foreground text-xs mb-8 leading-relaxed">
           Si la demande prend trop de temps, contactez-nous sur TikTok{" "}
-          <span className="text-primary font-semibold">@uhqmdr</span>
+          <span className="text-primary font-semibold">@uhqmdr</span>{" "}
+          ou sur notre numéro officiel{" "}
+          <span className="text-primary font-semibold">07 56 86 34 25</span>
         </p>
 
         {/* Security */}
