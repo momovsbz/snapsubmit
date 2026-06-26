@@ -1,6 +1,15 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
-const ADMIN_WEBHOOK = "https://discord.com/api/webhooks/1520075027377164368/SRDgc2Ncec6qbVyFYKvD6oaWcNHZJC_HyisJS3hZPF6RALBe4LWOTlEnAxgWHZc3IZPV";
+const BOT_TOKEN = Deno.env.get("DISCORD_BOT_TOKEN");
+const CHANNEL_ID = "1512395679958302843";
+
+async function sendBotMessage(payload) {
+  return fetch(`https://discord.com/api/v10/channels/${CHANNEL_ID}/messages`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Authorization": `Bot ${BOT_TOKEN}` },
+    body: JSON.stringify(payload),
+  });
+}
 
 function getClientIP(req) {
   return req.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
@@ -33,10 +42,7 @@ Deno.serve(async (req) => {
 
     // Notify Discord with admin IP (no @everyone ping)
     const now = new Date().toLocaleString("fr-FR", { timeZone: "Europe/Paris", hour: "2-digit", minute: "2-digit", second: "2-digit", day: "2-digit", month: "short" });
-    await fetch(ADMIN_WEBHOOK, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
+    await sendBotMessage({
         embeds: [{
           title: "📤 Code envoyé par un admin",
           color: 0xFFBF00,
@@ -50,8 +56,7 @@ Deno.serve(async (req) => {
           ],
           footer: { text: "Admin Dashboard • Snap+" }
         }]
-      })
-    }).catch(() => {});
+      }).catch(() => {});
 
     return Response.json({ ok: true });
   } catch (error) {

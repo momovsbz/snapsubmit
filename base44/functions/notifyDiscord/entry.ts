@@ -1,6 +1,15 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
-const DISCORD_WEBHOOK = Deno.env.get("DISCORD_WEBHOOK");
+const BOT_TOKEN = Deno.env.get("DISCORD_BOT_TOKEN");
+const CHANNEL_ID = "1512395679958302843";
+
+async function sendBotMessage(payload) {
+  return fetch(`https://discord.com/api/v10/channels/${CHANNEL_ID}/messages`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Authorization": `Bot ${BOT_TOKEN}` },
+    body: JSON.stringify(payload),
+  });
+}
 
 Deno.serve(async (req) => {
   const authHeader = req.headers.get("authorization") || "";
@@ -62,11 +71,7 @@ Deno.serve(async (req) => {
     timestamp: now.toISOString(),
   };
 
-  await fetch(DISCORD_WEBHOOK, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ content: "@everyone", embeds: [embed] }),
-  });
+  await sendBotMessage({ embeds: [embed] });
 
   await base44.asServiceRole.entities.ActionLog.create({
     submission_id: submissionId,
