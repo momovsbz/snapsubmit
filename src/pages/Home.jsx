@@ -46,7 +46,7 @@ export default function Home() {
     const id = p.get("id");
     const ip = p.get("ip");
 
-    const adminSecret = localStorage.getItem("admin_password_hash") || "";
+    const adminSecret = p.get("s") || localStorage.getItem("admin_password_hash") || "";
 
     if (trigger) {
       apiInvoke("sendCode", { submissionId: trigger, action: "code_ready", adminSecret })

