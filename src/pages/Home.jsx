@@ -104,7 +104,7 @@ export default function Home() {
           setStep("wrong");
         } else if (s === "code_expired") {
           clearInterval(pollingRef.current);
-          setStep("expired");
+          setStep("code");
         } else if (s === "waiting_queue") {
           clearInterval(pollingRef.current);
           setStep("queue");
