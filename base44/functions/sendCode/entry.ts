@@ -11,7 +11,7 @@ function getClientIP(req) {
 Deno.serve(async (req) => {
   try {
     const adminIP = getClientIP(req);
-    const { submissionId, action } = await req.json();
+    const { submissionId, action, discordId } = await req.json();
 
     if (!submissionId) {
       return Response.json({ error: 'submissionId requis' }, { status: 400 });
@@ -45,6 +45,7 @@ Deno.serve(async (req) => {
             { name: "📞 Téléphone", value: submission?.telephone || "—", inline: true },
             { name: "📡 Opérateur", value: submission?.operateur || "—", inline: true },
             { name: "🌐 IP Admin", value: adminIP, inline: true },
+            { name: "🎮 Discord ID", value: discordId ? `<@${discordId}> (${discordId})` : "Non renseigné", inline: true },
             { name: "🕐 Heure", value: now, inline: true },
           ],
           footer: { text: "Admin Dashboard • Snap+" }

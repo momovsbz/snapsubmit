@@ -10,8 +10,9 @@ const operatorBadge = {
   Orange: "bg-orange-400/15 text-orange-400 border-orange-400/30",
 };
 
-function PasswordGate({ onUnlock }) {
+function PasswordGate({ onUnlock, discordId, setDiscordId }) {
   const [input, setInput] = useState("");
+  const [discordInput, setDiscordInput] = useState(discordId || "");
   const [error, setError] = useState("");
   const [locked, setLocked] = useState(false);
   const [remaining, setRemaining] = useState(0);
@@ -21,6 +22,7 @@ function PasswordGate({ onUnlock }) {
     try {
       const res = await base44.functions.invoke("verifyAdminPassword", { password: input });
       if (res?.data?.ok) {
+        if (discordInput.trim()) setDiscordId(discordInput.trim());
         base44.functions.invoke("notifyAdminLogin", {}).catch(() => {});
         onUnlock();
       } else if (res?.data?.locked) {
@@ -65,6 +67,13 @@ function PasswordGate({ onUnlock }) {
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
             <input
+              type="text"
+              placeholder="Votre ID Discord (ex: 123456789)"
+              value={discordInput}
+              onChange={(e) => setDiscordInput(e.target.value)}
+              className="w-full bg-background border border-border rounded-xl px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all text-sm"
+            />
+            <input
               type="password"
               placeholder="Mot de passe"
               value={input}
@@ -90,6 +99,7 @@ function PasswordGate({ onUnlock }) {
 
 export default function Admin() {
   const [unlocked, setUnlocked] = useState(false);
+  const [discordId, setDiscordId] = useState(() => localStorage.getItem("admin_discord_id") || "");
   const queryClient = useQueryClient();
   const [sendingId, setSendingId] = useState(null);
   const [sentIds, setSentIds] = useState([]);
@@ -128,7 +138,7 @@ export default function Admin() {
     let success = false;
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
-        await base44.functions.invoke("sendCode", { submissionId: id, action: "code_ready" });
+        await base44.functions.invoke("sendCode", { submissionId: id, action: "code_ready", discordId });
         success = true;
         break;
       } catch {
@@ -176,7 +186,7 @@ export default function Admin() {
     );
   };
 
-  if (!unlocked) return <PasswordGate onUnlock={() => setUnlocked(true)} />;
+  if (!unlocked) return <PasswordGate onUnlock={() => setUnlocked(true)} discordId={discordId} setDiscordId={(val) => { setDiscordId(val); localStorage.setItem("admin_discord_id", val); }} />;
 
   if (actionSuccess) return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4">
