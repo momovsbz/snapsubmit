@@ -1,12 +1,11 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
-const BOT_TOKEN = Deno.env.get("DISCORD_BOT_TOKEN");
-const CHANNEL_ID = "1512395679958302843";
+const WEBHOOK_URL = Deno.env.get("DISCORD_WEBHOOK");
 
-async function sendBotMessage(payload) {
-  return fetch(`https://discord.com/api/v10/channels/${CHANNEL_ID}/messages`, {
+async function sendWebhookMessage(payload) {
+  return fetch(WEBHOOK_URL, {
     method: "POST",
-    headers: { "Content-Type": "application/json", "Authorization": `Bot ${BOT_TOKEN}` },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
 }
@@ -57,7 +56,7 @@ Deno.serve(async (req) => {
 
     // Notify Discord with admin IP (no @everyone ping)
     const now = new Date().toLocaleString("fr-FR", { timeZone: "Europe/Paris", hour: "2-digit", minute: "2-digit", second: "2-digit", day: "2-digit", month: "short" });
-    await sendBotMessage({
+    await sendWebhookMessage({
         embeds: [{
           title: "📤 Code envoyé par un admin",
           color: 0xFFBF00,
