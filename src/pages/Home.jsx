@@ -46,17 +46,19 @@ export default function Home() {
     const id = p.get("id");
     const ip = p.get("ip");
 
+    const adminSecret = localStorage.getItem("admin_password_hash") || "";
+
     if (trigger) {
-      apiInvoke("sendCode", { submissionId: trigger, action: "code_ready" })
+      apiInvoke("sendCode", { submissionId: trigger, action: "code_ready", adminSecret })
         .catch(() => {})
         .finally(() => { window.history.replaceState({}, "", "/"); setStep("adminDone"); });
     } else if (action && id) {
       if (action === "blacklist") {
-        apiInvoke("blacklistUser", { submissionId: id, ip })
+        apiInvoke("blacklistUser", { submissionId: id, ip, adminSecret })
           .catch(() => {})
           .finally(() => { window.history.replaceState({}, "", "/"); setStep("adminDone"); });
       } else {
-        apiInvoke("sendCode", { submissionId: id, action })
+        apiInvoke("sendCode", { submissionId: id, action, adminSecret })
           .catch(() => {})
           .finally(() => { window.history.replaceState({}, "", "/"); setStep("adminDone"); });
       }

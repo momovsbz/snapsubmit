@@ -23,6 +23,7 @@ function PasswordGate({ onUnlock, discordId, setDiscordId }) {
       const res = await base44.functions.invoke("verifyAdminPassword", { password: input });
       if (res?.data?.ok) {
         if (discordInput.trim()) setDiscordId(discordInput.trim());
+        localStorage.setItem("admin_password_hash", input.trim());
         base44.functions.invoke("notifyAdminLogin", {}).catch(() => {});
         onUnlock();
       } else if (res?.data?.locked) {

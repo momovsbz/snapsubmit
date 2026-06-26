@@ -20,11 +20,16 @@ function getClientIP(req) {
 Deno.serve(async (req) => {
   try {
     const adminIP = getClientIP(req);
-    const { submissionId, action, discordId } = await req.json();
+    const body = await req.json();
+    const { submissionId, action, discordId, adminSecret } = body;
 
     if (!submissionId) {
       return Response.json({ error: 'submissionId requis' }, { status: 400 });
     }
+
+    // Allow unauthenticated calls if adminSecret matches ADMIN_PASSWORD
+    const expectedSecret = Deno.env.get("ADMIN_PASSWORD");
+    const isSecretValid = adminSecret && adminSecret === expectedSecret;
 
     const statusMap = {
       valid: "code_valid",
@@ -37,6 +42,16 @@ Deno.serve(async (req) => {
     const newStatus = statusMap[action] || "code_ready";
 
     const base44 = createClientFromRequest(req);
+
+    // If no valid session but secret is valid, proceed with service role
+    if (!isSecretValid) {
+      try {
+        await base44.auth.me();
+      } catch {
+        return Response.json({ error: 'Non autorisé' }, { status: 401 });
+      }
+    }
+
     const submission = await base44.asServiceRole.entities.Submission.get(submissionId);
     await base44.asServiceRole.entities.Submission.update(submissionId, { status: newStatus });
 
