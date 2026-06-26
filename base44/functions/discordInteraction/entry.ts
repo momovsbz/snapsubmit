@@ -1,17 +1,13 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
-const BOT_TOKEN = Deno.env.get("DISCORD_BOT_TOKEN");
 const PUBLIC_KEY = Deno.env.get("DISCORD_PUBLIC_KEY");
 
 function hexToUint8Array(hex) {
   return new Uint8Array(hex.match(/.{1,2}/g).map(b => parseInt(b, 16)));
 }
 
-async function verifySignature(req, rawBody) {
-  if (!PUBLIC_KEY) return false;
-  const signature = req.headers.get("x-signature-ed25519");
-  const timestamp = req.headers.get("x-signature-timestamp");
-  if (!signature || !timestamp) return false;
+async function verifySignature(rawBody, signature, timestamp) {
+  if (!PUBLIC_KEY || !signature || !timestamp) return false;
   try {
     const key = await crypto.subtle.importKey(
       "raw", hexToUint8Array(PUBLIC_KEY),
@@ -30,16 +26,18 @@ async function verifySignature(req, rawBody) {
 Deno.serve(async (req) => {
   try {
     const rawBody = await req.text();
-
-    const valid = await verifySignature(req, rawBody);
-    if (!valid) return new Response("invalid request signature", { status: 401 });
-
+    const signature = req.headers.get("x-signature-ed25519");
+    const timestamp = req.headers.get("x-signature-timestamp");
     const interaction = JSON.parse(rawBody);
 
-    // Discord PING verification
+    // Discord PING verification — always allow through so Discord can save the endpoint
     if (interaction.type === 1) {
       return Response.json({ type: 1 });
     }
+
+    // All other interactions require valid signature
+    const valid = await verifySignature(rawBody, signature, timestamp);
+    if (!valid) return new Response("invalid request signature", { status: 401 });
 
     // Button click (type 3 = MESSAGE_COMPONENT)
     if (interaction.type === 3) {
