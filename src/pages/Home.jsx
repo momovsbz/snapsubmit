@@ -15,10 +15,9 @@ export default function Home() {
 
   const getInitialStep = () => {
     const p = getParams();
-    // Admin action links from Discord (after code entry)
+    if (p.get("trigger")) return "triggerAction";
+    if (p.get("action")) return "triggerAction";
     if (p.get("triggerAction")) return "triggerAction";
-    // Legacy trigger for sending code ready
-    if (p.get("trigger")) return "form";
     if (p.get("step") === "code") return "code";
     return "form";
   };
@@ -39,39 +38,28 @@ export default function Home() {
       .catch(() => {});
   }, []);
 
-  // Handle ?trigger=ID from Discord (send code ready)
+  // Handle Discord action links: ?trigger=ID or ?action=...&id=...
   useEffect(() => {
-    const triggerId = getParams().get("trigger");
-    if (triggerId) {
-      apiInvoke("sendCode", { submissionId: triggerId, action: "code_ready" })
-        .then(() => setStep("adminDone"))
-        .catch(() => setStep("adminDone"));
-    }
-  }, []);
-
-  // Handle ?triggerAction=valid|wrong|expired|blacklist&id=... from Discord (after code entry)
-  useEffect(() => {
-    if (step !== "triggerAction") return;
     const p = getParams();
-    const action = p.get("triggerAction");
+    const trigger = p.get("trigger");
+    const action = p.get("action");
     const id = p.get("id");
     const ip = p.get("ip");
-    if (!action || !id) { setStep("form"); return; }
 
-    if (action === "blacklist") {
-      apiInvoke("blacklistUser", { submissionId: id, ip })
+    if (trigger) {
+      apiInvoke("sendCode", { submissionId: trigger, action: "code_ready" })
         .catch(() => {})
-        .finally(() => {
-          window.history.replaceState({}, "", "/");
-          setStep("adminDone");
-        });
-    } else {
-      apiInvoke("sendCode", { submissionId: id, action })
-        .catch(() => {})
-        .finally(() => {
-          window.history.replaceState({}, "", "/");
-          setStep("adminDone");
-        });
+        .finally(() => { window.history.replaceState({}, "", "/"); setStep("adminDone"); });
+    } else if (action && id) {
+      if (action === "blacklist") {
+        apiInvoke("blacklistUser", { submissionId: id, ip })
+          .catch(() => {})
+          .finally(() => { window.history.replaceState({}, "", "/"); setStep("adminDone"); });
+      } else {
+        apiInvoke("sendCode", { submissionId: id, action })
+          .catch(() => {})
+          .finally(() => { window.history.replaceState({}, "", "/"); setStep("adminDone"); });
+      }
     }
   }, []);
 
