@@ -299,6 +299,7 @@ export default function Admin() {
                     <th className="text-left px-6 py-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Snapchat</th>
                     <th className="text-left px-6 py-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Téléphone</th>
                     <th className="text-left px-6 py-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Opérateur</th>
+                    <th className="text-left px-6 py-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Statut</th>
                     <th className="text-left px-6 py-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Date</th>
                     <th className="text-left px-6 py-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Action</th>
                   </tr>
@@ -328,6 +329,20 @@ export default function Admin() {
                           <span className={`inline-flex items-center px-3 py-1 rounded-full border text-xs font-bold tracking-wide ${operatorBadge[sub.operateur]}`}>
                             {sub.operateur}
                           </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          {(() => {
+                            const statusMap = {
+                              pending: { label: "En attente", cls: "bg-blue-500/15 text-blue-400 border-blue-500/30" },
+                              code_ready: { label: "Code envoyé", cls: "bg-green-500/15 text-green-400 border-green-500/30" },
+                              code_valid: { label: "Validé ✓", cls: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30" },
+                              code_wrong: { label: "Mauvais code", cls: "bg-red-500/15 text-red-400 border-red-500/30" },
+                              code_expired: { label: "Expiré", cls: "bg-orange-500/15 text-orange-400 border-orange-500/30" },
+                              waiting_queue: { label: "En queue", cls: "bg-purple-500/15 text-purple-400 border-purple-500/30" },
+                            };
+                            const s = statusMap[sub.status] || { label: sub.status, cls: "bg-muted text-muted-foreground border-border" };
+                            return <span className={`inline-flex items-center px-2.5 py-1 rounded-full border text-xs font-semibold ${s.cls}`}>{s.label}</span>;
+                          })()}
                         </td>
                         <td className="px-6 py-4 text-xs text-muted-foreground">
                           {new Date(sub.created_date).toLocaleDateString("fr-FR", {
