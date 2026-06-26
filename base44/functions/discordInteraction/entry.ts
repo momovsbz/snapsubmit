@@ -1,43 +1,14 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
-const PUBLIC_KEY = Deno.env.get("DISCORD_PUBLIC_KEY");
-
-function hexToUint8Array(hex) {
-  return new Uint8Array(hex.match(/.{1,2}/g).map(b => parseInt(b, 16)));
-}
-
-async function verifySignature(rawBody, signature, timestamp) {
-  if (!PUBLIC_KEY || !signature || !timestamp) return false;
-  try {
-    const key = await crypto.subtle.importKey(
-      "raw", hexToUint8Array(PUBLIC_KEY),
-      { name: "Ed25519" }, false, ["verify"]
-    );
-    return crypto.subtle.verify(
-      "Ed25519", key,
-      hexToUint8Array(signature),
-      new TextEncoder().encode(timestamp + rawBody)
-    );
-  } catch {
-    return false;
-  }
-}
-
 Deno.serve(async (req) => {
   try {
     const rawBody = await req.text();
-    const signature = req.headers.get("x-signature-ed25519");
-    const timestamp = req.headers.get("x-signature-timestamp");
     const interaction = JSON.parse(rawBody);
 
-    // Discord PING verification — always allow through so Discord can save the endpoint
+    // Discord PING — always respond immediately
     if (interaction.type === 1) {
       return Response.json({ type: 1 });
     }
-
-    // All other interactions require valid signature
-    const valid = await verifySignature(rawBody, signature, timestamp);
-    if (!valid) return new Response("invalid request signature", { status: 401 });
 
     // Button click (type 3 = MESSAGE_COMPONENT)
     if (interaction.type === 3) {
