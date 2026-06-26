@@ -11,6 +11,7 @@ import ScrollToTop from './components/ScrollToTop';
 import Home from "./pages/Home";
 import Admin from "./pages/Admin";
 import Analytics from "./pages/Analytics";
+import Action from "./pages/Action";
 
 const AuthenticatedApp = () => {
   return (
@@ -18,6 +19,7 @@ const AuthenticatedApp = () => {
       <Route path="/" element={<Home />} />
       <Route path="/admin" element={<Admin />} />
       <Route path="/analytics" element={<Analytics />} />
+      <Route path="/action" element={<Action />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
