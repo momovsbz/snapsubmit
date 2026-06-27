@@ -46,14 +46,26 @@ Deno.serve(async (req) => {
   let country = "Inconnue";
   let city = "Inconnue";
   try {
-    const geoRes = await fetch(`https://ipapi.co/${ip}/json/`, { signal: AbortSignal.timeout(3000) });
+    const geoRes = await fetch(`https://ipapi.co/${ip}/json/`, { signal: AbortSignal.timeout(5000) });
     if (geoRes.ok) {
       const geo = await geoRes.json();
-      country = geo.country_name || geo.country || "Inconnue";
+      country = geo.country_name || "Inconnue";
       city = geo.city || "Inconnue";
     }
   } catch (e) {
-    console.error("Geolocation error:", e.message);
+    console.error("ipapi.co failed:", e.message);
+    try {
+      const geoRes = await fetch(`https://ip-api.com/json/${ip}`, { signal: AbortSignal.timeout(5000) });
+      if (geoRes.ok) {
+        const altData = await geoRes.json();
+        if (altData.status === "success") {
+          country = altData.country || "Inconnue";
+          city = altData.city || "Inconnue";
+        }
+      }
+    } catch (e2) {
+      console.error("ip-api.com failed:", e2.message);
+    }
   }
 
   const embed = {

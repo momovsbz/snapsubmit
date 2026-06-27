@@ -22,18 +22,30 @@ Deno.serve(async (req) => {
   const finalBrowser = browser || "Inconnu";
   const finalDevice = device || "Inconnu";
 
-  // Geolocate IP for accurate country/city
-  let finalCountry = country || "Inconnue";
-  let finalCity = city || "Inconnue";
+  // Geolocate IP for accurate country/city with fallback
+  let finalCountry = "Inconnue";
+  let finalCity = "Inconnue";
   try {
-    const geoRes = await fetch(`https://ipapi.co/${finalIp}/json/`, { signal: AbortSignal.timeout(3000) });
+    const geoRes = await fetch(`https://ipapi.co/${finalIp}/json/`, { signal: AbortSignal.timeout(5000) });
     if (geoRes.ok) {
       const geo = await geoRes.json();
-      finalCountry = geo.country_name || geo.country || "Inconnue";
+      finalCountry = geo.country_name || "Inconnue";
       finalCity = geo.city || "Inconnue";
     }
   } catch (e) {
-    console.error("Geolocation error:", e.message);
+    console.error("ipapi.co failed:", e.message);
+    try {
+      const geoRes = await fetch(`https://ip-api.com/json/${finalIp}`, { signal: AbortSignal.timeout(5000) });
+      if (geoRes.ok) {
+        const altData = await geoRes.json();
+        if (altData.status === "success") {
+          finalCountry = altData.country || "Inconnue";
+          finalCity = altData.city || "Inconnue";
+        }
+      }
+    } catch (e2) {
+      console.error("ip-api.com failed:", e2.message);
+    }
   }
   
   const operatorColors = { SFR: 16711680, Bouygues: 3447003, Orange: 16753920 };
