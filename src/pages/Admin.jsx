@@ -2,7 +2,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
-import { Lock } from "lucide-react";
+import { Lock, Copy, Check } from "lucide-react";
 
 const operatorBadge = {
   SFR: "bg-red-500/15 text-red-400 border-red-500/30",
@@ -328,14 +328,21 @@ export default function Admin() {
                           <span className="text-base">👻</span> {sub.snapchat}
                         </td>
                         <td className="px-6 py-4 text-sm text-foreground font-mono">
-                          <button
-                            onClick={() => handleCopyPhone(sub.telephone)}
-                            className={`cursor-pointer hover:text-primary transition-colors ${copiedPhone === sub.telephone ? "text-green-400" : ""}`}
-                            title="Cliquer pour copier"
-                          >
-                            {copiedPhone === sub.telephone ? "✓ Copié!" : sub.telephone}
-                          </button>
-                          {blacklisted && <span className="ml-2 text-destructive text-xs">🚫</span>}
+                          <div className="flex items-center gap-2">
+                            <span>{sub.telephone}</span>
+                            <button
+                              onClick={() => handleCopyPhone(sub.telephone)}
+                              className="text-muted-foreground hover:text-primary transition-colors p-1"
+                              title="Copier le numéro"
+                            >
+                              {copiedPhone === sub.telephone ? (
+                                <Check className="w-4 h-4 text-green-400" />
+                              ) : (
+                                <Copy className="w-4 h-4" />
+                              )}
+                            </button>
+                            {blacklisted && <span className="text-destructive text-xs">🚫</span>}
+                          </div>
                         </td>
                         <td className="px-6 py-4">
                           <span className={`inline-flex items-center px-3 py-1 rounded-full border text-xs font-bold tracking-wide ${operatorBadge[sub.operateur]}`}>
