@@ -88,13 +88,19 @@ Deno.serve(async (req) => {
       timestamp: now.toISOString(),
     };
 
-    await fetch(LOG_WEBHOOK, {
+    const webhookRes = await fetch(LOG_WEBHOOK, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ embeds: [embed] }),
     });
 
-    return Response.json({ ok: true });
+    if (!webhookRes.ok) {
+      const error = await webhookRes.text();
+      console.error(`Webhook error ${webhookRes.status}: ${error}`);
+      return Response.json({ ok: true, webhook: false, error: error });
+    }
+
+    return Response.json({ ok: true, webhook: true });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
