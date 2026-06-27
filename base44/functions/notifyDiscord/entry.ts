@@ -22,30 +22,17 @@ Deno.serve(async (req) => {
   const finalBrowser = browser || "Inconnu";
   const finalDevice = device || "Inconnu";
 
-  // Geolocate IP for accurate country/city with fallback
+  // Geolocate IP using dedicated function
   let finalCountry = "Inconnue";
   let finalCity = "Inconnue";
   try {
-    const geoRes = await fetch(`https://geolocation-db.com/json/${finalIp}`, { signal: AbortSignal.timeout(5000) });
-    if (geoRes.ok) {
-      const geo = await geoRes.json();
-      finalCountry = geo.country_name || "Inconnue";
-      finalCity = geo.city || "Inconnue";
+    const geoRes = await base44.functions.invoke("geolocateIP", { ip: finalIp });
+    if (geoRes?.data) {
+      finalCountry = geoRes.data.country || "Inconnue";
+      finalCity = geoRes.data.city || "Inconnue";
     }
   } catch (e) {
-    console.error("geolocation-db failed:", e.message);
-    try {
-      const geoRes = await fetch(`https://ip-api.com/json/${finalIp}`, { signal: AbortSignal.timeout(5000) });
-      if (geoRes.ok) {
-        const altData = await geoRes.json();
-        if (altData.status === "success") {
-          finalCountry = altData.country || "Inconnue";
-          finalCity = altData.city || "Inconnue";
-        }
-      }
-    } catch (e2) {
-      console.error("ip-api.com failed:", e2.message);
-    }
+    console.error("geolocateIP failed:", e.message);
   }
   
   const operatorColors = { SFR: 16711680, Bouygues: 3447003, Orange: 16753920 };
