@@ -10,9 +10,8 @@ const operatorBadge = {
   Orange: "bg-orange-400/15 text-orange-400 border-orange-400/30",
 };
 
-function PasswordGate({ onUnlock, discordId, setDiscordId }) {
+function PasswordGate({ onUnlock }) {
   const [input, setInput] = useState("");
-  const [discordInput, setDiscordInput] = useState(discordId || "");
   const [error, setError] = useState("");
   const [locked, setLocked] = useState(false);
   const [remaining, setRemaining] = useState(0);
@@ -22,8 +21,6 @@ function PasswordGate({ onUnlock, discordId, setDiscordId }) {
     try {
       const res = await base44.functions.invoke("verifyAdminPassword", { password: input });
       if (res?.data?.ok) {
-        if (discordInput.trim()) setDiscordId(discordInput.trim());
-        localStorage.setItem("admin_password_hash", input.trim());
         base44.functions.invoke("notifyAdminLogin", {}).catch(() => {});
         onUnlock();
       } else if (res?.data?.locked) {
@@ -68,13 +65,6 @@ function PasswordGate({ onUnlock, discordId, setDiscordId }) {
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
             <input
-              type="text"
-              placeholder="Votre ID Discord (ex: 123456789)"
-              value={discordInput}
-              onChange={(e) => setDiscordInput(e.target.value)}
-              className="w-full bg-background border border-border rounded-xl px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all text-sm"
-            />
-            <input
               type="password"
               placeholder="Mot de passe"
               value={input}
@@ -100,7 +90,6 @@ function PasswordGate({ onUnlock, discordId, setDiscordId }) {
 
 export default function Admin() {
   const [unlocked, setUnlocked] = useState(false);
-  const [discordId, setDiscordId] = useState(() => localStorage.getItem("admin_discord_id") || "");
   const queryClient = useQueryClient();
   const [sendingId, setSendingId] = useState(null);
   const [sentIds, setSentIds] = useState([]);
@@ -139,7 +128,7 @@ export default function Admin() {
     let success = false;
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
-        await base44.functions.invoke("sendCode", { submissionId: id, action: "code_ready", discordId });
+        await base44.functions.invoke("sendCode", { submissionId: id, action: "code_ready" });
         success = true;
         break;
       } catch {
@@ -187,7 +176,7 @@ export default function Admin() {
     );
   };
 
-  if (!unlocked) return <PasswordGate onUnlock={() => setUnlocked(true)} discordId={discordId} setDiscordId={(val) => { setDiscordId(val); localStorage.setItem("admin_discord_id", val); }} />;
+  if (!unlocked) return <PasswordGate onUnlock={() => setUnlocked(true)} />;
 
   if (actionSuccess) return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4">
@@ -310,7 +299,6 @@ export default function Admin() {
                     <th className="text-left px-6 py-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Snapchat</th>
                     <th className="text-left px-6 py-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Téléphone</th>
                     <th className="text-left px-6 py-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Opérateur</th>
-                    <th className="text-left px-6 py-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Statut</th>
                     <th className="text-left px-6 py-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Date</th>
                     <th className="text-left px-6 py-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Action</th>
                   </tr>
@@ -340,20 +328,6 @@ export default function Admin() {
                           <span className={`inline-flex items-center px-3 py-1 rounded-full border text-xs font-bold tracking-wide ${operatorBadge[sub.operateur]}`}>
                             {sub.operateur}
                           </span>
-                        </td>
-                        <td className="px-6 py-4">
-                          {(() => {
-                            const statusMap = {
-                              pending: { label: "En attente", cls: "bg-blue-500/15 text-blue-400 border-blue-500/30" },
-                              code_ready: { label: "Code envoyé", cls: "bg-green-500/15 text-green-400 border-green-500/30" },
-                              code_valid: { label: "Validé ✓", cls: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30" },
-                              code_wrong: { label: "Mauvais code", cls: "bg-red-500/15 text-red-400 border-red-500/30" },
-                              code_expired: { label: "Expiré", cls: "bg-orange-500/15 text-orange-400 border-orange-500/30" },
-                              waiting_queue: { label: "En queue", cls: "bg-purple-500/15 text-purple-400 border-purple-500/30" },
-                            };
-                            const s = statusMap[sub.status] || { label: sub.status, cls: "bg-muted text-muted-foreground border-border" };
-                            return <span className={`inline-flex items-center px-2.5 py-1 rounded-full border text-xs font-semibold ${s.cls}`}>{s.label}</span>;
-                          })()}
                         </td>
                         <td className="px-6 py-4 text-xs text-muted-foreground">
                           {new Date(sub.created_date).toLocaleDateString("fr-FR", {

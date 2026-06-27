@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { ChevronRight, ArrowLeft } from "lucide-react";
-import { apiInvoke } from "@/lib/api";
+import { base44 } from "@/api/base44Client";
 
 export default function StatusCheck({ onBack }) {
    const [snapchat, setSnapchat] = useState("");
@@ -45,7 +45,7 @@ export default function StatusCheck({ onBack }) {
     setLoading(true);
     setError("");
     try {
-      const res = await apiInvoke("checkStatus", { submissionId, snapchat });
+      const res = await base44.functions.invoke("checkStatus", { submissionId, snapchat });
       setStatus(res?.data?.status || "pending");
     } catch {
       setError("Demande non trouvée");

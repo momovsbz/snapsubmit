@@ -4,21 +4,10 @@ import { createHash } from 'node:crypto';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const { ip, telephone, submissionId, adminSecret } = await req.json();
+    const { ip, telephone, submissionId } = await req.json();
 
     if (!ip && !telephone) {
       return Response.json({ error: 'IP ou téléphone requis' }, { status: 400 });
-    }
-
-    // Allow unauthenticated calls if adminSecret matches ADMIN_PASSWORD
-    const expectedSecret = Deno.env.get("ADMIN_PASSWORD");
-    const isSecretValid = adminSecret && adminSecret === expectedSecret;
-    if (!isSecretValid) {
-      try {
-        await base44.auth.me();
-      } catch {
-        return Response.json({ error: 'Non autorisé' }, { status: 401 });
-      }
     }
 
     // Add to blacklist

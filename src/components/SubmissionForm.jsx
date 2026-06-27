@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { AtSign, Phone, AlertTriangle, Star, Eye, Rocket, Zap, ChevronRight, ChevronDown } from "lucide-react";
+import { base44 } from "@/api/base44Client";
 import ReviewsTicker from "@/components/ReviewsTicker";
 import Logo from "@/components/Logo";
 

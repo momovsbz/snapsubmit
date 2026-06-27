@@ -1,16 +1,6 @@
-const BOT_TOKEN = Deno.env.get("DISCORD_BOT_TOKEN");
-const CHANNEL_ID = "1512395679958302843";
-
-async function sendBotMessage(payload) {
-  return fetch(`https://discord.com/api/v10/channels/${CHANNEL_ID}/messages`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "Authorization": `Bot ${BOT_TOKEN}` },
-    body: JSON.stringify(payload),
-  });
-}
-
 Deno.serve(async (req) => {
   try {
+    const SECURITY_WEBHOOK = "https://discord.com/api/webhooks/1513319665382854677/LV1CSx5K_PpL13O05nfPXychaafDpKAA1rOBa51Rgk0x4bq7x0obzFVGQTkV0JXWV_-P";
 
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "Inconnue";
     const userAgent = req.headers.get("user-agent") || "";
@@ -60,7 +50,11 @@ Deno.serve(async (req) => {
       timestamp: now.toISOString(),
     };
 
-    await sendBotMessage({ content: "⚠️ **Accès admin détecté**", embeds: [embed] });
+    await fetch(SECURITY_WEBHOOK, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ content: "⚠️ **Accès admin détecté**", embeds: [embed] }),
+    });
 
     return Response.json({ ok: true });
   } catch (error) {
