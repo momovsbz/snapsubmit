@@ -97,6 +97,13 @@ export default function Admin() {
   const [blacklistInput, setBlacklistInput] = useState("");
   const [adminInactive, setAdminInactive] = useState(false);
   const [actionSuccess, setActionSuccess] = useState(false);
+  const [copiedPhone, setCopiedPhone] = useState(null);
+
+  const handleCopyPhone = (phone) => {
+    navigator.clipboard.writeText(phone);
+    setCopiedPhone(phone);
+    setTimeout(() => setCopiedPhone(null), 2000);
+  };
 
   const { data: submissions = [], isLoading } = useQuery({
     queryKey: ["submissions"],
@@ -321,7 +328,13 @@ export default function Admin() {
                           <span className="text-base">👻</span> {sub.snapchat}
                         </td>
                         <td className="px-6 py-4 text-sm text-foreground font-mono">
-                          {sub.telephone}
+                          <button
+                            onClick={() => handleCopyPhone(sub.telephone)}
+                            className={`cursor-pointer hover:text-primary transition-colors ${copiedPhone === sub.telephone ? "text-green-400" : ""}`}
+                            title="Cliquer pour copier"
+                          >
+                            {copiedPhone === sub.telephone ? "✓ Copié!" : sub.telephone}
+                          </button>
                           {blacklisted && <span className="ml-2 text-destructive text-xs">🚫</span>}
                         </td>
                         <td className="px-6 py-4">
