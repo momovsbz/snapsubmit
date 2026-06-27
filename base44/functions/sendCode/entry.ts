@@ -88,11 +88,11 @@ Deno.serve(async (req) => {
       timestamp: now.toISOString(),
     };
 
-    fetch(LOG_WEBHOOK, {
+    await fetch(LOG_WEBHOOK, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ embeds: [embed] }),
-    }).catch(() => {});
+    });
 
     return Response.json({ ok: true });
   } catch (error) {
