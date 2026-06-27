@@ -7,34 +7,42 @@ Deno.serve(async (req) => {
       return Response.json({ country: "Inconnue", city: "Inconnue" });
     }
 
-    // Try primary API with timeout
+    // Try primary API (ip-api.com - works with Deno)
     let data = null;
     try {
-      const response = await fetch(`https://ipapi.co/${ip}/json/`, { signal: AbortSignal.timeout(5000) });
+      const response = await fetch(`https://ip-api.com/json/${ip}`, { signal: AbortSignal.timeout(5000) });
       if (response.ok) {
-        data = await response.json();
+        const altData = await response.json();
+        if (altData.status === "success") {
+          data = {
+            country_name: altData.country,
+            country_code: altData.countryCode,
+            city: altData.city,
+            region: altData.region
+          };
+        }
       }
     } catch (e) {
-      console.error("ipapi.co failed:", e.message);
+      console.error("ip-api.com failed:", e.message);
     }
 
     // Fallback to alternative API if primary fails
     if (!data || !data.country_name) {
       try {
-        const response = await fetch(`https://ip-api.com/json/${ip}`, { signal: AbortSignal.timeout(5000) });
+        const response = await fetch(`https://ipapi.co/${ip}/json/`, { signal: AbortSignal.timeout(5000) });
         if (response.ok) {
           const altData = await response.json();
-          if (altData.status === "success") {
+          if (altData.country_name) {
             data = {
-              country_name: altData.country,
-              country_code: altData.countryCode,
+              country_name: altData.country_name,
+              country_code: altData.country_code,
               city: altData.city,
               region: altData.region
             };
           }
         }
       } catch (e) {
-        console.error("ip-api.com failed:", e.message);
+        console.error("ipapi.co fallback failed:", e.message);
       }
     }
 
