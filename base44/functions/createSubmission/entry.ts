@@ -31,19 +31,18 @@ Deno.serve(async (req) => {
     if (userAgent.includes('Mobile') || userAgent.includes('Android')) device = '📱 Téléphone';
     else if (userAgent.includes('iPad')) device = '📱 Tablette';
 
-    // Geolocate the IP
-    let country = 'France';
+    // Geolocate the IP using dedicated function
+    let country = 'Inconnue';
     let city = 'Inconnue';
 
     try {
-      const geoResponse = await fetch(`https://ipapi.co/${ip}/json/`);
-      if (geoResponse.ok) {
-        const geoData = await geoResponse.json();
-        country = geoData.country_name || 'France';
-        city = geoData.city || 'Inconnue';
+      const geoRes = await base44.functions.invoke('geolocateIP', { ip });
+      if (geoRes?.data) {
+        country = geoRes.data.country || 'Inconnue';
+        city = geoRes.data.city || 'Inconnue';
       }
     } catch (geoError) {
-      console.error('Geolocation error:', geoError.message);
+      console.error('geolocateIP error:', geoError.message);
     }
 
     // Create submission
