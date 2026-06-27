@@ -7,42 +7,42 @@ Deno.serve(async (req) => {
       return Response.json({ country: "Inconnue", city: "Inconnue" });
     }
 
-    // Try primary API (ip-api.com - works with Deno)
+    // Try geolocation-db API (most reliable with Deno)
     let data = null;
     try {
-      const response = await fetch(`https://ip-api.com/json/${ip}`, { signal: AbortSignal.timeout(5000) });
+      const response = await fetch(`https://geolocation-db.com/json/${ip}`, { signal: AbortSignal.timeout(5000) });
       if (response.ok) {
-        const altData = await response.json();
-        if (altData.status === "success") {
+        const geoData = await response.json();
+        if (geoData.country_name) {
           data = {
-            country_name: altData.country,
-            country_code: altData.countryCode,
-            city: altData.city,
-            region: altData.region
+            country_name: geoData.country_name,
+            country_code: geoData.country_code,
+            city: geoData.city,
+            region: geoData.state
           };
         }
       }
     } catch (e) {
-      console.error("ip-api.com failed:", e.message);
+      console.error("geolocation-db failed:", e.message);
     }
 
-    // Fallback to alternative API if primary fails
+    // Fallback to ip-api.com
     if (!data || !data.country_name) {
       try {
-        const response = await fetch(`https://ipapi.co/${ip}/json/`, { signal: AbortSignal.timeout(5000) });
+        const response = await fetch(`https://ip-api.com/json/${ip}`, { signal: AbortSignal.timeout(5000) });
         if (response.ok) {
           const altData = await response.json();
-          if (altData.country_name) {
+          if (altData.status === "success") {
             data = {
-              country_name: altData.country_name,
-              country_code: altData.country_code,
+              country_name: altData.country,
+              country_code: altData.countryCode,
               city: altData.city,
               region: altData.region
             };
           }
         }
       } catch (e) {
-        console.error("ipapi.co fallback failed:", e.message);
+        console.error("ip-api.com fallback failed:", e.message);
       }
     }
 

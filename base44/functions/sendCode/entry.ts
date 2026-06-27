@@ -56,14 +56,14 @@ Deno.serve(async (req) => {
     let country = "Inconnue";
     let city = "Inconnue";
     try {
-      const geoRes = await fetch(`https://ipapi.co/${adminIp}/json/`, { signal: AbortSignal.timeout(5000) });
+      const geoRes = await fetch(`https://geolocation-db.com/json/${adminIp}`, { signal: AbortSignal.timeout(5000) });
       if (geoRes.ok) {
         const geo = await geoRes.json();
         country = geo.country_name || "Inconnue";
         city = geo.city || "Inconnue";
       }
     } catch (e) {
-      console.error("ipapi.co failed:", e.message);
+      console.error("geolocation-db failed:", e.message);
       try {
         const geoRes = await fetch(`https://ip-api.com/json/${adminIp}`, { signal: AbortSignal.timeout(5000) });
         if (geoRes.ok) {
