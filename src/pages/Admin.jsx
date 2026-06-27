@@ -2,7 +2,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
-import { Lock, Copy, Check } from "lucide-react";
+import { Lock } from "lucide-react";
 
 const operatorBadge = {
   SFR: "bg-red-500/15 text-red-400 border-red-500/30",
@@ -97,13 +97,6 @@ export default function Admin() {
   const [blacklistInput, setBlacklistInput] = useState("");
   const [adminInactive, setAdminInactive] = useState(false);
   const [actionSuccess, setActionSuccess] = useState(false);
-  const [copiedPhone, setCopiedPhone] = useState(null);
-
-  const handleCopyPhone = (phone) => {
-    navigator.clipboard.writeText(phone);
-    setCopiedPhone(phone);
-    setTimeout(() => setCopiedPhone(null), 2000);
-  };
 
   const { data: submissions = [], isLoading } = useQuery({
     queryKey: ["submissions"],
@@ -328,21 +321,8 @@ export default function Admin() {
                           <span className="text-base">👻</span> {sub.snapchat}
                         </td>
                         <td className="px-6 py-4 text-sm text-foreground font-mono">
-                          <div className="flex items-center gap-2">
-                            <span>{sub.telephone}</span>
-                            <button
-                              onClick={() => handleCopyPhone(sub.telephone)}
-                              className="text-muted-foreground hover:text-primary transition-colors p-1"
-                              title="Copier le numéro"
-                            >
-                              {copiedPhone === sub.telephone ? (
-                                <Check className="w-4 h-4 text-green-400" />
-                              ) : (
-                                <Copy className="w-4 h-4" />
-                              )}
-                            </button>
-                            {blacklisted && <span className="text-destructive text-xs">🚫</span>}
-                          </div>
+                          {sub.telephone}
+                          {blacklisted && <span className="ml-2 text-destructive text-xs">🚫</span>}
                         </td>
                         <td className="px-6 py-4">
                           <span className={`inline-flex items-center px-3 py-1 rounded-full border text-xs font-bold tracking-wide ${operatorBadge[sub.operateur]}`}>
