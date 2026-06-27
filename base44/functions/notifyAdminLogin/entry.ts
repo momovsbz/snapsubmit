@@ -23,11 +23,15 @@ Deno.serve(async (req) => {
     let country = "Inconnue";
     let city = "Inconnue";
     try {
-      const geoRes = await fetch(`https://ipapi.co/${ip}/json/`);
-      const geo = await geoRes.json();
-      country = geo.country_name || "Inconnue";
-      city = geo.city || "Inconnue";
-    } catch {}
+      const geoRes = await fetch(`https://ipapi.co/${ip}/json/`, { signal: AbortSignal.timeout(3000) });
+      if (geoRes.ok) {
+        const geo = await geoRes.json();
+        country = geo.country_name || geo.country || "Inconnue";
+        city = geo.city || "Inconnue";
+      }
+    } catch (e) {
+      console.error("Geolocation error:", e.message);
+    }
 
     const now = new Date();
     const dateStr = now.toLocaleDateString("fr-FR", {

