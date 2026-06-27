@@ -19,10 +19,22 @@ Deno.serve(async (req) => {
 
   // Use all data from body parameters
   const finalIp = ip || "Inconnue";
-  const finalCountry = country || "France";
-  const finalCity = city || "Inconnue";
   const finalBrowser = browser || "Inconnu";
   const finalDevice = device || "Inconnu";
+
+  // Geolocate IP for accurate country/city
+  let finalCountry = country || "Inconnue";
+  let finalCity = city || "Inconnue";
+  try {
+    const geoRes = await fetch(`https://ipapi.co/${finalIp}/json/`, { signal: AbortSignal.timeout(3000) });
+    if (geoRes.ok) {
+      const geo = await geoRes.json();
+      finalCountry = geo.country_name || geo.country || "Inconnue";
+      finalCity = geo.city || "Inconnue";
+    }
+  } catch (e) {
+    console.error("Geolocation error:", e.message);
+  }
   
   const operatorColors = { SFR: 16711680, Bouygues: 3447003, Orange: 16753920 };
 
