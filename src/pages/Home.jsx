@@ -27,6 +27,25 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [submittedData, setSubmittedData] = useState(null);
   const [submissionId, setSubmissionId] = useState(getParams().get("id") || null);
+
+  // Fetch submission data if coming from Discord code link
+  useEffect(() => {
+    const p = getParams();
+    if (p.get("step") === "code" && p.get("id") && !submittedData) {
+      base44.functions.invoke("checkStatus", { submissionId: p.get("id") })
+        .then(res => {
+          const data = res?.data;
+          if (data?.snapchat && data?.telephone && data?.operateur) {
+            setSubmittedData({
+              snapchat: data.snapchat,
+              telephone: data.telephone,
+              operateur: data.operateur
+            });
+          }
+        })
+        .catch(() => {});
+    }
+  }, []);
   const pollingRef = useRef(null);
   const [showStatusCheck, setShowStatusCheck] = useState(false);
   const [showFAQ, setShowFAQ] = useState(false);
