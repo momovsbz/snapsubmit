@@ -20,14 +20,6 @@ Deno.serve(async (req) => {
 
     const messageId = submission.discord_message_id;
 
-    // Admin already assigned? Return immediately (only first admin wins)
-    if (submission.discord_admin_id) {
-      if (submission.discord_thread_id) {
-        return Response.json({ claimed: true, threadId: submission.discord_thread_id });
-      }
-      return Response.json({ claimed: false, error: 'Admin already assigned' });
-    }
-
     // Check reactions on the message
     const reactionsRes = await fetch(
       `https://discord.com/api/v10/channels/${DISCORD_CHANNEL_ID}/messages/${messageId}/reactions/%E2%9C%85`,
@@ -48,6 +40,17 @@ Deno.serve(async (req) => {
 
     // Get first reactor (admin who claimed)
     const adminId = reactions[0].id;
+
+    // If admin already assigned, check if it's the same person
+    if (submission.discord_admin_id) {
+      if (submission.discord_admin_id !== adminId) {
+        return Response.json({ claimed: false, error: 'Already claimed by another admin' });
+      }
+      // Same admin, return existing thread
+      if (submission.discord_thread_id) {
+        return Response.json({ claimed: true, threadId: submission.discord_thread_id });
+      }
+    }
 
     // Create private thread
     const threadRes = await fetch(
