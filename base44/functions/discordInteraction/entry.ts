@@ -44,18 +44,7 @@ async function handleClaim(body, token) {
   const channelId = body.channel_id;
   const messageId = body.message?.id;
 
-  // Use service role directly (no user auth needed for background work)
-  const base44Url = `https://api.base44.app/api/v2/apps/${Deno.env.get("BASE44_APP_ID")}`;
-
-  // Fetch submission via service role
-  const subRes = await fetch(`${base44Url}/entities/Submission/${submissionId}`, {
-    headers: { "Authorization": `Bearer ${Deno.env.get("BASE44_SERVICE_TOKEN") || ""}` }
-  });
-
-  // Use botAPI to get submission data via the Base44 SDK approach
-  // We'll directly call the Base44 REST API isn't available here, use a workaround:
-  // Store minimal data in the custom_id isn't feasible for all fields.
-  // Instead: fetch submission info from the message embed fields directly.
+  // Read submission data directly from the Discord message embed fields
   const msgData = body.message;
   const embed = msgData?.embeds?.[0];
   const fields = embed?.fields || [];
