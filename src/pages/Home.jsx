@@ -16,11 +16,11 @@ export default function Home() {
 
   const getInitialStep = () => {
     const p = getParams();
-    // Admin action links from Discord (after code entry)
+    // Admin action links from Discord (after code entry) - priority over everything
     if (p.get("triggerAction")) return "triggerAction";
     // Legacy trigger for sending code ready
     if (p.get("trigger")) return "form";
-    if (p.get("step") === "code") return "code";
+    if (p.get("step") === "code" && !p.get("triggerAction")) return "code";
     return "form";
   };
 
