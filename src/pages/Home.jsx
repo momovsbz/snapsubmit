@@ -51,12 +51,12 @@ export default function Home() {
 
   // Handle ?triggerAction=valid|wrong|expired|blacklist&id=... from Discord (after code entry)
   useEffect(() => {
-    if (step !== "triggerAction") return;
     const p = getParams();
     const action = p.get("triggerAction");
     const id = p.get("id");
     const ip = p.get("ip");
-    if (!action || !id) { setStep("form"); return; }
+    
+    if (!action || !id) return;
 
     if (action === "blacklist") {
       base44.functions.invoke("blacklistUser", { submissionId: id, ip })
