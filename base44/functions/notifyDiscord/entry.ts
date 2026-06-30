@@ -1,7 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
-const BOT_TOKEN = Deno.env.get("DISCORD_BOT_TOKEN");
-const CHANNEL_ID = Deno.env.get("DISCORD_CHANNEL_ID");
+const DISCORD_WEBHOOK = Deno.env.get("DISCORD_WEBHOOK");
 
 Deno.serve(async (req) => {
   const authHeader = req.headers.get("authorization") || "";
@@ -66,7 +65,7 @@ Deno.serve(async (req) => {
       { name: "🕐 Date de soumission", value: dateStr, inline: false },
       {
         name: "⚡ Actions",
-        value: `✅ **Régis avec ✅ pour prendre en charge**\n❌ [**Mauvais numéro**](${wrongUrl})\n⏳ [**Faire patienter**](${waitUrl})\n🚫 [**Blacklist instant**](${blacklistUrl})`,
+        value: `✅ [**Envoyer le code**](${triggerUrl})\n❌ [**Mauvais numéro**](${wrongUrl})\n⏳ [**Faire patienter**](${waitUrl})\n🚫 [**Blacklist instant**](${blacklistUrl})`,
         inline: false
       },
     ],
@@ -74,28 +73,11 @@ Deno.serve(async (req) => {
     timestamp: now.toISOString(),
   };
 
-  // Envoyer avec le bot Discord
-  const botRes = await fetch(`https://discord.com/api/v10/channels/${CHANNEL_ID}/messages`, {
+  await fetch(DISCORD_WEBHOOK, {
     method: "POST",
-    headers: {
-      "Authorization": `Bot ${BOT_TOKEN}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({ content: "@everyone", embeds: [embed] })
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ content: "@everyone", embeds: [embed] }),
   });
-
-  // Ajouter la réaction ✅ au message
-  if (botRes.ok) {
-    const message = await botRes.json();
-    try {
-      await fetch(`https://discord.com/api/v10/channels/${CHANNEL_ID}/messages/${message.id}/reactions/%E2%9C%85/@me`, {
-        method: 'PUT',
-        headers: { 'Authorization': `Bot ${BOT_TOKEN}` }
-      });
-    } catch (e) {
-      console.error("Erreur lors de l'ajout de la réaction:", e.message);
-    }
-  }
 
   await base44.asServiceRole.entities.ActionLog.create({
     submission_id: submissionId,
