@@ -75,7 +75,7 @@ Deno.serve(async (req) => {
         discord_user_id: userId
       });
 
-      // Créer le thread
+      // Créer le thread privé
       const threadRes = await fetch(
         `https://discord.com/api/v10/channels/${CHANNEL_ID}/messages/${message.id}/threads`,
         {
@@ -86,6 +86,8 @@ Deno.serve(async (req) => {
           },
           body: JSON.stringify({
             name: `✅ Prise en charge — @${snapchat}`,
+            type: 12,
+            invitable: false,
             auto_archive_duration: 1440
           })
         }
