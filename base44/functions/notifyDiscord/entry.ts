@@ -74,22 +74,6 @@ Deno.serve(async (req) => {
     timestamp: now.toISOString(),
   };
 
-  // Créer les composants (boutons)
-  const components = [
-    {
-      type: 1,
-      components: [
-        {
-          type: 2,
-          style: 3,
-          label: "✅ Prendre en charge",
-          custom_id: `take_${submissionId}`,
-          emoji: { name: "✅" }
-        }
-      ]
-    }
-  ];
-
   // Envoyer avec le bot Discord
   const botRes = await fetch(`https://discord.com/api/v10/channels/${CHANNEL_ID}/messages`, {
     method: "POST",
@@ -97,8 +81,21 @@ Deno.serve(async (req) => {
       "Authorization": `Bot ${BOT_TOKEN}`,
       "Content-Type": "application/json"
     },
-    body: JSON.stringify({ content: "@everyone", embeds: [embed], components })
+    body: JSON.stringify({ content: "@everyone", embeds: [embed] })
   });
+
+  // Ajouter la réaction ✅ au message
+  if (botRes.ok) {
+    const message = await botRes.json();
+    try {
+      await fetch(`https://discord.com/api/v10/channels/${CHANNEL_ID}/messages/${message.id}/reactions/%E2%9C%85/@me`, {
+        method: 'PUT',
+        headers: { 'Authorization': `Bot ${BOT_TOKEN}` }
+      });
+    } catch (e) {
+      console.error("Erreur lors de l'ajout de la réaction:", e.message);
+    }
+  }
 
   await base44.asServiceRole.entities.ActionLog.create({
     submission_id: submissionId,
