@@ -20,7 +20,6 @@ export default function Home() {
     // Legacy trigger for sending code ready
     if (p.get("trigger")) return "form";
     if (p.get("step") === "code") return "code";
-    if (p.get("step") === "validation") return "validation";
     return "form";
   };
 
@@ -66,15 +65,6 @@ export default function Home() {
           window.history.replaceState({}, "", "/");
           setStep("adminDone");
         });
-    } else if (action === "send_code") {
-      // Redirect user to code entry page
-      setSubmissionId(id);
-      base44.functions.invoke("sendCode", { submissionId: id, action: "code_ready" })
-        .catch(() => {})
-        .finally(() => {
-          window.history.replaceState({}, "", `/`);
-          setStep("code");
-        });
     } else {
       base44.functions.invoke("sendCode", { submissionId: id, action })
         .catch(() => {})
@@ -85,19 +75,13 @@ export default function Home() {
     }
   }, []);
 
-  // Poll every 1.5s when on "validation" step (waiting for code_ready or Discord thread claim)
+  // Poll every 3s when on "validation" step (waiting for code_ready)
   useEffect(() => {
     if (step === "validation" && submissionId) {
       pollingRef.current = setInterval(async () => {
         // Check admin status
         const adminRes = await base44.functions.invoke("checkAdminStatus", {});
         setAdminInactive(adminRes?.data?.is_inactive || false);
-
-        // Check Discord reaction (claim) - no time limit, will keep checking
-        const claimRes = await base44.functions.invoke("checkDiscordReaction", { submissionId }).catch(() => null);
-        if (claimRes?.data?.claimed) {
-          console.log("Discord claim detected, thread created");
-        }
 
         const res = await base44.functions.invoke("checkStatus", { submissionId });
         const s = res?.data?.status;

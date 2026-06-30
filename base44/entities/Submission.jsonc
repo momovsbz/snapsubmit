@@ -45,10 +45,6 @@
       "type": "string",
       "description": "Pays d\u00e9tect\u00e9 par g\u00e9olocalisation"
     },
-    "city": {
-      "type": "string",
-      "description": "Ville d\u00e9tect\u00e9e par g\u00e9olocalisation"
-    },
     "browser": {
       "type": "string",
       "description": "Navigateur utilis\u00e9"
@@ -61,18 +57,6 @@
         "desktop"
       ],
       "description": "Type d'appareil"
-    },
-    "discord_message_id": {
-      "type": "string",
-      "description": "ID du message Discord post\u00e9"
-    },
-    "discord_thread_id": {
-      "type": "string",
-      "description": "ID du thread priv\u00e9 Discord"
-    },
-    "discord_admin_id": {
-      "type": "string",
-      "description": "ID de l'admin Discord qui a pris en charge"
     }
   },
   "required": [
