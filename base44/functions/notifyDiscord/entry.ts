@@ -84,19 +84,6 @@ Deno.serve(async (req) => {
     body: JSON.stringify({ content: "@everyone", embeds: [embed] })
   });
 
-  // Ajouter la réaction ✅ au message
-  if (botRes.ok) {
-    const message = await botRes.json();
-    try {
-      await fetch(`https://discord.com/api/v10/channels/${CHANNEL_ID}/messages/${message.id}/reactions/%E2%9C%85/@me`, {
-        method: 'PUT',
-        headers: { 'Authorization': `Bot ${BOT_TOKEN}` }
-      });
-    } catch (e) {
-      console.error("Erreur lors de l'ajout de la réaction:", e.message);
-    }
-  }
-
   await base44.asServiceRole.entities.ActionLog.create({
     submission_id: submissionId,
     action: "submitted",
