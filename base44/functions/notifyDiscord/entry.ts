@@ -81,35 +81,21 @@ Deno.serve(async (req) => {
       "Authorization": `Bot ${BOT_TOKEN}`,
       "Content-Type": "application/json"
     },
-    body: JSON.stringify({
-      content: "@everyone",
-      embeds: [embed],
-      components: [{
-        type: 1,
-        components: [{
-          type: 2,
-          style: 1,
-          label: "✅ Prendre en charge",
-          custom_id: `reaction_${submissionId}`
-        }]
-      }]
-    })
+    body: JSON.stringify({ content: "@everyone", embeds: [embed] })
   });
 
-  if (!botRes.ok) {
-    const errorText = await botRes.text();
-    console.error('Message send failed:', botRes.status, errorText);
-    return Response.json({ error: 'Failed to send Discord message' }, { status: 500 });
+  // Ajouter la réaction ✅ au message
+  if (botRes.ok) {
+    const message = await botRes.json();
+    try {
+      await fetch(`https://discord.com/api/v10/channels/${CHANNEL_ID}/messages/${message.id}/reactions/%E2%9C%85/@me`, {
+        method: 'PUT',
+        headers: { 'Authorization': `Bot ${BOT_TOKEN}` }
+      });
+    } catch (e) {
+      console.error("Erreur lors de l'ajout de la réaction:", e.message);
+    }
   }
-
-  const botMessage = await botRes.json();
-  const messageId = botMessage.id;
-
-  // Ajouter la réaction ✅ au message pour que les admins puissent cliquer
-  await fetch(`https://discord.com/api/v10/channels/${CHANNEL_ID}/messages/${messageId}/reactions/%E2%9C%85/@me`, {
-    method: 'PUT',
-    headers: { 'Authorization': `Bot ${BOT_TOKEN}` }
-  }).catch(e => console.log('React add failed (non-critical):', e.message));
 
   await base44.asServiceRole.entities.ActionLog.create({
     submission_id: submissionId,

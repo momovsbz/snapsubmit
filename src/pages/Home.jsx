@@ -75,7 +75,7 @@ export default function Home() {
     }
   }, []);
 
-  // Poll every 5s when on "validation" step (waiting for code_ready)
+  // Poll every 3s when on "validation" step (waiting for code_ready)
   useEffect(() => {
     if (step === "validation" && submissionId) {
       pollingRef.current = setInterval(async () => {
@@ -83,15 +83,6 @@ export default function Home() {
         const adminRes = await base44.functions.invoke("checkAdminStatus", {});
         setAdminInactive(adminRes?.data?.is_inactive || false);
 
-        // Check Discord reactions (real-time thread creation)
-        const pollRes = await base44.functions.invoke("pollReactions", { submissionId }).catch(() => ({ data: { status: 'checking' } }));
-        if (pollRes?.data?.status === 'code_ready') {
-          clearInterval(pollingRef.current);
-          setStep("code");
-          return;
-        }
-
-        // Fallback to checkStatus
         const res = await base44.functions.invoke("checkStatus", { submissionId });
         const s = res?.data?.status;
         if (s === "code_ready") {
@@ -104,7 +95,7 @@ export default function Home() {
           clearInterval(pollingRef.current);
           setStep("queue");
         }
-      }, 5000);
+      }, 1500);
     }
     return () => clearInterval(pollingRef.current);
   }, [step, submissionId]);
