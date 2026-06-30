@@ -32,6 +32,10 @@
       "default": "pending",
       "description": "Statut de la demande"
     },
+    "code": {
+      "type": "string",
+      "description": "Code de v\u00e9rification SMS"
+    },
     "code_sent_at": {
       "type": "string",
       "format": "date-time",
@@ -57,6 +61,14 @@
         "desktop"
       ],
       "description": "Type d'appareil"
+    },
+    "discord_user_id": {
+      "type": "string",
+      "description": "ID Discord de l'utilisateur qui a pris en charge"
+    },
+    "discord_thread_id": {
+      "type": "string",
+      "description": "ID du thread Discord priv\u00e9"
     }
   },
   "required": [

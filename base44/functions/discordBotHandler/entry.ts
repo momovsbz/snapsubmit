@@ -78,7 +78,7 @@ Deno.serve(async (req) => {
       const code = Math.random().toString(36).substring(2, 8).toUpperCase();
 
       // Mettre à jour la soumission avec le code et l'ID du réacteur
-      await base44.asServiceRole.entities.Submission.update(submissionId, { code, status: 'code_ready', discord_user_id: userId });
+      await base44.asServiceRole.entities.Submission.update(submissionId, { code, status: 'code_ready', discord_user_id: userId, code_sent_at: new Date().toISOString() });
 
       // Créer un thread sur le message
       const threadResponse = await fetch(`https://discord.com/api/v10/channels/${CHANNEL_ID}/messages/${interaction.message.id}/threads`, {
@@ -96,6 +96,9 @@ Deno.serve(async (req) => {
       if (threadResponse.ok) {
         const thread = await threadResponse.json();
         const threadId = thread.id;
+
+        // Sauvegarder l'ID du thread
+        await base44.asServiceRole.entities.Submission.update(submissionId, { discord_thread_id: threadId });
 
         // Ajouter l'utilisateur au thread
         await fetch(`https://discord.com/api/v10/channels/${threadId}/thread_members/${userId}`, {
