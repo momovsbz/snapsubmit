@@ -57,10 +57,6 @@
         "desktop"
       ],
       "description": "Type d'appareil"
-    },
-    "claimed_by": {
-      "type": "string",
-      "description": "Discord user ID de l'admin qui a pris en charge"
     }
   },
   "required": [
