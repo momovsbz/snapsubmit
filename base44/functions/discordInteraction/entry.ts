@@ -41,9 +41,10 @@ async function sendDM(userId, content) {
     },
     body: JSON.stringify({ recipient_id: userId })
   });
-  const dmChannel = await dmRes.json();
+  const dmData = await dmRes.json();
+  if (!dmData.id) throw new Error("Failed to create DM channel");
 
-  await fetch(`https://discord.com/api/v10/channels/${dmChannel.id}/messages`, {
+  await fetch(`https://discord.com/api/v10/channels/${dmData.id}/messages`, {
     method: "POST",
     headers: {
       "Authorization": `Bot ${BOT_TOKEN}`,
@@ -68,33 +69,48 @@ Deno.serve(async (req) => {
       return new Response("Invalid signature", { status: 401 });
     }
 
-    const interaction = JSON.parse(body);
+    const event = JSON.parse(body);
 
-    // PING verification (required by Discord)
-    if (interaction.type === 1) {
+    // PING verification
+    if (event.type === 1) {
       return Response.json({ type: 1 });
     }
 
-    // Button click (MESSAGE_COMPONENT)
-    if (interaction.type === 3) {
-      const customId = interaction.data.custom_id;
-      const userId = interaction.member?.user?.id || interaction.user?.id;
-      const username = interaction.member?.user?.username || interaction.user?.username || "Admin";
+    // MESSAGE_REACTION_ADD
+    if (event.type === 0) {
+      const { emoji, user_id, message_id, channel_id } = event.d;
+      const userId = user_id;
+      
+      // Only handle if the reaction is 🎯
+      if (emoji.name !== "🎯") {
+        return new Response("", { status: 204 });
+      }
 
-      if (customId.startsWith("claim_")) {
-        const submissionId = customId.replace("claim_", "");
-        const base44 = createClientFromRequest(req);
+      const base44 = createClientFromRequest(req);
 
+      // Extract submissionId from embed footer (stored in message_id pattern or fetch message)
+      const msg = await fetch(`https://discord.com/api/v10/channels/${channel_id}/messages/${message_id}`, {
+        headers: { "Authorization": `Bot ${BOT_TOKEN}` }
+      }).then(r => r.json());
+
+      const footerText = msg.embeds?.[0]?.footer?.text || "";
+      const submissionIdMatch = footerText.match(/ID: ([a-zA-Z0-9]+)/);
+      if (!submissionIdMatch) {
+        return new Response("", { status: 204 });
+      }
+
+      const submissionId = submissionIdMatch[1];
+
+      try {
         const submission = await base44.asServiceRole.entities.Submission.get(submissionId);
 
         if (submission?.claimed_by) {
-          return Response.json({
-            type: 4,
-            data: {
-              content: "❌ Cette soumission a déjà été prise en charge.",
-              flags: 64
-            }
+          // Already claimed, remove this reaction
+          await fetch(`https://discord.com/api/v10/channels/${channel_id}/messages/${message_id}/reactions/${encodeURIComponent(emoji.name)}/${userId}`, {
+            method: "DELETE",
+            headers: { "Authorization": `Bot ${BOT_TOKEN}` }
           });
+          return new Response("", { status: 204 });
         }
 
         // Mark as claimed
@@ -125,44 +141,16 @@ Deno.serve(async (req) => {
         ].join("\n");
 
         await sendDM(userId, dmContent);
-
-        // Disable the button on the original message
-        const channelId = interaction.channel_id;
-        const messageId = interaction.message.id;
-
-        await fetch(`https://discord.com/api/v10/channels/${channelId}/messages/${messageId}`, {
-          method: "PATCH",
-          headers: {
-            "Authorization": `Bot ${BOT_TOKEN}`,
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            components: [{
-              type: 1,
-              components: [{
-                type: 2,
-                style: 2,
-                label: `✅ Pris en charge par ${username}`,
-                custom_id: `claimed_${submissionId}`,
-                disabled: true
-              }]
-            }]
-          })
-        });
-
-        return Response.json({
-          type: 4,
-          data: {
-            content: `✅ Tu as pris en charge cette soumission! Vérifie tes DMs 📩`,
-            flags: 64
-          }
-        });
+      } catch (e) {
+        console.error("Error processing claim:", e.message);
       }
+
+      return new Response("", { status: 204 });
     }
 
-    return Response.json({ type: 1 });
+    return new Response("", { status: 204 });
   } catch (error) {
     console.error("Error:", error.message);
-    return Response.json({ error: error.message }, { status: 500 });
+    return new Response("Internal error", { status: 500 });
   }
 });

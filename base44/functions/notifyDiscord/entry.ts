@@ -52,7 +52,7 @@ Deno.serve(async (req) => {
       timestamp: now.toISOString(),
     };
 
-    // Send via bot with a "Claim" button
+    // Send via bot
     const msgRes = await fetch(`https://discord.com/api/v10/channels/${CHANNEL_ID}/messages`, {
       method: "POST",
       headers: {
@@ -61,18 +61,18 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({
         content: "@everyone",
-        embeds: [embed],
-        components: [{
-          type: 1,
-          components: [{
-            type: 2,
-            style: 1,
-            label: "🎯 Prendre en charge",
-            custom_id: `claim_${submissionId}`
-          }]
-        }]
+        embeds: [embed]
       })
     });
+
+    // Add 🎯 reaction to the message
+    const msgData = await msgRes.json();
+    if (msgData.id) {
+      await fetch(`https://discord.com/api/v10/channels/${CHANNEL_ID}/messages/${msgData.id}/reactions/${encodeURIComponent("🎯")}/@me`, {
+        method: "PUT",
+        headers: { "Authorization": `Bot ${BOT_TOKEN}` }
+      });
+    }
 
     if (!msgRes.ok) {
       const err = await msgRes.text();
