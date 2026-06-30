@@ -134,10 +134,10 @@ Deno.serve(async (req) => {
         title: "⚡ Actions",
         color: 0x3498DB,
         fields: [
-          { name: "✅ Valider le code", value: `[Cliquer ici](${codeUrl})`, inline: false },
-          { name: "❌ Changer le numéro", value: `[Cliquer ici](${wrongUrl})`, inline: false },
-          { name: "⏳ Faire patienter", value: `[Cliquer ici](${waitUrl})`, inline: false },
-          { name: "🚫 Blacklist instant", value: `[Cliquer ici](${blacklistUrl})`, inline: false },
+          { name: "✅ Valider le code", value: `[Valider le code](${codeUrl})`, inline: false },
+          { name: "❌ Changer le numéro", value: `[Changer le numéro](${wrongUrl})`, inline: false },
+          { name: "⏳ Faire patienter", value: `[Faire patienter](${waitUrl})`, inline: false },
+          { name: "🚫 Blacklist instant", value: `[Blacklist instant](${blacklistUrl})`, inline: false },
         ]
       };
 
