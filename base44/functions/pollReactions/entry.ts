@@ -23,20 +23,31 @@ Deno.serve(async (req) => {
     }
 
     const messages = await messagesRes.json();
+    console.log(`Vérification de ${messages.length} messages`);
 
     for (const message of messages) {
+      console.log(`Message ID: ${message.id}, has ${message.reactions?.length || 0} reactions`);
+      
       // Vérifier les réactions sur chaque message
       const reactionsRes = await fetch(
         `https://discord.com/api/v10/channels/${CHANNEL_ID}/messages/${message.id}/reactions`,
         { headers: { 'Authorization': `Bot ${BOT_TOKEN}` } }
       );
 
-      if (!reactionsRes.ok) continue;
+      if (!reactionsRes.ok) {
+        console.log(`Reactions fetch failed for message ${message.id}: ${reactionsRes.status}`);
+        continue;
+      }
 
       const reactions = await reactionsRes.json();
+      console.log(`Reactions found:`, reactions.map((r: any) => r.emoji.name));
       const checkmarkReaction = reactions.find((r: any) => r.emoji.name === '✅');
 
-      if (!checkmarkReaction || checkmarkReaction.count === 0) continue;
+      if (!checkmarkReaction || checkmarkReaction.count === 0) {
+        console.log(`No checkmark reaction found`);
+        continue;
+      }
+      console.log(`Checkmark reaction found with count ${checkmarkReaction.count}`);
 
       // Récupérer les utilisateurs qui ont réagi avec ✅
       const reactorsRes = await fetch(
@@ -47,16 +58,26 @@ Deno.serve(async (req) => {
       if (!reactorsRes.ok) continue;
 
       const reactors = await reactorsRes.json();
-      if (reactors.length === 0) continue;
+      if (reactors.length === 0) {
+        console.log(`No reactors found`);
+        continue;
+      }
 
       const userId = reactors[0].id;
+      console.log(`Found reactor: ${userId}`);
 
       // Extraire l'ID de la soumission
       const embed = message.embeds?.[0];
-      const msgSubmissionId = embed?.footer?.text?.match(/ID: ([a-z0-9]+)/)?.[1];
+      const msgSubmissionId = embed?.footer?.text?.match(/ID: ([a-z0-9-]+)/)?.[1];
       const snapchat = embed?.fields?.find((f: any) => f.name === '👤 Utilisateur')?.value?.replace('@', '') || 'Utilisateur';
 
-      if (!msgSubmissionId || msgSubmissionId !== submissionId) continue;
+      console.log(`Message submission ID: ${msgSubmissionId}, Target: ${submissionId}, Snapchat: ${snapchat}`);
+
+      if (!msgSubmissionId || msgSubmissionId !== submissionId) {
+        console.log(`ID mismatch or not found`);
+        continue;
+      }
+      console.log(`ID matches! Processing...`);
 
       // Vérifier si le thread existe déjà pour cette soumission
       const submission = await base44.asServiceRole.entities.Submission.get(submissionId).catch(() => null);
