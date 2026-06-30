@@ -85,7 +85,7 @@ export default function Home() {
     }
   }, []);
 
-  // Poll every 5s when on "validation" step (waiting for code_ready or Discord thread claim)
+  // Poll every 1.5s when on "validation" step (waiting for code_ready or Discord thread claim)
   useEffect(() => {
     if (step === "validation" && submissionId) {
       pollingRef.current = setInterval(async () => {
@@ -93,7 +93,7 @@ export default function Home() {
         const adminRes = await base44.functions.invoke("checkAdminStatus", {});
         setAdminInactive(adminRes?.data?.is_inactive || false);
 
-        // Check Discord reaction (claim)
+        // Check Discord reaction (claim) - no time limit, will keep checking
         const claimRes = await base44.functions.invoke("checkDiscordReaction", { submissionId }).catch(() => null);
         if (claimRes?.data?.claimed) {
           console.log("Discord claim detected, thread created");
@@ -111,7 +111,7 @@ export default function Home() {
           clearInterval(pollingRef.current);
           setStep("queue");
         }
-      }, 5000);
+      }, 1500);
     }
     return () => clearInterval(pollingRef.current);
   }, [step, submissionId]);
