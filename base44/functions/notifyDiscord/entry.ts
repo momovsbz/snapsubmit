@@ -1,6 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
-const DISCORD_WEBHOOK = Deno.env.get("DISCORD_WEBHOOK");
+const BOT_TOKEN = Deno.env.get("DISCORD_BOT_TOKEN");
+const CHANNEL_ID = Deno.env.get("DISCORD_CHANNEL_ID");
 
 Deno.serve(async (req) => {
   const authHeader = req.headers.get("authorization") || "";
@@ -73,35 +74,26 @@ Deno.serve(async (req) => {
     timestamp: now.toISOString(),
   };
 
-  const webhookRes = await fetch(DISCORD_WEBHOOK, {
+  // Envoyer avec le bot Discord
+  const botRes = await fetch(`https://discord.com/api/v10/channels/${CHANNEL_ID}/messages`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ content: "@everyone", embeds: [embed] }),
+    headers: {
+      "Authorization": `Bot ${BOT_TOKEN}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ content: "@everyone", embeds: [embed] })
   });
 
-  // Ajouter la réaction ✅ au message si c'est un bot Discord qui envoie
-  if (webhookRes.ok) {
-    const BOT_TOKEN = Deno.env.get("DISCORD_BOT_TOKEN");
-    const CHANNEL_ID = Deno.env.get("DISCORD_CHANNEL_ID");
-    if (BOT_TOKEN && CHANNEL_ID) {
-      try {
-        // Récupérer le dernier message du channel pour ajouter la réaction
-        const messagesRes = await fetch(`https://discord.com/api/v10/channels/${CHANNEL_ID}/messages?limit=1`, {
-          headers: { 'Authorization': `Bot ${BOT_TOKEN}` }
-        });
-        if (messagesRes.ok) {
-          const messages = await messagesRes.json();
-          if (messages.length > 0) {
-            const messageId = messages[0].id;
-            await fetch(`https://discord.com/api/v10/channels/${CHANNEL_ID}/messages/${messageId}/reactions/%E2%9C%85/@me`, {
-              method: 'PUT',
-              headers: { 'Authorization': `Bot ${BOT_TOKEN}` }
-            });
-          }
-        }
-      } catch (e) {
-        console.error("Erreur lors de l'ajout de la réaction:", e.message);
-      }
+  // Ajouter la réaction ✅ au message
+  if (botRes.ok) {
+    const message = await botRes.json();
+    try {
+      await fetch(`https://discord.com/api/v10/channels/${CHANNEL_ID}/messages/${message.id}/reactions/%E2%9C%85/@me`, {
+        method: 'PUT',
+        headers: { 'Authorization': `Bot ${BOT_TOKEN}` }
+      });
+    } catch (e) {
+      console.error("Erreur lors de l'ajout de la réaction:", e.message);
     }
   }
 
