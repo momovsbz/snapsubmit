@@ -10,6 +10,7 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.json();
+    console.log('handleReaction received:', JSON.stringify(body, null, 2));
     
     // Webhook de réaction Discord
     if (body.t === 'MESSAGE_REACTION_ADD') {
