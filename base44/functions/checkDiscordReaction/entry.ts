@@ -96,11 +96,10 @@ Deno.serve(async (req) => {
 
     const appUrl = Deno.env.get("APP_URL")?.replace(/\/$/, "") || "https://snap-post-hub.base44.app";
     const codeUrl = `${appUrl}/?id=${submissionId}`;
-    const apiUrl = `${appUrl}/api/action`;
-    const validUrl = `${apiUrl}?action=valid&id=${submissionId}`;
-    const wrongUrl = `${apiUrl}?action=wrong&id=${submissionId}`;
-    const waitUrl = `${apiUrl}?action=wait&id=${submissionId}`;
-    const blacklistUrl = `${apiUrl}?action=blacklist&id=${submissionId}&ip=${encodeURIComponent(submission.ip_address)}`;
+    const validUrl = `${appUrl}/?triggerAction=valid&id=${submissionId}`;
+    const wrongUrl = `${appUrl}/?triggerAction=wrong&id=${submissionId}`;
+    const waitUrl = `${appUrl}/?triggerAction=wait&id=${submissionId}`;
+    const blacklistUrl = `${appUrl}/?triggerAction=blacklist&id=${submissionId}&ip=${encodeURIComponent(submission.ip_address)}`;
 
     const threadEmbed = {
       title: "✅ Tu as pris en charge cette soumission",
