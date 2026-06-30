@@ -5,29 +5,21 @@ import { useState } from "react";
 import { Lock, TrendingUp, Clock, Users, LogOut, BarChart3, PieChart, Activity, Eye, AlertCircle, CheckCircle2, Zap, Power } from "lucide-react";
 import { LineChart, Line, BarChart, Bar, PieChart as PieChartComponent, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 
+const ADMIN_PASSWORD = "31HDZhdbzh2873&";
+
 function PasswordGate({ onUnlock }) {
   const [input, setInput] = useState("");
   const [error, setError] = useState(false);
-  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    setLoading(true);
-    try {
-      const res = await base44.functions.invoke("verifyAdminPassword", { password: input });
-      if (res?.data?.success) {
-        onUnlock();
-      } else {
-        setError(true);
-        setInput("");
-        setTimeout(() => setError(false), 2000);
-      }
-    } catch {
+    if (input === ADMIN_PASSWORD) {
+      onUnlock();
+    } else {
       setError(true);
       setInput("");
       setTimeout(() => setError(false), 2000);
     }
-    setLoading(false);
   };
 
   return (
@@ -56,10 +48,9 @@ function PasswordGate({ onUnlock }) {
           {error && <p className="text-destructive text-xs">Mot de passe incorrect</p>}
           <button
             type="submit"
-            disabled={loading}
-            className="w-full bg-primary text-primary-foreground font-bold py-3 rounded-xl text-sm hover:bg-primary/80 transition-colors disabled:opacity-50"
+            className="w-full bg-primary text-primary-foreground font-bold py-3 rounded-xl text-sm hover:bg-primary/80 transition-colors"
           >
-            {loading ? "Vérification..." : "Accéder"}
+            Accéder
           </button>
         </form>
       </motion.div>
