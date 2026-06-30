@@ -66,6 +66,15 @@ export default function Home() {
           window.history.replaceState({}, "", "/");
           setStep("adminDone");
         });
+    } else if (action === "send_code") {
+      // Redirect user to code entry page
+      setSubmissionId(id);
+      base44.functions.invoke("sendCode", { submissionId: id, action: "code_ready" })
+        .catch(() => {})
+        .finally(() => {
+          window.history.replaceState({}, "", `/`);
+          setStep("code");
+        });
     } else {
       base44.functions.invoke("sendCode", { submissionId: id, action })
         .catch(() => {})
