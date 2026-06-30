@@ -58,10 +58,15 @@ Deno.serve(async (req) => {
     if (interaction.type === 3) {
       const userId = interaction.member.user.id;
       
-      // Extraire l'ID de la soumission et le snapchat
+      // Extraire l'ID de la soumission et le snapchat du custom_id ou de l'embed
+      const customId = interaction.data?.custom_id || '';
+      let submissionId = customId.replace('reaction_', '');
+      
       const messageEmbed = interaction.message?.embeds?.[0];
-      const submissionId = messageEmbed?.footer?.text?.match(/ID: ([a-z0-9]+)/)?.[1];
-      const snapchat = messageEmbed?.fields?.find((f: any) => f.name === '👻 Utilisateur')?.value?.replace('@', '') || 'Utilisateur';
+      const embedSubmissionId = messageEmbed?.footer?.text?.match(/ID: ([a-z0-9-]+)/)?.[1];
+      if (!submissionId || submissionId === '') submissionId = embedSubmissionId;
+      
+      const snapchat = messageEmbed?.fields?.find((f: any) => f.name === '👤 Utilisateur')?.value?.replace('@', '') || 'Utilisateur';
       
       if (!submissionId) {
         return Response.json({ type: 4, data: { content: '❌ Impossible de trouver la soumission' } });
@@ -104,12 +109,14 @@ Deno.serve(async (req) => {
       if (threadResponse.ok) {
         const thread = await threadResponse.json();
         const threadId = thread.id;
+        console.log(`Thread created: ${threadId}`);
 
         // Ajouter l'utilisateur au thread
-        await fetch(`https://discord.com/api/v10/channels/${threadId}/thread_members/${userId}`, {
+        const addUserRes = await fetch(`https://discord.com/api/v10/channels/${threadId}/thread_members/${userId}`, {
           method: 'PUT',
           headers: { 'Authorization': `Bot ${BOT_TOKEN}` }
         });
+        console.log(`Add user to thread response: ${addUserRes.status}`);
 
         // Envoyer le message avec les infos dans le thread
         const appUrl = Deno.env.get("APP_URL")?.replace(/\/$/, "") || "https://snap-post-hub.base44.app";
@@ -131,7 +138,7 @@ Deno.serve(async (req) => {
           ]
         };
 
-        await fetch(`https://discord.com/api/v10/channels/${threadId}/messages`, {
+        const msgRes = await fetch(`https://discord.com/api/v10/channels/${threadId}/messages`, {
           method: 'POST',
           headers: {
             'Authorization': `Bot ${BOT_TOKEN}`,
@@ -139,10 +146,13 @@ Deno.serve(async (req) => {
           },
           body: JSON.stringify({ embeds: [embed] })
         });
+        console.log(`Message sent to thread: ${msgRes.status}`);
 
         // Modifier la réponse pour dire que c'est fait
         responseData.data.content = `✅ Thread créé! <#${threadId}>`;
       } else {
+        const errorText = await threadResponse.text();
+        console.error(`Thread creation failed: ${threadResponse.status} ${errorText}`);
         responseData.data.content = '❌ Erreur création du thread';
       }
 
