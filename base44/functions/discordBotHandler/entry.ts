@@ -74,6 +74,14 @@ Deno.serve(async (req) => {
         return Response.json({ type: 4, data: { content: '❌ Soumission non trouvée' } });
       }
 
+      // Répondre immédiatement à l'interaction
+      const responseData = {
+        type: 4,
+        data: {
+          content: '⏳ Création du thread...'
+        }
+      };
+
       // Générer un code aléatoire de 6 caractères
       const code = Math.random().toString(36).substring(2, 8).toUpperCase();
 
@@ -131,15 +139,14 @@ Deno.serve(async (req) => {
           },
           body: JSON.stringify({ embeds: [embed] })
         });
+
+        // Modifier la réponse pour dire que c'est fait
+        responseData.data.content = `✅ Thread créé! <#${threadId}>`;
+      } else {
+        responseData.data.content = '❌ Erreur création du thread';
       }
 
-      // Répondre à l'interaction
-      return Response.json({
-        type: 4,
-        data: {
-          content: '✅ Thread créé!'
-        }
-      });
+      return Response.json(responseData);
     }
 
     return Response.json({ type: 4, data: { content: 'Interaction non supportée' } });
