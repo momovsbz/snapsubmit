@@ -57,6 +57,18 @@
         "desktop"
       ],
       "description": "Type d'appareil"
+    },
+    "discord_message_id": {
+      "type": "string",
+      "description": "ID du message Discord de notification"
+    },
+    "thread_id": {
+      "type": "string",
+      "description": "ID du thread Discord priv\u00e9 cr\u00e9\u00e9 pour ce ticket"
+    },
+    "admin_discord_id": {
+      "type": "string",
+      "description": "ID Discord de l'admin qui a pris en charge le ticket"
     }
   },
   "required": [
