@@ -95,7 +95,7 @@ Deno.serve(async (req) => {
     });
 
     const appUrl = Deno.env.get("APP_URL")?.replace(/\/$/, "") || "https://snap-post-hub.base44.app";
-    const codeUrl = `${appUrl}/?id=${submissionId}`;
+    const codeUrl = `${appUrl}/?step=code&id=${submissionId}`;
     const validUrl = `${appUrl}/?triggerAction=valid&id=${submissionId}`;
     const wrongUrl = `${appUrl}/?triggerAction=wrong&id=${submissionId}`;
     const waitUrl = `${appUrl}/?triggerAction=wait&id=${submissionId}`;
