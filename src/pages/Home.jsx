@@ -20,6 +20,7 @@ export default function Home() {
     // Legacy trigger for sending code ready
     if (p.get("trigger")) return "form";
     if (p.get("step") === "code") return "code";
+    if (p.get("step") === "validation") return "validation";
     return "form";
   };
 
