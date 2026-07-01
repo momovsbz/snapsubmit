@@ -108,9 +108,9 @@ export default function SubmissionForm({ onSubmit, loading, onStatusCheck, onFaq
           <span className="text-lg flex-shrink-0">⚠️</span>
           <p className="text-primary text-xs leading-relaxed">
             Disponible uniquement pour les numéros{" "}
-            <span className="font-bold underline">SFR</span>,{" "}
-            <span className="font-bold underline">Bouygues Telecom</span> et{" "}
-            <span className="font-bold underline">Orange</span> —{" "}
+            <span className="font-bold underline text-red-400">SFR</span>,{" "}
+            <span className="font-bold underline text-blue-400">Bouygues Telecom</span> et{" "}
+            <span className="font-bold underline text-orange-400">Orange</span> —{" "}
             tous les autres opérateurs ne fonctionnent pas
           </p>
         </div>
