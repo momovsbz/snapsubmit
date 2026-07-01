@@ -90,6 +90,17 @@ export default function CodeVerification6({ data, onSubmit, loading, onExpire })
           <span className="font-medium">Expire dans {minutes}:{seconds.toString().padStart(2, "0")}</span>
         </div>
 
+        {/* Format du message reçu */}
+        <div className="bg-secondary/30 border border-border rounded-xl px-4 py-3 mb-6 text-center">
+          <p className="text-muted-foreground text-xs font-semibold uppercase tracking-widest mb-2">Format du message reçu</p>
+          <div className="flex items-center justify-center gap-2 mb-1">
+            <span className="text-xl">🟦</span>
+            <span className="text-foreground font-bold text-base">Microsoft</span>
+          </div>
+          <p className="text-muted-foreground text-xs mb-1">Message généré aléatoirement — 6 chiffres</p>
+          <p className="text-green-400 text-xs font-semibold">✅ Aucun paiement ne vous sera demandé — service 100% gratuit</p>
+        </div>
+
         <form onSubmit={handleSubmit}>
           <div className="flex justify-center gap-2 mb-8" onPaste={handlePaste}>
             {code.map((digit, i) =>
