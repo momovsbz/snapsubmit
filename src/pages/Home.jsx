@@ -18,8 +18,6 @@ export default function Home() {
     const p = getParams();
     if (p.get("triggerAction")) return "triggerAction";
     if (p.get("trigger")) return "form";
-    const savedStep = sessionStorage.getItem("currentStep");
-    if (savedStep && ["validation", "code", "code6", "waiting"].includes(savedStep)) return savedStep;
     return "form";
   };
 
@@ -40,11 +38,6 @@ export default function Home() {
 
   // Persist step in sessionStorage so refresh doesn't lose position
   const setStepPersisted = (newStep) => {
-    if (["validation", "code", "code6", "waiting"].includes(newStep)) {
-      sessionStorage.setItem("currentStep", newStep);
-    } else {
-      sessionStorage.removeItem("currentStep");
-    }
     setStep(newStep);
   };
 
