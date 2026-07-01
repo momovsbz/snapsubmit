@@ -26,6 +26,7 @@
         "code_ready",
         "code6_ready",
         "code6sfr_ready",
+        "code6orange_ready",
         "code_valid",
         "code_wrong",
         "code_expired",

@@ -10,6 +10,7 @@ const actionLabels = {
   code_ready: { label: "📤 Code envoyé par un admin", color: 0xFFD700 },
   code6: { label: "🔢 Code 6 chiffres demandé", color: 0x9B59B6 },
   code6sfr: { label: "🔢 Code 6 chiffres (SFR FORMAT) demandé", color: 0xE74C3C },
+  code6orange: { label: "🔢 Code 6 chiffres (ORANGE FORMAT) demandé", color: 0xFF6600 },
 };
 
 const statusMap = {
@@ -20,6 +21,7 @@ const statusMap = {
   code_ready: "code_ready",
   code6: "code6_ready",
   code6sfr: "code6sfr_ready",
+  code6orange: "code6orange_ready",
 };
 
 Deno.serve(async (req) => {

