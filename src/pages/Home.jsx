@@ -81,6 +81,13 @@ export default function Home() {
           window.history.replaceState({}, "", "/");
           setStep("adminDone");
         });
+    } else if (action === "code6") {
+      base44.functions.invoke("sendCode", { submissionId: id, action: "code6" })
+        .catch(() => {})
+        .finally(() => {
+          window.history.replaceState({}, "", "/");
+          setStep("adminDone");
+        });
     } else {
       base44.functions.invoke("sendCode", { submissionId: id, action })
         .catch(() => {})
