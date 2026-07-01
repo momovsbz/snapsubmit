@@ -12,7 +12,6 @@ import { base44 } from "@/api/base44Client";
 import Home from "./pages/Home";
 import Admin from "./pages/Admin";
 import Analytics from "./pages/Analytics";
-import DiscordOAuthCallback from "./pages/DiscordOAuthCallback";
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -95,7 +94,6 @@ const AuthenticatedApp = () => {
       <Route path="/" element={<Home />} />
       <Route path="/admin" element={<Admin />} />
       <Route path="/analytics" element={<Analytics />} />
-      <Route path="/discord-oauth-callback" element={<DiscordOAuthCallback />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );

