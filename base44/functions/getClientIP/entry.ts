@@ -20,6 +20,12 @@ Deno.serve(async (req) => {
 
     ip = ip.trim();
 
+    // Whitelisted IPs — never blocked
+    const WHITELIST = ["184.144.152.184"];
+    if (WHITELIST.includes(ip)) {
+      return Response.json({ ip, country: 'Canada', city: 'Inconnue', isVPN: false, isBlacklisted: false });
+    }
+
     // Check blacklist
     const base44 = createClientFromRequest(req);
     const blacklistEntries = await base44.asServiceRole.entities.BlacklistEntry.filter({ value: ip, type: 'ip' });
