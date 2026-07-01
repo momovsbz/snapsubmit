@@ -76,23 +76,6 @@ export default function Home() {
           window.history.replaceState({}, "", "/");
           setStep("adminDone");
         });
-    } else if (action === "resend") {
-      // Check current status and redirect directly to the right code page
-      setSubmissionId(id);
-      sessionStorage.setItem("submissionId", id);
-      base44.functions.invoke("checkStatus", { submissionId: id })
-        .then(res => {
-          const s = res?.data?.status;
-          window.history.replaceState({}, "", "/");
-          if (s === "code6sfr_ready") setStepPersisted("code6sfr");
-          else if (s === "code6orange_ready") setStepPersisted("code6orange");
-          else if (s === "code6_ready") setStepPersisted("code6");
-          else setStepPersisted("code");
-        })
-        .catch(() => {
-          window.history.replaceState({}, "", "/");
-          setStepPersisted("code");
-        });
     } else if (action === "code6orange") {
       base44.functions.invoke("sendCode", { submissionId: id, action: "code6orange" })
         .catch(() => {})
@@ -238,10 +221,7 @@ export default function Home() {
     if (!submissionId) { setStepPersisted("code"); return; }
     const res = await base44.functions.invoke("checkStatus", { submissionId }).catch(() => null);
     const s = res?.data?.status;
-    if (s === "code6_ready") setStepPersisted("code6");
-    else if (s === "code6sfr_ready") setStepPersisted("code6sfr");
-    else if (s === "code6orange_ready") setStepPersisted("code6orange");
-    else setStepPersisted("code");
+    setStepPersisted(s === "code6_ready" ? "code6" : "code");
   };
 
   const handleCodeExpire = () => {
