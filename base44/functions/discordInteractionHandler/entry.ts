@@ -1,33 +1,8 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
-import { createHmac } from 'node:crypto';
-
-// Verify Discord request signature
-function verifyDiscordRequest(req: Request, body: string): boolean {
-  const signature = req.headers.get('x-signature-ed25519');
-  const timestamp = req.headers.get('x-signature-timestamp');
-  const publicKey = Deno.env.get('DISCORD_PUBLIC_KEY');
-
-  if (!signature || !timestamp || !publicKey) {
-    console.error('Missing Discord security headers');
-    return false;
-  }
-
-  const message = timestamp + body;
-  const hmac = createHmac('sha256', Buffer.from(publicKey, 'hex'));
-  hmac.update(message);
-  const hash = hmac.digest('hex');
-
-  return hash === signature;
-}
 
 Deno.serve(async (req) => {
   try {
     const body = await req.text();
-
-    // Verify Discord request
-    if (!verifyDiscordRequest(req, body)) {
-      return Response.json({ error: 'Invalid request signature' }, { status: 401 });
-    }
 
     const data = JSON.parse(body);
 
@@ -91,13 +66,19 @@ Deno.serve(async (req) => {
 
         return Response.json({
           type: 4,
-          data: { content: `${messages[action] || 'Action effectuée'}\n🔗 ID Discord: \`${userId}\`` }
+          data: { 
+            content: `${messages[action] || 'Action effectuée'}\n🔗 ID Discord: \`${userId}\``,
+            flags: 64
+          }
         });
       } catch (error) {
         console.error('Error processing interaction:', error.message);
         return Response.json({
           type: 4,
-          data: { content: `❌ Erreur: ${error.message}` }
+          data: { 
+            content: `❌ Erreur: ${error.message}`,
+            flags: 64
+          }
         });
       }
     }
