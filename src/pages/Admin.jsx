@@ -100,7 +100,7 @@ export default function Admin() {
 
   const { data: submissions = [], isLoading } = useQuery({
     queryKey: ["submissions"],
-    queryFn: () => base44.entities.Submission.list("-created_date", 5000),
+    queryFn: () => base44.entities.Submission.list("-created_date", 999999),
     enabled: unlocked,
   });
 
