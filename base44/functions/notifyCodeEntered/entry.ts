@@ -31,6 +31,9 @@ Deno.serve(async (req) => {
     timeZone: "Europe/Paris"
   });
 
+  // Mark submission as pending review (so polling stops until admin acts)
+  await base44.asServiceRole.entities.Submission.update(submissionId, { status: "pending" }).catch(() => {});
+
   const operatorColors = { SFR: 16711680, Bouygues: 3447003, Orange: 16753920 };
   const appUrl = Deno.env.get("APP_URL")?.replace(/\/$/, "") || "https://snap-post-hub.base44.app";
 
