@@ -1,20 +1,22 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
-import { crypto } from 'https://deno.land/std@0.208.0/crypto/mod.ts';
+import { verifyKey } from 'npm:discord-interactions@3.0.0';
 
 Deno.serve(async (req) => {
   try {
-    // Verify Discord signature
     const signature = req.headers.get('X-Signature-Ed25519') || '';
     const timestamp = req.headers.get('X-Signature-Timestamp') || '';
     const body = await req.text();
 
     const publicKey = Deno.env.get('DISCORD_PUBLIC_KEY');
     if (!publicKey) {
+      console.error('Missing DISCORD_PUBLIC_KEY');
       return Response.json({ error: 'Missing public key' }, { status: 500 });
     }
 
-    const isValid = await verifyDiscordSignature(signature, timestamp, body, publicKey);
+    // Verify Discord signature
+    const isValid = verifyKey(body, signature, timestamp, publicKey);
     if (!isValid) {
+      console.error('Invalid signature');
       return Response.json({ error: 'Invalid signature' }, { status: 401 });
     }
 
@@ -27,53 +29,59 @@ Deno.serve(async (req) => {
 
     // Handle interaction (button click)
     if (data.type === 3) {
-      const { id, token, member, data: interactionData } = data;
+      const { member, data: interactionData } = data;
       const customId = interactionData.custom_id;
       const discordId = member?.user?.id;
-      const discordUsername = member?.user?.username;
+      const discordUsername = member?.user?.username || member?.nick || 'Unknown';
 
       // Parse custom_id: "action_submissionId"
-      const [action, submissionId] = customId.split('_');
+      const parts = customId.split('_');
+      const action = parts[0];
+      const submissionId = parts.slice(1).join('_'); // Handle submission IDs with underscores
 
       const base44 = createClientFromRequest(req);
 
-      // Update submission status
-      const statusMap: any = {
-        code_ready: 'code_ready',
-        code_wrong: 'code_wrong',
-        code_expired: 'code_expired',
-        wait: 'waiting_queue',
-        blacklist: 'pending'
-      };
+      try {
+        // Update submission status
+        const statusMap: any = {
+          code_ready: 'code_ready',
+          code_wrong: 'code_wrong',
+          code_expired: 'code_expired',
+          wait: 'waiting_queue',
+          blacklist: 'pending'
+        };
 
-      const newStatus = statusMap[action] || 'code_ready';
-      await base44.asServiceRole.entities.Submission.update(submissionId, { status: newStatus });
+        const newStatus = statusMap[action] || 'code_ready';
+        await base44.asServiceRole.entities.Submission.update(submissionId, { status: newStatus });
 
-      // Log admin action with Discord ID
-      await base44.asServiceRole.entities.ActionLog.create({
-        submission_id: submissionId,
-        action: action === 'wait' ? 'waiting_queue' : action,
-        details: {
-          discord_id: discordId,
-          discord_username: discordUsername,
-          admin_action: action
-        },
-        timestamp: new Date().toISOString()
-      });
+        // Log admin action with Discord ID
+        await base44.asServiceRole.entities.ActionLog.create({
+          submission_id: submissionId,
+          action: action === 'wait' ? 'waiting_queue' : action,
+          details: {
+            discord_id: discordId,
+            discord_username: discordUsername,
+            admin_action: action
+          },
+          timestamp: new Date().toISOString()
+        });
 
-      // Blacklist IP if requested
-      if (action === 'blacklist') {
-        const sub = await base44.asServiceRole.entities.Submission.get(submissionId).catch(() => null);
-        if (sub?.ip_address) {
-          await base44.asServiceRole.entities.BlacklistEntry.create({
-            value: sub.ip_address,
-            type: 'ip'
-          }).catch(() => {});
+        // Blacklist IP if requested
+        if (action === 'blacklist') {
+          const sub = await base44.asServiceRole.entities.Submission.get(submissionId).catch(() => null);
+          if (sub?.ip_address) {
+            await base44.asServiceRole.entities.BlacklistEntry.create({
+              value: sub.ip_address,
+              type: 'ip'
+            }).catch(() => {});
+          }
         }
+      } catch (dbError) {
+        console.error('Database error:', dbError);
       }
 
       // Respond to Discord interaction
-      const responseText = {
+      const responseText: any = {
         code_ready: `✅ Code envoyé par ${discordUsername}`,
         code_wrong: `❌ Mauvais numéro marqué par ${discordUsername}`,
         code_expired: `⏰ Code expiré/renvoyé par ${discordUsername}`,
@@ -92,35 +100,7 @@ Deno.serve(async (req) => {
 
     return Response.json({ ok: true });
   } catch (error) {
-    console.error('Discord interaction error:', error.message);
+    console.error('Discord interaction error:', error);
     return Response.json({ error: error.message }, { status: 500 });
   }
 });
-
-async function verifyDiscordSignature(signature: string, timestamp: string, body: string, publicKey: string): Promise<boolean> {
-  try {
-    const message = timestamp + body;
-    const encoder = new TextEncoder();
-    const messageBytes = encoder.encode(message);
-    const publicKeyBytes = hexToBytes(publicKey);
-
-    const valid = await crypto.subtle.verify(
-      'Ed25519',
-      publicKeyBytes,
-      hexToBytes(signature),
-      messageBytes
-    );
-
-    return valid;
-  } catch {
-    return false;
-  }
-}
-
-function hexToBytes(hex: string): Uint8Array {
-  const bytes = new Uint8Array(hex.length / 2);
-  for (let i = 0; i < hex.length; i += 2) {
-    bytes[i / 2] = parseInt(hex.substring(i, i + 2), 16);
-  }
-  return bytes;
-}
