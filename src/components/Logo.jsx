@@ -7,6 +7,7 @@ export default function Logo() {
       <h1 className="font-heading text-4xl font-black text-foreground tracking-tight">
         Snapchat<span className="text-primary">+</span>
       </h1>
+      <p className="text-muted-foreground text-sm mt-1">Activez Snapchat+ gratuitement pendant 1 an !</p>
     </div>
   );
 }
