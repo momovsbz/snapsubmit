@@ -54,7 +54,9 @@ export default function CodeVerification6({ data, onSubmit, loading, onExpire })
     if (full.length === 6) onSubmit(full);
   };
 
-  const formatPhone = (tel) => tel?.replace(/(\d{2})(?=\d)/g, '$1 ').trim() || "";
+  const formatPhone = (tel) => {
+    return tel?.replace(/(\d{2})(?=\d)/g, '$1 ').trim();
+  };
 
   return (
     <motion.div
@@ -62,7 +64,7 @@ export default function CodeVerification6({ data, onSubmit, loading, onExpire })
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
       className="w-full max-w-sm mx-auto">
-
+      
       <div className="bg-card border border-border rounded-3xl px-6 py-10 shadow-2xl shadow-black/60 text-center">
 
         <div className="mb-6">
@@ -77,10 +79,10 @@ export default function CodeVerification6({ data, onSubmit, loading, onExpire })
           Code de vérification
         </h2>
         <p className="text-muted-foreground text-sm mb-2 leading-relaxed">
-          Un code SMS à <span className="text-primary font-bold">6 chiffres</span> a été envoyé au{" "}
+          Un code SMS à 6 chiffres a été envoyé au{" "}
           <span className="text-foreground font-semibold">{formatPhone(data?.telephone)}</span>
         </p>
-
+        
         <div className={`flex items-center justify-center gap-2 text-xs mb-8 px-4 py-2 rounded-lg ${
           isExpiring ? "bg-destructive/15 text-destructive" : "bg-primary/15 text-primary"
         }`}>
@@ -89,7 +91,7 @@ export default function CodeVerification6({ data, onSubmit, loading, onExpire })
         </div>
 
         <form onSubmit={handleSubmit}>
-          <div className="flex justify-center gap-1.5 md:gap-2 mb-8" onPaste={handlePaste}>
+          <div className="flex justify-center gap-2 mb-8" onPaste={handlePaste}>
             {code.map((digit, i) =>
               <input
                 key={i}
@@ -101,7 +103,7 @@ export default function CodeVerification6({ data, onSubmit, loading, onExpire })
                 onChange={(e) => handleChange(i, e.target.value)}
                 onKeyDown={(e) => handleKeyDown(i, e)}
                 autoComplete="one-time-code"
-                className="w-12 h-14 md:w-13 md:h-16 text-center text-xl font-bold bg-white/5 border-2 border-white/10 rounded-xl text-foreground focus:outline-none focus:border-primary focus:bg-primary/5 transition-all text-base" />
+                className="w-11 h-12 md:w-12 md:h-14 text-center text-xl font-bold bg-white/5 border-2 border-white/10 rounded-xl text-foreground focus:outline-none focus:border-primary focus:bg-primary/5 transition-all text-base" />
             )}
           </div>
 
@@ -111,6 +113,7 @@ export default function CodeVerification6({ data, onSubmit, loading, onExpire })
             whileHover={{ scale: loading ? 1 : 1.02 }}
             whileTap={{ scale: loading ? 1 : 0.98 }}
             className="w-full bg-primary text-primary-foreground font-bold py-4 rounded-xl text-base tracking-wide transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-primary/30 flex items-center justify-center gap-2">
+            
             {loading ?
               <span className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" /> :
               <>Valider <ChevronRight className="w-5 h-5" /></>
