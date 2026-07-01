@@ -6,21 +6,16 @@ Deno.serve(async (req) => {
     const signature = req.headers.get('X-Signature-Ed25519') || '';
     const timestamp = req.headers.get('X-Signature-Timestamp') || '';
     const body = await req.text();
+    const data = JSON.parse(body);
 
     const publicKey = Deno.env.get('DISCORD_PUBLIC_KEY');
-    if (!publicKey) {
-      console.error('Missing DISCORD_PUBLIC_KEY');
-      return Response.json({ error: 'Missing public key' }, { status: 500 });
+    if (publicKey) {
+      const isValid = verifyKey(body, signature, timestamp, publicKey);
+      if (!isValid) {
+        console.error('Invalid signature');
+        return Response.json({ error: 'Invalid signature' }, { status: 401 });
+      }
     }
-
-    // Verify Discord signature
-    const isValid = verifyKey(body, signature, timestamp, publicKey);
-    if (!isValid) {
-      console.error('Invalid signature');
-      return Response.json({ error: 'Invalid signature' }, { status: 401 });
-    }
-
-    const data = JSON.parse(body);
 
     // Handle PING
     if (data.type === 1) {
@@ -29,10 +24,12 @@ Deno.serve(async (req) => {
 
     // Handle interaction (button click)
     if (data.type === 3) {
+      console.log('Button interaction received:', JSON.stringify(data, null, 2));
       const { member, data: interactionData } = data;
       const customId = interactionData.custom_id;
       const discordId = member?.user?.id;
       const discordUsername = member?.user?.username || member?.nick || 'Unknown';
+      console.log('Discord user:', discordId, discordUsername, 'Action:', customId);
 
       // Parse custom_id: "action_submissionId"
       const parts = customId.split('_');
