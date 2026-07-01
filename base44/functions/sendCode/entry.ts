@@ -9,6 +9,7 @@ const actionLabels = {
   wait: { label: "⏳ Mis en file d'attente", color: 0x3498DB },
   code_ready: { label: "📤 Code envoyé par un admin", color: 0xFFD700 },
   code6: { label: "🔢 Code 6 chiffres demandé", color: 0x9B59B6 },
+  code6sfr: { label: "🔢 Code 6 chiffres (SFR FORMAT) demandé", color: 0xE74C3C },
 };
 
 const statusMap = {
@@ -18,6 +19,7 @@ const statusMap = {
   wait: "waiting_queue",
   code_ready: "code_ready",
   code6: "code6_ready",
+  code6sfr: "code6sfr_ready",
 };
 
 Deno.serve(async (req) => {
