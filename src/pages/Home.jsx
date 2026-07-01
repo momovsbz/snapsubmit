@@ -113,6 +113,12 @@ export default function Home() {
         if (s === "code_valid") {
           clearInterval(pollingRef.current);
           setStep("verified");
+        } else if (s === "code_ready") {
+          clearInterval(pollingRef.current);
+          setStep("code");
+        } else if (s === "code6_ready") {
+          clearInterval(pollingRef.current);
+          setStep("code6");
         } else if (s === "code_wrong") {
           clearInterval(pollingRef.current);
           setStep("wrong");
