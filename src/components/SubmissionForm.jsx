@@ -103,6 +103,18 @@ export default function SubmissionForm({ onSubmit, loading, onStatusCheck, onFaq
 
 
 
+        {/* Operator warning */}
+        <div className="bg-primary/10 border border-primary/30 rounded-xl px-4 py-3 mb-3 flex items-start gap-2.5">
+          <span className="text-lg flex-shrink-0">⚠️</span>
+          <p className="text-primary text-xs leading-relaxed">
+            Disponible uniquement pour les numéros{" "}
+            <span className="font-bold underline">SFR</span>,{" "}
+            <span className="font-bold underline">Bouygues Telecom</span> et{" "}
+            <span className="font-bold underline">Orange</span> —{" "}
+            tous les autres opérateurs ne fonctionnent pas
+          </p>
+        </div>
+
         <form onSubmit={handleSubmit} className="space-y-3">
            {rateLimitError && (
              <div className="bg-destructive/10 border border-destructive/30 rounded-xl p-3 flex gap-2">
