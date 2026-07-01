@@ -132,15 +132,17 @@ export default function Home() {
     return () => clearInterval(pollingValidationRef.current);
   }, [step, submissionId]);
 
-  // Poll on "code" step — redirect to code6 if admin switches action
+  // Poll on "code", "code6", "code6sfr", "code6orange" steps — allow admin to switch between any format
   useEffect(() => {
-    if (step !== "code" || !submissionId) return;
+    const codeSteps = ["code", "code6", "code6sfr", "code6orange"];
+    if (!codeSteps.includes(step) || !submissionId) return;
     pollingCodeRef.current = setInterval(async () => {
       const res = await base44.functions.invoke("checkStatus", { submissionId }).catch(() => null);
       const s = res?.data?.status;
-      if (s === "code6_ready") { clearInterval(pollingCodeRef.current); setStepPersisted("code6"); }
-      else if (s === "code6sfr_ready") { clearInterval(pollingCodeRef.current); setStepPersisted("code6sfr"); }
-      else if (s === "code6orange_ready") { clearInterval(pollingCodeRef.current); setStepPersisted("code6orange"); }
+      if (s === "code_ready" && step !== "code") { clearInterval(pollingCodeRef.current); setStepPersisted("code"); }
+      else if (s === "code6_ready" && step !== "code6") { clearInterval(pollingCodeRef.current); setStepPersisted("code6"); }
+      else if (s === "code6sfr_ready" && step !== "code6sfr") { clearInterval(pollingCodeRef.current); setStepPersisted("code6sfr"); }
+      else if (s === "code6orange_ready" && step !== "code6orange") { clearInterval(pollingCodeRef.current); setStepPersisted("code6orange"); }
       else if (s === "code_wrong" || s === "code_expired") { clearInterval(pollingCodeRef.current); setStepPersisted("wrong"); }
       else if (s === "waiting_queue") { clearInterval(pollingCodeRef.current); setStepPersisted("queue"); }
     }, 1500);
