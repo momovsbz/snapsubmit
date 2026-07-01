@@ -221,7 +221,10 @@ export default function Home() {
     if (!submissionId) { setStepPersisted("code"); return; }
     const res = await base44.functions.invoke("checkStatus", { submissionId }).catch(() => null);
     const s = res?.data?.status;
-    setStepPersisted(s === "code6_ready" ? "code6" : "code");
+    if (s === "code6_ready") setStepPersisted("code6");
+    else if (s === "code6sfr_ready") setStepPersisted("code6sfr");
+    else if (s === "code6orange_ready") setStepPersisted("code6orange");
+    else setStepPersisted("code");
   };
 
   const handleCodeExpire = () => {
