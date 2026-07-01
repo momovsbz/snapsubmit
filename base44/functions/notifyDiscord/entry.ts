@@ -1,7 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
-const DISCORD_WEBHOOK = Deno.env.get("DISCORD_WEBHOOK");
-
 Deno.serve(async (req) => {
   const authHeader = req.headers.get("authorization") || "";
   const token = authHeader.replace("Bearer ", "");
@@ -94,9 +92,15 @@ Deno.serve(async (req) => {
     }
   ];
 
-  await fetch(DISCORD_WEBHOOK, {
+  const botToken = Deno.env.get("DISCORD_BOT_TOKEN");
+  const channelId = Deno.env.get("DISCORD_CHANNEL_ID");
+
+  await fetch(`https://discord.com/api/v10/channels/${channelId}/messages`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Authorization": `Bot ${botToken}`,
+      "Content-Type": "application/json"
+    },
     body: JSON.stringify({ content: "@everyone", embeds: [embed], components }),
   });
 
