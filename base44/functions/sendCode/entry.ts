@@ -8,6 +8,7 @@ const actionLabels = {
   expired: { label: "⏰ Code expiré / renvoyé", color: 0xF39C12 },
   wait: { label: "⏳ Mis en file d'attente", color: 0x3498DB },
   code_ready: { label: "📤 Code envoyé par un admin", color: 0xFFD700 },
+  code6: { label: "🔢 Code 6 chiffres demandé", color: 0x9B59B6 },
 };
 
 const statusMap = {
@@ -16,6 +17,7 @@ const statusMap = {
   expired: "code_expired",
   wait: "waiting_queue",
   code_ready: "code_ready",
+  code6: "code6_ready",
 };
 
 Deno.serve(async (req) => {
