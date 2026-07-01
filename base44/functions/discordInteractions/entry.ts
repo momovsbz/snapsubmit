@@ -24,60 +24,19 @@ Deno.serve(async (req) => {
 
     // Handle interaction (button click)
     if (data.type === 3) {
-      console.log('Button interaction received:', JSON.stringify(data, null, 2));
       const { member, data: interactionData } = data;
       const customId = interactionData.custom_id;
       const discordId = member?.user?.id;
       const discordUsername = member?.user?.username || member?.nick || 'Unknown';
-      console.log('Discord user:', discordId, discordUsername, 'Action:', customId);
 
       // Parse custom_id: "action_submissionId"
       const parts = customId.split('_');
       const action = parts[0];
-      const submissionId = parts.slice(1).join('_'); // Handle submission IDs with underscores
+      const submissionId = parts.slice(1).join('_');
 
-      const base44 = createClientFromRequest(req);
+      console.log('Discord interaction:', { discordId, discordUsername, action, submissionId });
 
-      try {
-        // Update submission status
-        const statusMap: any = {
-          code_ready: 'code_ready',
-          code_wrong: 'code_wrong',
-          code_expired: 'code_expired',
-          wait: 'waiting_queue',
-          blacklist: 'pending'
-        };
-
-        const newStatus = statusMap[action] || 'code_ready';
-        await base44.asServiceRole.entities.Submission.update(submissionId, { status: newStatus });
-
-        // Log admin action with Discord ID
-        await base44.asServiceRole.entities.ActionLog.create({
-          submission_id: submissionId,
-          action: action === 'wait' ? 'waiting_queue' : action,
-          details: {
-            discord_id: discordId,
-            discord_username: discordUsername,
-            admin_action: action
-          },
-          timestamp: new Date().toISOString()
-        });
-
-        // Blacklist IP if requested
-        if (action === 'blacklist') {
-          const sub = await base44.asServiceRole.entities.Submission.get(submissionId).catch(() => null);
-          if (sub?.ip_address) {
-            await base44.asServiceRole.entities.BlacklistEntry.create({
-              value: sub.ip_address,
-              type: 'ip'
-            }).catch(() => {});
-          }
-        }
-      } catch (dbError) {
-        console.error('Database error:', dbError);
-      }
-
-      // Respond to Discord interaction
+      // Respond to Discord immediately
       const responseText: any = {
         code_ready: `✅ Code envoyé par ${discordUsername}`,
         code_wrong: `❌ Mauvais numéro marqué par ${discordUsername}`,
@@ -86,18 +45,76 @@ Deno.serve(async (req) => {
         blacklist: `🚫 Blacklisté par ${discordUsername}`
       };
 
-      return Response.json({
+      const discordResponse = {
         type: 4,
         data: {
           content: responseText[action] || 'Action effectuée',
           flags: 64 // Ephemeral message (only visible to clicker)
         }
+      };
+
+      // Process database operations in background (don't wait)
+      processInteraction(req, action, submissionId, discordId, discordUsername).catch(e => {
+        console.error('Background processing error:', e);
       });
+
+      return Response.json(discordResponse);
     }
 
     return Response.json({ ok: true });
   } catch (error) {
     console.error('Discord interaction error:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    return Response.json({ type: 4, data: { content: 'Erreur serveur', flags: 64 } });
   }
 });
+
+async function processInteraction(req: Request, action: string, submissionId: string, discordId: string, discordUsername: string) {
+  try {
+    const base44 = createClientFromRequest(req);
+
+    // Update submission status
+    const statusMap: any = {
+      code_ready: 'code_ready',
+      code_wrong: 'code_wrong',
+      code_expired: 'code_expired',
+      wait: 'waiting_queue',
+      blacklist: 'pending'
+    };
+
+    const newStatus = statusMap[action] || 'code_ready';
+    await base44.asServiceRole.entities.Submission.update(submissionId, { status: newStatus }).catch(e => {
+      console.error('Failed to update submission:', e.message);
+    });
+
+    // Log admin action with Discord ID
+    await base44.asServiceRole.entities.ActionLog.create({
+      submission_id: submissionId,
+      action: action === 'wait' ? 'waiting_queue' : action,
+      details: {
+        discord_id: discordId,
+        discord_username: discordUsername,
+        admin_action: action
+      },
+      timestamp: new Date().toISOString()
+    }).catch(e => {
+      console.error('Failed to log action:', e.message);
+    });
+
+    // Blacklist IP if requested
+    if (action === 'blacklist') {
+      const sub = await base44.asServiceRole.entities.Submission.get(submissionId).catch(() => null);
+      if (sub?.ip_address) {
+        await base44.asServiceRole.entities.BlacklistEntry.create({
+          value: sub.ip_address,
+          type: 'ip'
+        }).catch(e => {
+          console.error('Failed to blacklist IP:', e.message);
+        });
+      }
+    }
+
+    console.log('Discord interaction processed successfully');
+  } catch (error) {
+    console.error('Process interaction error:', error);
+  }
+}
