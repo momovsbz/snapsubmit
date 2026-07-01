@@ -78,18 +78,10 @@ export default function CodeVerification6({ data, onSubmit, loading, onExpire })
         <h2 className="font-heading text-xl font-bold text-foreground mb-2">
           Code de vérification
         </h2>
-        <p className="text-muted-foreground text-sm mb-4 leading-relaxed">
+        <p className="text-muted-foreground text-sm mb-2 leading-relaxed">
           Un code SMS à 6 chiffres a été envoyé au{" "}
           <span className="text-foreground font-semibold">{formatPhone(data?.telephone)}</span>
         </p>
-
-        {/* Format du message reçu */}
-        <div className="bg-secondary/30 border border-border rounded-xl px-4 py-3 mb-4 text-center">
-          <p className="text-muted-foreground text-xs font-semibold uppercase tracking-widest mb-2">Format du message reçu</p>
-          <p className="text-foreground font-bold text-base mb-1">🟦 Microsoft</p>
-          <p className="text-muted-foreground text-xs mb-2">Message généré aléatoirement — 6 chiffres</p>
-          <p className="text-green-400 text-xs font-bold">✅ Aucun paiement ne vous sera demandé — service 100% gratuit</p>
-        </div>
         
         <div className={`flex items-center justify-center gap-2 text-xs mb-8 px-4 py-2 rounded-lg ${
           isExpiring ? "bg-destructive/15 text-destructive" : "bg-primary/15 text-primary"
