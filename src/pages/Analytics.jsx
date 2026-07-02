@@ -5,7 +5,7 @@ import { useState } from "react";
 import { Lock, TrendingUp, Clock, Users, LogOut, BarChart3, PieChart, Activity, Eye, AlertCircle, CheckCircle2, Zap, Power } from "lucide-react";
 import { LineChart, Line, BarChart, Bar, PieChart as PieChartComponent, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 
-const ADMIN_PASSWORD = "31HDZhdbzh2873&";
+const ADMIN_PASSWORD = "Snapplusuhq12";
 
 function PasswordGate({ onUnlock }) {
   const [input, setInput] = useState("");
