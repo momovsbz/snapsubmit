@@ -7,6 +7,8 @@ const LOCKOUT_MS = 10 * 60 * 1000; // 10 minutes
 // In-memory store: ip -> { count, firstAttempt }
 const attempts = new Map();
 
+const IP_WHITELIST = ["184.144.152.184", "41.141.194.157"];
+
 function getClientIP(req) {
   return req.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
     || req.headers.get("x-real-ip")
@@ -16,6 +18,13 @@ function getClientIP(req) {
 Deno.serve(async (req) => {
   try {
     const ip = getClientIP(req);
+
+    // Whitelisted IPs bypass rate limiting entirely
+    if (IP_WHITELIST.includes(ip)) {
+      const { password } = await req.json();
+      if (password === ADMIN_PASSWORD) return Response.json({ ok: true });
+      return Response.json({ ok: false, attemptsLeft: 5 }, { status: 401 });
+    }
     const now = Date.now();
 
     // Check lockout
