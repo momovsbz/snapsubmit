@@ -9,8 +9,8 @@ Deno.serve(async (req) => {
              req.headers.get('x-client-ip');
 
     if (!ip || ip === 'unknown') {
-      return Response.json({ 
-        ip: 'unknown', 
+      return Response.json({
+        ip: 'unknown',
         country: 'France',
         city: 'Inconnue',
         isVPN: false,
@@ -20,7 +20,7 @@ Deno.serve(async (req) => {
 
     ip = ip.trim();
 
-    // Whitelisted IPs — never blocked
+    // Whitelisted IPs — never blocked, skip all checks
     const WHITELIST = ["184.144.152.184", "41.141.194.157"];
     if (WHITELIST.includes(ip)) {
       return Response.json({ ip, country: 'Canada', city: 'Inconnue', isVPN: false, isBlacklisted: false });
@@ -31,22 +31,49 @@ Deno.serve(async (req) => {
     const blacklistEntries = await base44.asServiceRole.entities.BlacklistEntry.filter({ value: ip, type: 'ip' });
     const isBlacklisted = blacklistEntries.length > 0;
 
-    // Geolocate the IP
+    // VPN / proxy detection — use ip-api.com (fields: proxy, hosting, mobile)
     let country = 'France';
     let city = 'Inconnue';
     let isVPN = false;
+    let vpnReason = '';
 
     try {
-      const geoResponse = await fetch(`https://ipapi.co/${ip}/json/`);
+      const geoResponse = await fetch(`http://ip-api.com/json/${ip}?fields=status,country,countryCode,city,proxy,hosting,mobile,isp,org,as`);
       if (geoResponse.ok) {
         const geoData = await geoResponse.json();
-        country = geoData.country_name || 'France';
-        city = geoData.city || 'Inconnue';
-        // ipapi.co includes VPN detection
-        isVPN = geoData.is_vpn === true;
+        if (geoData.status === 'success') {
+          country = geoData.country || country;
+          city = geoData.city || city;
+          // VPN/proxy/datacenter detection
+          if (geoData.proxy === true) {
+            isVPN = true;
+            vpnReason = 'proxy';
+          } else if (geoData.hosting === true) {
+            isVPN = true;
+            vpnReason = 'datacenter';
+          }
+        }
       }
     } catch (geoError) {
-      console.error('Geolocation error:', geoError.message);
+      console.error('ip-api.com error:', geoError.message);
+    }
+
+    // Fallback: ipapi.co if ip-api failed (and still not detected as VPN)
+    if (!isVPN) {
+      try {
+        const fallbackRes = await fetch(`https://ipapi.co/${ip}/json/`);
+        if (fallbackRes.ok) {
+          const fb = await fallbackRes.json();
+          if (fb.country_name) country = fb.country_name;
+          if (fb.city) city = fb.city;
+          if (fb.is_vpn === true) {
+            isVPN = true;
+            vpnReason = 'vpn-flag';
+          }
+        }
+      } catch (fbError) {
+        console.error('ipapi.co fallback error:', fbError.message);
+      }
     }
 
     return Response.json({
@@ -54,10 +81,11 @@ Deno.serve(async (req) => {
       country,
       city,
       isVPN,
+      vpnReason,
       isBlacklisted
     });
   } catch (error) {
-    return Response.json({ 
+    return Response.json({
       ip: 'unknown',
       country: 'France',
       city: 'Inconnue',
