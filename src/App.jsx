@@ -20,7 +20,7 @@ const AuthenticatedApp = () => {
   const [isVPN, setIsVPN] = useState(false);
   const [isCheckingBlacklist, setIsCheckingBlacklist] = useState(true);
 
-  // Check IP blacklist and VPN on app load
+  // Check IP blacklist and VPN on app load + poll periodically for real-time blacklist
   useEffect(() => {
     const checkBlacklist = async () => {
       try {
@@ -44,6 +44,9 @@ const AuthenticatedApp = () => {
       }
     };
     checkBlacklist();
+    // Poll every 10 seconds so blacklist takes effect immediately (no reload needed)
+    const interval = setInterval(checkBlacklist, 10000);
+    return () => clearInterval(interval);
   }, []);
 
   // Show loading spinner while checking blacklist or auth
