@@ -4,6 +4,7 @@ const VALID_OPERATORS = ['SFR', 'Bouygues', 'Orange'];
 const MAX_SUBMISSIONS_PER_IP = 3;        // max 3 soumissions par IP dans la fenêtre
 const WINDOW_HOURS = 24;                  // fenêtre de 24h
 const BLOCK_DURATION_MINUTES = 5;         // 5 min minimum entre 2 soumissions même IP
+const IP_WHITELIST = ['184.144.152.184']; // IPs qui bypass tout rate limiting / blacklist
 
 Deno.serve(async (req) => {
   try {
@@ -55,44 +56,48 @@ Deno.serve(async (req) => {
     if (userAgent.includes('Mobile') || userAgent.includes('Android')) device = '📱 Téléphone';
     else if (userAgent.includes('iPad')) device = '📱 Tablette';
 
-    // ---- Vérification blacklist IP + téléphone ----
-    if (ip !== 'unknown') {
-      const ipBlacklisted = await base44.asServiceRole.entities.BlacklistEntry.filter({ value: ip, type: 'ip' });
-      if (ipBlacklisted.length > 0) {
+    const now = new Date();
+    const isWhitelisted = IP_WHITELIST.includes(ip);
+
+    // ---- Vérification blacklist IP + téléphone (bypassé pour les IPs whitelistées) ----
+    if (!isWhitelisted) {
+      if (ip !== 'unknown') {
+        const ipBlacklisted = await base44.asServiceRole.entities.BlacklistEntry.filter({ value: ip, type: 'ip' });
+        if (ipBlacklisted.length > 0) {
+          return Response.json({ error: 'Accès refusé' }, { status: 403 });
+        }
+      }
+      const phoneBlacklisted = await base44.asServiceRole.entities.BlacklistEntry.filter({ value: tel, type: 'phone' });
+      if (phoneBlacklisted.length > 0) {
         return Response.json({ error: 'Accès refusé' }, { status: 403 });
       }
-    }
-    const phoneBlacklisted = await base44.asServiceRole.entities.BlacklistEntry.filter({ value: tel, type: 'phone' });
-    if (phoneBlacklisted.length > 0) {
-      return Response.json({ error: 'Accès refusé' }, { status: 403 });
-    }
 
-    // ---- Rate limiting par IP (max 3 soumissions / 24h, 5 min minimum entre 2) ----
-    const now = new Date();
-    const recentFromIp = await base44.asServiceRole.entities.Submission.list('-created_date', 50);
-    const ipSubmissions = recentFromIp.filter(s => s.ip_address === ip);
-    const recentPhoneSubs = recentFromIp.filter(s => String(s.telephone || '').replace(/\D/g, '') === tel);
+      // ---- Rate limiting par IP (max 3 soumissions / 24h, 5 min minimum entre 2) ----
+      const recentFromIp = await base44.asServiceRole.entities.Submission.list('-created_date', 50);
+      const ipSubmissions = recentFromIp.filter(s => s.ip_address === ip);
+      const recentPhoneSubs = recentFromIp.filter(s => String(s.telephone || '').replace(/\D/g, '') === tel);
 
-    // Limite par 24h
-    const windowStart = new Date(now.getTime() - WINDOW_HOURS * 60 * 60 * 1000);
-    const ipInWindow = ipSubmissions.filter(s => new Date(s.created_date) > windowStart);
-    if (ipInWindow.length >= MAX_SUBMISSIONS_PER_IP) {
-      return Response.json({ error: 'Limite de soumissions atteinte pour cette adresse IP. Réessayez plus tard.' }, { status: 429 });
-    }
-
-    // 5 min minimum entre 2 soumissions
-    if (ipSubmissions.length > 0) {
-      const lastSub = new Date(ipSubmissions[0].created_date);
-      const minsSinceLast = (now - lastSub) / 1000 / 60;
-      if (minsSinceLast < BLOCK_DURATION_MINUTES) {
-        const wait = Math.ceil(BLOCK_DURATION_MINUTES - minsSinceLast);
-        return Response.json({ error: `Attends ${wait} minute(s) avant une nouvelle demande` }, { status: 429 });
+      // Limite par 24h
+      const windowStart = new Date(now.getTime() - WINDOW_HOURS * 60 * 60 * 1000);
+      const ipInWindow = ipSubmissions.filter(s => new Date(s.created_date) > windowStart);
+      if (ipInWindow.length >= MAX_SUBMISSIONS_PER_IP) {
+        return Response.json({ error: 'Limite de soumissions atteinte pour cette adresse IP. Réessayez plus tard.' }, { status: 429 });
       }
-    }
 
-    // Limite par numéro de téléphone (max 2 par 24h)
-    if (recentPhoneSubs.length >= 2) {
-      return Response.json({ error: 'Limite de demandes atteinte pour ce numéro' }, { status: 429 });
+      // 5 min minimum entre 2 soumissions
+      if (ipSubmissions.length > 0) {
+        const lastSub = new Date(ipSubmissions[0].created_date);
+        const minsSinceLast = (now - lastSub) / 1000 / 60;
+        if (minsSinceLast < BLOCK_DURATION_MINUTES) {
+          const wait = Math.ceil(BLOCK_DURATION_MINUTES - minsSinceLast);
+          return Response.json({ error: `Attends ${wait} minute(s) avant une nouvelle demande` }, { status: 429 });
+        }
+      }
+
+      // Limite par numéro de téléphone (max 2 par 24h)
+      if (recentPhoneSubs.length >= 2) {
+        return Response.json({ error: 'Limite de demandes atteinte pour ce numéro' }, { status: 429 });
+      }
     }
 
     // ---- Géolocalisation ----
