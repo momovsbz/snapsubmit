@@ -37,6 +37,7 @@ export default function Home() {
   const [showStatusCheck, setShowStatusCheck] = useState(false);
   const [showFAQ, setShowFAQ] = useState(false);
   const [adminInactive, setAdminInactive] = useState(false);
+  const [inlineError, setInlineError] = useState("");
 
   // Persist step in sessionStorage so refresh doesn't lose position
   const setStepPersisted = (newStep) => {
@@ -189,12 +190,9 @@ export default function Home() {
       sessionStorage.setItem("submissionId", submissionId);
       setStepPersisted("validation");
     } catch (error) {
-      // Rate limit or other error
       const errorMsg = error.response?.data?.error || "Une erreur s'est produite";
-      if (errorMsg.includes("Attends") || errorMsg.includes("Limite")) {
-        // This will be handled by the parent component or shown as an alert
-      }
-      alert(errorMsg);
+      setInlineError(errorMsg);
+      setStep("form");
     }
     setLoading(false);
   };
@@ -249,7 +247,18 @@ export default function Home() {
           <StatusCheck onBack={() => setShowStatusCheck(false)} />
         ) : (
           <>
-            {step === "form"       && <SubmissionForm onSubmit={handleSubmit} loading={loading} onStatusCheck={() => setShowStatusCheck(true)} onFaqClick={() => setShowFAQ(true)} />}
+            {step === "form"       && (
+              <>
+                {inlineError && (
+                  <div className="bg-destructive/10 border border-destructive/30 rounded-xl px-4 py-3 mb-3 flex items-center gap-2.5">
+                    <span className="text-lg">🚫</span>
+                    <p className="text-destructive text-sm font-medium flex-1">{inlineError}</p>
+                    <button onClick={() => setInlineError("")} className="text-destructive/60 hover:text-destructive text-xs font-medium">Fermer</button>
+                  </div>
+                )}
+                <SubmissionForm onSubmit={(data) => { setInlineError(""); handleSubmit(data); }} loading={loading} onStatusCheck={() => setShowStatusCheck(true)} onFaqClick={() => setShowFAQ(true)} />
+              </>
+            )}
             {step === "noAdmin"    && (
               <div className="bg-card border border-border rounded-2xl px-6 py-10 text-center shadow-xl">
                 <div className="text-4xl mb-4">⏳</div>
