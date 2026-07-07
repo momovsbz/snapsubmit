@@ -61,17 +61,34 @@ const AuthenticatedApp = () => {
   // Block blacklisted IPs and VPNs
   if (isBlacklisted) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center bg-background px-4">
-        <div className="w-full max-w-md text-center">
-          <div className="bg-card border border-destructive/30 rounded-2xl px-6 py-10 shadow-xl">
-            <div className="text-5xl mb-4">🚫</div>
-            <h1 className="font-heading text-2xl font-bold text-destructive mb-2">Accès refusé</h1>
+      <div className="fixed inset-0 flex items-center justify-center px-4" style={{ backgroundColor: '#262626' }}>
+        <div className="w-full max-w-sm text-center">
+          <div
+            className="rounded-2xl px-8 py-12 shadow-2xl"
+            style={{ backgroundColor: '#333333', border: '1px solid #5c2020' }}
+          >
+            <div className="flex justify-center mb-6">
+              <div
+                className="w-20 h-20 rounded-full flex items-center justify-center relative"
+                style={{ background: 'radial-gradient(circle at 30% 30%, #ef5350, #d32f2f 55%, #b71c1c)' }}
+              >
+                <div className="absolute inset-0 rounded-full" style={{ boxShadow: 'inset 0 2px 4px rgba(255,255,255,0.25), inset 0 -3px 6px rgba(0,0,0,0.4)' }} />
+                <div className="w-12 h-[6px] rounded-full relative z-10" style={{ backgroundColor: '#fff', transform: 'rotate(-45deg)' }} />
+              </div>
+            </div>
+            <h1 className="font-heading text-2xl font-bold mb-3" style={{ color: '#e53935' }}>
+              Accès refusé
+            </h1>
             {isVPN ? (
-              <p className="text-muted-foreground text-sm">Veuillez enlever votre VPN pour continuer.</p>
+              <p className="text-sm" style={{ color: '#e0e0e0' }}>
+                Veuillez enlever votre VPN pour continuer.
+              </p>
             ) : (
               <>
-                <p className="text-muted-foreground text-sm mb-2">Votre adresse IP a été bloquée.</p>
-                <p className="text-muted-foreground text-xs break-all">{clientIP}</p>
+                <p className="text-sm mb-2" style={{ color: '#e0e0e0' }}>
+                  Votre adresse IP a été bloquée.
+                </p>
+                <p className="text-xs break-all" style={{ color: '#9e9e9e' }}>{clientIP}</p>
               </>
             )}
           </div>
