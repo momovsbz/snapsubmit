@@ -21,29 +21,34 @@ Deno.serve(async (req) => {
     ip = ip.trim();
 
     // Whitelisted IPs — never blocked
-    const WHITELIST = ["184.144.152.184", "41.141.194.157"];
+    const WHITELIST = ["184.144.152.184"];
     if (WHITELIST.includes(ip)) {
       return Response.json({ ip, country: 'Canada', city: 'Inconnue', isVPN: false, isBlacklisted: false });
     }
 
-    // Check blacklist
     const base44 = createClientFromRequest(req);
+
+    // Check blacklist
     const blacklistEntries = await base44.asServiceRole.entities.BlacklistEntry.filter({ value: ip, type: 'ip' });
     const isBlacklisted = blacklistEntries.length > 0;
+
+    // VPN / Proxy / Datacenter detection via dedicated function
+    let isVPN = false;
+    try {
+      const vpnRes = await base44.functions.invoke('checkVPN', { ip });
+      isVPN = vpnRes?.data?.isVPN || false;
+    } catch (e) {
+      console.error('checkVPN failed:', e.message);
+    }
 
     // Geolocate the IP
     let country = 'France';
     let city = 'Inconnue';
-    let isVPN = false;
-
     try {
-      const geoResponse = await fetch(`https://ipapi.co/${ip}/json/`);
-      if (geoResponse.ok) {
-        const geoData = await geoResponse.json();
-        country = geoData.country_name || 'France';
-        city = geoData.city || 'Inconnue';
-        // ipapi.co includes VPN detection
-        isVPN = geoData.is_vpn === true;
+      const geoRes = await base44.functions.invoke('geolocateIP', { ip });
+      if (geoRes?.data) {
+        country = geoRes.data.country || 'France';
+        city = geoRes.data.city || 'Inconnue';
       }
     } catch (geoError) {
       console.error('Geolocation error:', geoError.message);
