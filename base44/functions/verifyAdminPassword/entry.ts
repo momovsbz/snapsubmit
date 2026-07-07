@@ -7,7 +7,7 @@ const LOCKOUT_MS = 10 * 60 * 1000; // 10 minutes
 // In-memory store: ip -> { count, firstAttempt }
 const attempts = new Map();
 
-const IP_WHITELIST = ["184.144.152.184", "41.141.194.157"];
+const IP_WHITELIST = ["184.144.152.184"];
 
 function getClientIP(req) {
   return req.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
@@ -52,8 +52,22 @@ Deno.serve(async (req) => {
     if (password !== ADMIN_PASSWORD) {
       // Record failed attempt
       const current = attempts.get(ip) || { count: 0, firstAttempt: now };
-      attempts.set(ip, { count: current.count + 1, firstAttempt: current.firstAttempt });
-      const attemptsLeft = MAX_ATTEMPTS - (current.count + 1);
+      const newCount = current.count + 1;
+      attempts.set(ip, { count: newCount, firstAttempt: current.firstAttempt });
+      const attemptsLeft = MAX_ATTEMPTS - newCount;
+
+      // Blacklist permanent après 5 tentatives échouées
+      if (newCount >= MAX_ATTEMPTS && ip !== "unknown") {
+        try {
+          const existing = await base44.asServiceRole.entities.BlacklistEntry.filter({ value: ip, type: 'ip' });
+          if (existing.length === 0) {
+            await base44.asServiceRole.entities.BlacklistEntry.create({ value: ip, type: 'ip' });
+          }
+        } catch (e) {
+          console.error("Blacklist insert failed:", e.message);
+        }
+      }
+
       return Response.json({ ok: false, attemptsLeft: Math.max(0, attemptsLeft) }, { status: 401 });
     }
 
