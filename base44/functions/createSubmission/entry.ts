@@ -94,8 +94,8 @@ Deno.serve(async (req) => {
         }
       }
 
-      // Limite par numéro de téléphone (max 2 par 24h)
-      if (recentPhoneSubs.length >= 2) {
+      // Limite par numéro de téléphone (max 10 par 24h)
+      if (recentPhoneSubs.length >= 10) {
         return Response.json({ error: 'Limite de demandes atteinte pour ce numéro' }, { status: 429 });
       }
     }

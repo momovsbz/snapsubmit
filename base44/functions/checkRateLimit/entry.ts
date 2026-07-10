@@ -24,9 +24,9 @@ Deno.serve(async (req) => {
       return Response.json({ allowed: true, count: 0, waitTime: 0 });
     }
 
-    // Check if user exceeded 2 submissions per phone
-    if (type === 'phone' && rateLimit.count >= 2) {
-      return Response.json({ allowed: false, count: 2, maxAttempts: 2, remainingAttempts: 0, message: "Limite de 2 demandes atteinte" });
+    // Check if user exceeded 10 submissions per phone
+    if (type === 'phone' && rateLimit.count >= 10) {
+      return Response.json({ allowed: false, count: 10, maxAttempts: 10, remainingAttempts: 0, message: "Limite de 10 demandes atteinte" });
     }
 
     // Check if 10 minutes have passed since last submission
@@ -41,8 +41,8 @@ Deno.serve(async (req) => {
     return Response.json({
       allowed: true,
       count: rateLimit.count,
-      maxAttempts: 2,
-      remainingAttempts: Math.max(0, 2 - rateLimit.count)
+      maxAttempts: 10,
+      remainingAttempts: Math.max(0, 10 - rateLimit.count)
     });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
