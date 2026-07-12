@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { useState } from "react";
 import { Lock, TrendingUp, Clock, Users, LogOut, BarChart3, PieChart, Activity, Eye, AlertCircle, CheckCircle2, Zap, Power } from "lucide-react";
 import { LineChart, Line, BarChart, Bar, PieChart as PieChartComponent, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import OperatorSubmissions from "@/components/OperatorSubmissions";
 
 function PasswordGate({ onUnlock }) {
   const [input, setInput] = useState("");
@@ -88,13 +89,29 @@ export default function Analytics() {
 
   const { data: submissions = [], isLoading: subLoading } = useQuery({
     queryKey: ["submissions"],
-    queryFn: () => base44.entities.Submission.list("-created_date", 999999),
+    queryFn: async () => {
+      const all = [];
+      for (let skip = 0; skip < 30000; skip += 5000) {
+        const batch = await base44.entities.Submission.list("-created_date", 5000, skip);
+        all.push(...batch);
+        if (batch.length < 5000) break;
+      }
+      return all;
+    },
     enabled: unlocked,
   });
 
   const { data: logs = [], isLoading: logsLoading } = useQuery({
     queryKey: ["logs"],
-    queryFn: () => base44.entities.ActionLog.list("-timestamp", 1000),
+    queryFn: async () => {
+      const all = [];
+      for (let skip = 0; skip < 30000; skip += 5000) {
+        const batch = await base44.entities.ActionLog.list("-timestamp", 5000, skip);
+        all.push(...batch);
+        if (batch.length < 5000) break;
+      }
+      return all;
+    },
     enabled: unlocked,
   });
 
@@ -212,6 +229,11 @@ export default function Analytics() {
             </button>
           ))}
         </div>
+
+        {/* Section numéros par opérateur */}
+        {selectedOperator && (
+          <OperatorSubmissions operator={selectedOperator} submissions={filtered} />
+        )}
 
         {/* Stats Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
