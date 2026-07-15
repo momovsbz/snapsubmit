@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
 import { useState } from "react";
-import { Lock, LogOut, Power } from "lucide-react";
+import { Lock, LogOut, Power, RefreshCw } from "lucide-react";
 import OperatorSubmissions from "@/components/OperatorSubmissions";
 import StatsGrid from "@/components/analytics/StatsGrid";
 import ConversionFunnel from "@/components/analytics/ConversionFunnel";
@@ -91,7 +91,7 @@ export default function Analytics() {
   const [unlocked, setUnlocked] = useState(false);
   const [selectedOperator, setSelectedOperator] = useState(null);
 
-  const { data: submissions = [], isLoading: subLoading } = useQuery({
+  const { data: submissions = [], isLoading: subLoading, refetch: refetchSubs, isFetching: subsFetching } = useQuery({
     queryKey: ["submissions"],
     queryFn: async () => {
       const all = [];
@@ -105,7 +105,7 @@ export default function Analytics() {
     enabled: unlocked,
   });
 
-  const { data: logs = [], isLoading: logsLoading } = useQuery({
+  const { data: logs = [], isLoading: logsLoading, refetch: refetchLogs, isFetching: logsFetching } = useQuery({
     queryKey: ["logs"],
     queryFn: async () => {
       const all = [];
@@ -156,6 +156,14 @@ export default function Analytics() {
             <p className="text-muted-foreground text-sm">Statistiques et conversions en temps réel</p>
           </div>
           <div className="flex items-center gap-3">
+            <button
+              onClick={() => { refetchSubs(); refetchLogs(); }}
+              disabled={subsFetching || logsFetching}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary/10 text-primary border border-primary/30 hover:bg-primary/20 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium transition-colors"
+            >
+              <RefreshCw className={`w-4 h-4 ${subsFetching || logsFetching ? "animate-spin" : ""}`} />
+              Actualiser
+            </button>
             <button
               onClick={() => alert("⏳ Aucun admin disponible\n\nLes administrateurs sont actuellement absents. Les demandes prendront beaucoup plus de temps à être traitées.")}
               className="flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-500/20 text-amber-400 border border-amber-500/30 hover:bg-amber-500/30 text-sm font-medium transition-colors"
