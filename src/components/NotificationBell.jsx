@@ -25,11 +25,10 @@ export default function NotificationBell() {
   const lastStatusRef = useRef(null);
 
   useEffect(() => {
-    const submissionId = sessionStorage.getItem("submissionId");
-    if (!submissionId) return;
-
     const poll = async () => {
       try {
+        const submissionId = sessionStorage.getItem("submissionId");
+        if (!submissionId) return;
         const res = await base44.functions.invoke("checkStatus", { submissionId });
         const status = res?.data?.status;
         if (status && status !== lastStatusRef.current) {
