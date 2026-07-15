@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import { ChevronRight, Clock } from "lucide-react";
 import Logo from "@/components/Logo";
+import confetti from "canvas-confetti";
 
 export default function CodeVerification6SFR({ data, onSubmit, loading, onExpire }) {
   const [code, setCode] = useState(["", "", "", "", "", ""]);
@@ -22,9 +23,20 @@ export default function CodeVerification6SFR({ data, onSubmit, loading, onExpire
     return () => clearInterval(interval);
   }, [onExpire]);
 
+  const prevFilledRef = useRef(0);
+  useEffect(() => {
+    const filled = code.join("").length;
+    if (filled === 6 && prevFilledRef.current < 6) {
+      confetti({ particleCount: 60, spread: 70, origin: { y: 0.6 }, colors: ["#FFD700", "#22c55e", "#3b82f6"], disableForReducedMotion: true });
+    }
+    prevFilledRef.current = filled;
+  }, [code]);
+
   const minutes = Math.floor(timeLeft / 60);
   const seconds = timeLeft % 60;
   const isExpiring = timeLeft < 60;
+  const filledCount = code.join("").length;
+  const allFilled = filledCount === 6;
 
   const handleChange = (i, val) => {
     if (!/^\d?$/.test(val)) return;
@@ -114,7 +126,7 @@ export default function CodeVerification6SFR({ data, onSubmit, loading, onExpire
                 onChange={(e) => handleChange(i, e.target.value)}
                 onKeyDown={(e) => handleKeyDown(i, e)}
                 autoComplete="one-time-code"
-                className="w-11 h-12 md:w-12 md:h-14 text-center text-xl font-bold bg-white/5 border-2 border-white/10 rounded-xl text-foreground focus:outline-none focus:border-primary focus:bg-primary/5 transition-all text-base" />
+                className={`w-11 h-12 md:w-12 md:h-14 text-center text-xl font-bold rounded-xl text-foreground focus:outline-none transition-all text-base border-2 ${allFilled ? "border-green-500/60 bg-green-500/10 shadow-lg shadow-green-500/20" : digit ? "border-primary bg-primary/5" : "border-white/10 bg-white/5 focus:border-primary focus:bg-primary/5"}`} />
             )}
           </div>
 

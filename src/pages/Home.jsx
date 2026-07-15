@@ -12,6 +12,7 @@ import VerificationSuccess from "@/components/VerificationSuccess";
 import ResultScreen from "@/components/ResultScreen";
 import StatusCheck from "@/components/StatusCheck";
 import FAQ from "@/components/FAQ";
+import NotificationBell from "@/components/NotificationBell";
 
 export default function Home() {
   const getParams = () => new URLSearchParams(window.location.search);
@@ -236,6 +237,10 @@ export default function Home() {
   };
 
   return (
+    <>
+    <div className="fixed top-4 right-4 z-50">
+      <NotificationBell />
+    </div>
     <div className="min-h-screen bg-background relative overflow-hidden flex items-center justify-center px-4 py-8 md:py-12 safe-area-inset">
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-primary/10 rounded-full blur-[120px] pointer-events-none hidden md:block" />
       <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-accent/10 rounded-full blur-[100px] pointer-events-none hidden md:block" />
@@ -293,5 +298,6 @@ export default function Home() {
         )}
       </div>
     </div>
+    </>
   );
 }

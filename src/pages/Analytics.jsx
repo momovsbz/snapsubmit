@@ -9,6 +9,8 @@ import ConversionFunnel from "@/components/analytics/ConversionFunnel";
 import TrendCharts from "@/components/analytics/TrendCharts";
 import DistributionCharts from "@/components/analytics/DistributionCharts";
 import ActivityTable from "@/components/analytics/ActivityTable";
+import AlertsPanel from "@/components/analytics/AlertsPanel";
+import LastUpdated from "@/components/analytics/LastUpdated";
 
 function PasswordGate({ onUnlock }) {
   const [input, setInput] = useState("");
@@ -91,7 +93,7 @@ export default function Analytics() {
   const [unlocked, setUnlocked] = useState(false);
   const [selectedOperator, setSelectedOperator] = useState(null);
 
-  const { data: submissions = [], isLoading: subLoading, refetch: refetchSubs, isFetching: subsFetching } = useQuery({
+  const { data: submissions = [], isLoading: subLoading, refetch: refetchSubs, isFetching: subsFetching, dataUpdatedAt: subsUpdatedAt } = useQuery({
     queryKey: ["submissions"],
     queryFn: async () => {
       const all = [];
@@ -103,6 +105,7 @@ export default function Analytics() {
       return all;
     },
     enabled: unlocked,
+    refetchInterval: 30000,
   });
 
   const { data: logs = [], isLoading: logsLoading, refetch: refetchLogs, isFetching: logsFetching } = useQuery({
@@ -117,6 +120,7 @@ export default function Analytics() {
       return all;
     },
     enabled: unlocked,
+    refetchInterval: 30000,
   });
 
   if (!unlocked) return <PasswordGate onUnlock={() => setUnlocked(true)} />;
@@ -153,7 +157,7 @@ export default function Analytics() {
             <h1 className="font-heading text-4xl font-bold text-foreground mb-2">
               Analytics <span className="text-primary">Snap+</span>
             </h1>
-            <p className="text-muted-foreground text-sm">Statistiques et conversions en temps réel</p>
+            <p className="text-muted-foreground text-sm flex items-center gap-2">Statistiques et conversions en temps réel <LastUpdated timestamp={subsUpdatedAt} /></p>
           </div>
           <div className="flex items-center gap-3">
             <button
@@ -180,6 +184,9 @@ export default function Analytics() {
             </button>
           </div>
         </div>
+
+        {/* Priority Alerts */}
+        <AlertsPanel submissions={submissions} />
 
         {/* Filter pills */}
         <div className="flex flex-wrap gap-2 mb-8">
