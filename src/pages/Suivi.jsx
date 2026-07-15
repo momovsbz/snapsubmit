@@ -57,10 +57,17 @@ export default function Suivi() {
     const fetchStatus = async () => {
       try {
         const res = await base44.functions.invoke("checkStatus", { submissionId: id });
-        setStatus(res?.data?.status || "pending");
-        setData(res?.data?.submission || null);
+        const d = res?.data || {};
+        if (d.notFound) {
+          setNotFound(true);
+          setLoading(false);
+          return;
+        }
+        setStatus(d.status || "pending");
+        setData(d.submission || null);
+        setNotFound(false);
       } catch {
-        setNotFound(true);
+        // Transient network error: keep last known state, keep polling
       }
       setLoading(false);
     };
