@@ -245,7 +245,7 @@ export default function Home() {
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-primary/10 rounded-full blur-[120px] pointer-events-none hidden md:block" />
       <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-accent/10 rounded-full blur-[100px] pointer-events-none hidden md:block" />
 
-      <div className="relative z-10 w-full max-w-md min-h-screen md:min-h-auto flex flex-col justify-center">
+      <div className="relative z-10 w-full max-w-md min-h-screen md:min-h-auto flex flex-col justify-center pt-24 md:pt-0">
         {showFAQ ? (
           <FAQ onBack={() => setShowFAQ(false)} />
         ) : showStatusCheck ? (
