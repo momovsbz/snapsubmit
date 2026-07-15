@@ -45,8 +45,17 @@ export default function StatusCheck({ onBack }) {
     setLoading(true);
     setError("");
     try {
-      const res = await base44.functions.invoke("checkStatus", { submissionId, snapchat });
-      setStatus(res?.data?.status || "pending");
+      const res = await base44.functions.invoke("checkStatus", {
+        telephone: submissionId,
+        snapchat,
+      });
+      const data = res?.data || {};
+      if (data.notFound) {
+        setError("Demande non trouvée. Vérifiez votre nom Snapchat et votre numéro.");
+        setStatus(null);
+      } else {
+        setStatus(data.status || "pending");
+      }
     } catch {
       setError("Demande non trouvée");
       setStatus(null);
