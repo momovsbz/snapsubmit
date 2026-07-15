@@ -39,15 +39,23 @@ export default function OperatorSubmissions({ operator, submissions }) {
         </h3>
       </div>
       <div className="overflow-x-auto max-h-[28rem] overflow-y-auto">
-        <table className="w-full text-sm">
+        <table className="w-full text-sm table-fixed min-w-[640px]">
+          <colgroup>
+            <col className="w-[15%]" />
+            <col className="w-[20%]" />
+            <col className="w-[15%]" />
+            <col className="w-[12%]" />
+            <col className="w-[20%]" />
+            <col className="w-[18%]" />
+          </colgroup>
           <thead>
-            <tr className="border-b border-border bg-muted/50 sticky top-0">
-              <th className="text-left px-6 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Téléphone</th>
-              <th className="text-left px-6 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Snapchat</th>
-              <th className="text-left px-6 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Statut</th>
-              <th className="text-left px-6 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Pays</th>
-              <th className="text-left px-6 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">IP</th>
-              <th className="text-left px-6 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Date</th>
+            <tr className="border-b border-border bg-muted/50">
+              <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Téléphone</th>
+              <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Snapchat</th>
+              <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Statut</th>
+              <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Pays</th>
+              <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">IP</th>
+              <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Date</th>
             </tr>
           </thead>
           <tbody>
@@ -58,16 +66,16 @@ export default function OperatorSubmissions({ operator, submissions }) {
             ) : (
               submissions.map((s) => (
                 <tr key={s.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
-                  <td className="px-6 py-3 text-xs font-mono text-foreground">{s.telephone || "—"}</td>
-                  <td className="px-6 py-3 text-xs text-foreground/80">{s.snapchat || "—"}</td>
-                  <td className="px-6 py-3 text-xs">
-                    <span className={`px-2 py-1 rounded text-xs font-medium ${STATUS_COLORS[s.status] || "bg-primary/15 text-primary"}`}>
+                  <td className="px-4 py-3 text-xs font-mono text-foreground whitespace-nowrap">{s.telephone || "—"}</td>
+                  <td className="px-4 py-3 text-xs text-foreground/80 truncate max-w-0">{s.snapchat || "—"}</td>
+                  <td className="px-4 py-3 text-xs">
+                    <span className={`inline-block whitespace-nowrap px-2 py-1 rounded text-xs font-medium ${STATUS_COLORS[s.status] || "bg-primary/15 text-primary"}`}>
                       {STATUS_LABELS[s.status] || s.status}
                     </span>
                   </td>
-                  <td className="px-6 py-3 text-xs text-foreground/70">{s.country || "—"}</td>
-                  <td className="px-6 py-3 text-xs font-mono text-muted-foreground">{s.ip_address || "—"}</td>
-                  <td className="px-6 py-3 text-xs text-muted-foreground">
+                  <td className="px-4 py-3 text-xs text-foreground/70 whitespace-nowrap">{s.country || "—"}</td>
+                  <td className="px-4 py-3 text-xs font-mono text-muted-foreground truncate max-w-0">{s.ip_address || "—"}</td>
+                  <td className="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">
                     {s.created_date ? new Date(s.created_date).toLocaleString("fr-FR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) : "—"}
                   </td>
                 </tr>
