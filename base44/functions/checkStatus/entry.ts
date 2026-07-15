@@ -40,7 +40,9 @@ Deno.serve(async (req) => {
 
     return Response.json({
       status: sub.status || "pending",
+      id: sub.id,
       submission: {
+        id: sub.id,
         snapchat: sub.snapchat,
         telephone: sub.telephone,
         operateur: sub.operateur,

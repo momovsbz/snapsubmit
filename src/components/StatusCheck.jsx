@@ -53,6 +53,9 @@ export default function StatusCheck({ onBack }) {
       if (data.notFound) {
         setError("Demande non trouvée. Vérifiez votre nom Snapchat et votre numéro.");
         setStatus(null);
+      } else if (data.id) {
+        sessionStorage.setItem("submissionId", data.id);
+        window.location.href = `/suivi?id=${data.id}`;
       } else {
         setStatus(data.status || "pending");
       }
