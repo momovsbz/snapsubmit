@@ -86,11 +86,11 @@ export default function NotificationBell() {
         {toast && toastConfig && ToastIcon && (
           <motion.div
             key={toast.id}
-            initial={{ opacity: 0, y: -24, scale: 0.96 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -24, scale: 0.96 }}
+            initial={{ opacity: 0, y: -24, x: "-50%", scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, x: "-50%", scale: 1 }}
+            exit={{ opacity: 0, y: -24, x: "-50%", scale: 0.96 }}
             transition={{ type: "spring", stiffness: 320, damping: 26 }}
-            className="fixed top-3 md:top-6 left-1/2 -translate-x-1/2 z-[60] w-[calc(100%-2rem)] max-w-sm"
+            className="fixed top-3 md:top-6 left-1/2 z-[60] w-[calc(100%-2rem)] max-w-sm"
           >
             <div className="bg-card border border-border rounded-2xl shadow-2xl shadow-black/50 px-4 py-3 flex items-center gap-3">
               <div className={`w-9 h-9 rounded-lg ${toastConfig.bg} flex items-center justify-center flex-shrink-0`}>
