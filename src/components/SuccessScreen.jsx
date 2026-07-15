@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Send, Clock, ExternalLink } from "lucide-react";
+import { Send, Clock, ArrowRight } from "lucide-react";
 import { useState, useEffect } from "react";
 import Logo from "@/components/Logo";
 
@@ -113,12 +113,10 @@ export default function SuccessScreen({ data, adminInactive }) {
         {/* Lien de suivi */}
         <a
           href={`/suivi?id=${typeof sessionStorage !== "undefined" ? sessionStorage.getItem("submissionId") || "" : ""}`}
-          target="_blank"
-          rel="noopener noreferrer"
           className="block w-full bg-primary/10 border border-primary/30 rounded-xl px-4 py-3 mb-6 text-center hover:bg-primary/20 transition-colors"
         >
           <span className="flex items-center justify-center gap-2 text-primary text-sm font-semibold">
-            <ExternalLink className="w-4 h-4" /> Suivre ma demande en temps réel
+            <ArrowRight className="w-4 h-4" /> Suivre ma demande en temps réel
           </span>
         </a>
 

@@ -240,7 +240,22 @@ export default function Suivi() {
                   </motion.div>
                 )}
 
-                <a href="/" className="mt-6 flex items-center justify-center gap-1 text-muted-foreground/60 text-xs hover:text-muted-foreground transition-colors">
+                {/* Retour à la demande en cours */}
+                {status !== "code_valid" && (
+                  <motion.button
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => { window.location.href = "/?resume=1"; }}
+                    className="w-full mt-6 mb-2 bg-secondary border border-border text-foreground font-bold py-4 rounded-2xl flex items-center justify-center gap-2.5 hover:bg-muted transition-colors"
+                  >
+                    <ArrowLeft className="w-5 h-5" />
+                    Retour à ma demande en cours
+                  </motion.button>
+                )}
+
+                <a href="/" className="flex items-center justify-center gap-1 text-muted-foreground/60 text-xs hover:text-muted-foreground transition-colors">
                   <ArrowLeft className="w-3 h-3" /> Retour à l'accueil
                 </a>
               </>
