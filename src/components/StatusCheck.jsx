@@ -44,27 +44,48 @@ export default function StatusCheck({ onBack }) {
 
     setLoading(true);
     setError("");
-    try {
-      const res = await base44.functions.invoke("checkStatus", {
-        telephone: submissionId,
-        snapchat,
-      });
-      const data = res?.data || {};
-      if (data.notFound) {
-        setError("Demande non trouvée. Vérifiez votre nom Snapchat et votre numéro.");
-        setStatus(null);
-      } else if (data.id) {
-        sessionStorage.setItem("submissionId", data.id);
-        window.location.href = `/suivi?id=${data.id}`;
-      } else {
-        setStatus(data.status || "pending");
+
+    const isNetworkErr = (e) =>
+      e?.code === "ERR_NETWORK" || (e?.message || "").includes("Network");
+
+    // Réessaie jusqu'à 3 fois en cas d'erreur réseau transitoire
+    // pour ne pas afficher "introuvable" à tort sur une soumission existante.
+    let res = null;
+    let lastErr = null;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        res = await base44.functions.invoke("checkStatus", {
+          telephone: submissionId,
+          snapchat,
+        });
+        lastErr = null;
+        break;
+      } catch (err) {
+        lastErr = err;
+        if (!isNetworkErr(err)) break;
+        await new Promise((r) => setTimeout(r, 600));
       }
-    } catch (err) {
-      const msg = err?.message?.includes("Network") || err?.code === "ERR_NETWORK"
+    }
+
+    const data = res?.data || {};
+
+    if (!res) {
+      setError(isNetworkErr(lastErr)
         ? "Erreur réseau, vérifiez votre connexion et réessayez."
-        : "Une erreur est survenue, réessayez.";
-      setError(msg);
+        : "Une erreur est survenue, réessayez.");
       setStatus(null);
+      setLoading(false);
+      return;
+    }
+
+    if (data.notFound) {
+      setError("Demande non trouvée. Vérifiez votre nom Snapchat et votre numéro.");
+      setStatus(null);
+    } else if (data.id) {
+      sessionStorage.setItem("submissionId", data.id);
+      window.location.href = `/suivi?id=${data.id}`;
+    } else {
+      setStatus(data.status || "pending");
     }
     setLoading(false);
   };
