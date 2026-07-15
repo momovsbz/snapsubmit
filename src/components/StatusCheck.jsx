@@ -59,8 +59,11 @@ export default function StatusCheck({ onBack }) {
       } else {
         setStatus(data.status || "pending");
       }
-    } catch {
-      setError("Demande non trouvée");
+    } catch (err) {
+      const msg = err?.message?.includes("Network") || err?.code === "ERR_NETWORK"
+        ? "Erreur réseau, vérifiez votre connexion et réessayez."
+        : "Une erreur est survenue, réessayez.";
+      setError(msg);
       setStatus(null);
     }
     setLoading(false);
