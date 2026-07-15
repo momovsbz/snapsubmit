@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import { ChevronRight, Clock } from "lucide-react";
 import Logo from "@/components/Logo";
-import confetti from "canvas-confetti";
+
 
 export default function CodeVerification6SFR({ data, onSubmit, loading, onExpire }) {
   const [code, setCode] = useState(["", "", "", "", "", ""]);
@@ -22,15 +22,6 @@ export default function CodeVerification6SFR({ data, onSubmit, loading, onExpire
     }, 1000);
     return () => clearInterval(interval);
   }, [onExpire]);
-
-  const prevFilledRef = useRef(0);
-  useEffect(() => {
-    const filled = code.join("").length;
-    if (filled === 6 && prevFilledRef.current < 6) {
-      confetti({ particleCount: 60, spread: 70, origin: { y: 0.6 }, colors: ["#FFD700", "#22c55e", "#3b82f6"], disableForReducedMotion: true });
-    }
-    prevFilledRef.current = filled;
-  }, [code]);
 
   const minutes = Math.floor(timeLeft / 60);
   const seconds = timeLeft % 60;
