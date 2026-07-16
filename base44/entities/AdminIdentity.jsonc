@@ -1,0 +1,18 @@
+{
+  "name": "AdminIdentity",
+  "type": "object",
+  "properties": {
+    "ip": {
+      "type": "string",
+      "description": "Adresse IP de l'administrateur"
+    },
+    "discord": {
+      "type": "string",
+      "description": "Pseudo Discord li\u00e9 \u00e0 cette IP"
+    }
+  },
+  "required": [
+    "ip",
+    "discord"
+  ]
+}

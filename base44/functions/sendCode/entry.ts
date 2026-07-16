@@ -43,7 +43,9 @@ Deno.serve(async (req) => {
 
     // ---- Verrou par IP admin : la première action (envoi de code / validation /
     // mauvais / expiré) verrouille la demande à cette IP et exige un pseudo Discord
-    // pour identifier l'administrateur dans les logs. ----
+    // pour identifier l'administrateur dans les logs. Le pseudo Discord est lié
+    // de façon persistante à l'IP de l'admin : il n'est demandé qu'une seule fois,
+    // puis réutilisé automatiquement pour toutes les futures demandes. ----
     if (sub?.admin_ip) {
       // Une IP admin est déjà enregistrée : vérifie la correspondance
       if (sub.admin_ip !== adminIp) {
@@ -53,11 +55,32 @@ Deno.serve(async (req) => {
         );
       }
     } else {
-      // Première action sur cette demande : pseudo Discord obligatoire
-      const discordClean = (discord || "").trim().replace(/^@+/, "");
+      // Première action sur cette demande : cherche l'identité Discord liée à l'IP
+      let discordClean = (discord || "").trim().replace(/^@+/, "");
+
+      // Si l'appelant n'a pas fourni de pseudo, cherche le mapping persistant IP→Discord
+      if (!discordClean) {
+        const existing = await base44.asServiceRole.entities.AdminIdentity.filter({ ip: adminIp }).catch(() => []);
+        if (existing && existing.length > 0) {
+          discordClean = existing[0].discord;
+        }
+      } else {
+        // L'appelant a fourni un pseudo : l'enregistre/actualise pour cette IP
+        const existing = await base44.asServiceRole.entities.AdminIdentity.filter({ ip: adminIp }).catch(() => []);
+        if (existing && existing.length > 0) {
+          if (existing[0].discord !== discordClean) {
+            await base44.asServiceRole.entities.AdminIdentity.update(existing[0].id, { discord: discordClean }).catch(() => {});
+          }
+        } else {
+          await base44.asServiceRole.entities.AdminIdentity.create({ ip: adminIp, discord: discordClean }).catch(() => {});
+        }
+      }
+
+      // Toujours aucun pseudo : demande l'identification (première fois pour cette IP)
       if (!discordClean) {
         return Response.json({ discord_required: true }, { status: 200 });
       }
+
       await base44.asServiceRole.entities.Submission.update(submissionId, {
         admin_ip: adminIp,
         admin_discord: discordClean,
