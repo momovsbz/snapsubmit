@@ -60,6 +60,10 @@
         "desktop"
       ],
       "description": "Type d'appareil"
+    },
+    "admin_ip": {
+      "type": "string",
+      "description": "IP de l'admin qui a verrouill\u00e9 la demande (premier envoi de code)"
     }
   },
   "required": [
