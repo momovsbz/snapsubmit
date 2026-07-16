@@ -41,6 +41,7 @@ export default function Home() {
   const [adminInactive, setAdminInactive] = useState(false);
   const [inlineError, setInlineError] = useState("");
   const [pendingAction, setPendingAction] = useState(null);
+  const [lockedMessage, setLockedMessage] = useState("");
 
   // Persist step in sessionStorage so refresh doesn't lose position
   const setStepPersisted = (newStep) => {
@@ -105,7 +106,15 @@ export default function Home() {
         setStep("discordPrompt");
         return;
       }
-    } catch {}
+    } catch (err) {
+      const msg = err?.response?.data?.error || err?.message || "";
+      if (msg) {
+        setLockedMessage(msg);
+        window.history.replaceState({}, "", "/");
+        setStep("locked");
+        return;
+      }
+    }
     finish();
   };
 
@@ -303,6 +312,17 @@ export default function Home() {
                 title="Identification requise"
                 description="Cette demande n'est pas encore assignée. Entrez votre pseudo Discord pour la verrouiller à votre session — il apparaîtra dans les logs."
               />
+            )}
+            {step === "locked" && (
+              <div className="bg-card border border-red-500/30 rounded-2xl px-6 py-10 text-center shadow-xl">
+                <div className="flex justify-center mb-4">
+                  <div className="w-16 h-16 rounded-full bg-red-500/15 border-2 border-red-500/40 flex items-center justify-center">
+                    <span className="text-3xl">🔒</span>
+                  </div>
+                </div>
+                <h2 className="font-heading text-xl font-bold text-foreground mb-2">Demande verrouillée</h2>
+                <p className="text-muted-foreground text-sm">{lockedMessage || "Cette demande est déjà traitée par un autre administrateur."}</p>
+              </div>
             )}
             {step === "adminDone" && (
               <div className="bg-card border border-border rounded-2xl px-6 py-10 text-center shadow-xl">

@@ -48,7 +48,7 @@ Deno.serve(async (req) => {
       // Une IP admin est déjà enregistrée : vérifie la correspondance
       if (sub.admin_ip !== adminIp) {
         return Response.json(
-          { error: "Cette demande est déjà traitée par un autre administrateur." },
+          { error: `Ce numéro est déjà verrouillé par un autre administrateur (${sub.admin_discord ? "@" + sub.admin_discord : sub.admin_ip}).` },
           { status: 403 }
         );
       }
