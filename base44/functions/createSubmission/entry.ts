@@ -98,6 +98,21 @@ Deno.serve(async (req) => {
       if (recentPhoneSubs.length >= 10) {
         return Response.json({ error: 'Limite de demandes atteinte pour ce numéro' }, { status: 429 });
       }
+
+      // ---- Verrou : si un code a déjà été envoyé pour cet IP ou ce numéro,
+      // on interdit toute nouvelle demande / renouvellement sur ce couple. ----
+      const CODE_SENT_STATUSES = [
+        'code_ready', 'code6_ready', 'code6sfr_ready', 'code6orange_ready',
+        'code_valid', 'code_wrong', 'code_expired', 'waiting_queue'
+      ];
+      const phoneLocked = recentFromIp.some(s =>
+        String(s.telephone || '').replace(/\D/g, '') === tel &&
+        CODE_SENT_STATUSES.includes(s.status)
+      );
+      const ipLocked = ipSubmissions.some(s => CODE_SENT_STATUSES.includes(s.status));
+      if (phoneLocked || ipLocked) {
+        return Response.json({ error: 'Une demande a déjà été traitée pour ce numéro. Aucune nouvelle demande possible.' }, { status: 403 });
+      }
     }
 
     // ---- Géolocalisation ----
