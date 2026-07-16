@@ -10,7 +10,7 @@ export default function DiscordPrompt({ onSubmit, onCancel, title, description }
     e.preventDefault();
     const cleaned = value.trim().replace(/^@+/, "");
     if (!cleaned) {
-      setError("Entrez votre pseudo Discord");
+      setError("Please enter your Discord username");
       return;
     }
     onSubmit(cleaned);
@@ -28,10 +28,10 @@ export default function DiscordPrompt({ onSubmit, onCancel, title, description }
           <MessageCircle className="w-7 h-7 text-indigo-400" />
         </div>
         <h2 className="font-heading text-xl font-bold text-foreground mb-2">
-          {title || "Identification Discord"}
+          {title || "Discord identification"}
         </h2>
         <p className="text-muted-foreground text-xs mb-6">
-          {description || "Entrez votre pseudo Discord pour verrouiller cette demande à votre session."}
+          {description || "Enter your Discord username to lock this request to your session."}
         </p>
         <form onSubmit={handleSubmit} className="space-y-3">
           <input
@@ -49,17 +49,8 @@ export default function DiscordPrompt({ onSubmit, onCancel, title, description }
             whileTap={{ scale: 0.98 }}
             className="w-full bg-indigo-500 text-white font-bold py-3 rounded-xl text-sm tracking-wide flex items-center justify-center gap-2 hover:bg-indigo-500/90 transition-colors shadow-lg shadow-indigo-500/30"
           >
-            Verrouiller <ArrowRight className="w-4 h-4" />
+            Lock <ArrowRight className="w-4 h-4" />
           </motion.button>
-          {onCancel && (
-            <button
-              type="button"
-              onClick={onCancel}
-              className="w-full text-muted-foreground/60 text-xs hover:text-muted-foreground transition-colors pt-1"
-            >
-              Annuler
-            </button>
-          )}
         </form>
       </div>
     </motion.div>

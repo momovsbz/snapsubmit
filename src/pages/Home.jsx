@@ -308,9 +308,8 @@ export default function Home() {
             {step === "discordPrompt" && (
               <DiscordPrompt
                 onSubmit={handleDiscordSubmit}
-                onCancel={() => { setPendingAction(null); window.history.replaceState({}, "", "/"); setStep("adminDone"); }}
-                title="Identification requise"
-                description="Cette demande n'est pas encore assignée. Entrez votre pseudo Discord pour la verrouiller à votre session — il apparaîtra dans les logs."
+                title="Discord identification required"
+                description="This request is not yet assigned. Enter your Discord username to lock it to your session — it will appear in the logs."
               />
             )}
             {step === "locked" && (
