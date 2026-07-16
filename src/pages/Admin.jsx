@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { Lock, Shield, Ban, Send, Check, Phone, Ghost, Activity, Power, X } from "lucide-react";
+import DiscordPrompt from "@/components/DiscordPrompt";
 
 const operatorBadge = {
   SFR: "bg-red-500/15 text-red-400 border-red-500/30",
@@ -106,6 +107,7 @@ export default function Admin() {
   const [blacklistInput, setBlacklistInput] = useState("");
   const [adminInactive, setAdminInactive] = useState(false);
   const [actionSuccess, setActionSuccess] = useState(false);
+  const [discordPromptId, setDiscordPromptId] = useState(null);
 
   const { data: submissions = [], isLoading } = useQuery({
     queryKey: ["submissions"],
@@ -131,25 +133,41 @@ export default function Admin() {
     if (triggerId) handleSendCode(triggerId);
   }, [unlocked]);
 
-  const handleSendCode = async (id) => {
+  const runSendCode = async (id, discord) => {
     setSendingId(id);
     let success = false;
+    let needDiscord = false;
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
-        await base44.functions.invoke("sendCode", { submissionId: id, action: "code_ready" });
+        const res = await base44.functions.invoke("sendCode", {
+          submissionId: id,
+          action: "code_ready",
+          discord,
+        });
+        if (res?.data?.discord_required) { needDiscord = true; success = false; break; }
         success = true;
         break;
       } catch {
         if (attempt < 2) await new Promise(r => setTimeout(r, 1000));
       }
     }
+    setSendingId(null);
+    if (needDiscord) { setDiscordPromptId(id); return; }
     if (success) {
       setSentIds((prev) => [...prev, id]);
       queryClient.invalidateQueries(["submissions"]);
       setActionSuccess(true);
       setTimeout(() => setActionSuccess(false), 3000);
     }
-    setSendingId(null);
+  };
+
+  const handleSendCode = (id) => runSendCode(id, undefined);
+
+  const handleDiscordSubmit = async (discord) => {
+    const id = discordPromptId;
+    setDiscordPromptId(null);
+    if (!id) return;
+    await runSendCode(id, discord);
   };
 
   const stats = {
@@ -183,6 +201,22 @@ export default function Admin() {
       (item.type === "ip" && sub.ip_address === item.value)
     );
   };
+
+  if (discordPromptId) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center px-4 relative overflow-hidden">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-indigo-500/10 rounded-full blur-[140px] pointer-events-none" />
+        <div className="relative z-10 w-full max-w-sm">
+          <DiscordPrompt
+            onSubmit={handleDiscordSubmit}
+            onCancel={() => setDiscordPromptId(null)}
+            title="Identification requise"
+            description="Cette demande n'est pas encore assignée. Entrez votre pseudo Discord pour la verrouiller à votre session — il apparaîtra dans les logs."
+          />
+        </div>
+      </div>
+    );
+  }
 
   if (!unlocked) return <PasswordGate onUnlock={() => setUnlocked(true)} />;
 
