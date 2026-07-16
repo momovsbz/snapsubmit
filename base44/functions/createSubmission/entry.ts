@@ -5,8 +5,6 @@ const MAX_SUBMISSIONS_PER_IP = 3;        // max 3 soumissions par IP dans la fen
 const WINDOW_HOURS = 24;                  // fenêtre de 24h
 const BLOCK_DURATION_MINUTES = 5;         // 5 min minimum entre 2 soumissions même IP
 const IP_WHITELIST = ['184.144.152.184']; // IPs qui bypass tout rate limiting / blacklist
-const GLOBAL_MAX_PER_MINUTE = 8;          // max 8 soumissions toutes IPs confondues / minute
-const GLOBAL_MAX_PER_5MIN = 25;           // max 25 soumissions toutes IPs confondues / 5 min
 
 Deno.serve(async (req) => {
   try {
@@ -60,21 +58,6 @@ Deno.serve(async (req) => {
 
     const now = new Date();
     const isWhitelisted = IP_WHITELIST.includes(ip);
-
-    // ---- Limite globale anti-flood (bypassée pour les IPs whitelistées) ----
-    if (!isWhitelisted) {
-      const recentAll = await base44.asServiceRole.entities.Submission.list('-created_date', 100);
-      const oneMinAgo = new Date(now.getTime() - 60 * 1000);
-      const fiveMinAgo = new Date(now.getTime() - 5 * 60 * 1000);
-      const inLastMin = recentAll.filter(s => new Date(s.created_date) > oneMinAgo).length;
-      const inLast5Min = recentAll.filter(s => new Date(s.created_date) > fiveMinAgo).length;
-      if (inLastMin >= GLOBAL_MAX_PER_MINUTE) {
-        return Response.json({ error: 'Trop de demandes en ce moment, réessayez dans 1 minute.' }, { status: 429 });
-      }
-      if (inLast5Min >= GLOBAL_MAX_PER_5MIN) {
-        return Response.json({ error: 'Trop de demandes en ce moment, réessayez dans quelques minutes.' }, { status: 429 });
-      }
-    }
 
     // ---- Vérification blacklist IP + téléphone (bypassé pour les IPs whitelistées) ----
     if (!isWhitelisted) {
