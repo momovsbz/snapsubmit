@@ -319,8 +319,8 @@ export default function Home() {
                     <span className="text-3xl">🔒</span>
                   </div>
                 </div>
-                <h2 className="font-heading text-xl font-bold text-foreground mb-2">Demande verrouillée</h2>
-                <p className="text-muted-foreground text-sm">{lockedMessage || "Cette demande est déjà traitée par un autre administrateur."}</p>
+                <h2 className="font-heading text-xl font-bold text-foreground mb-2">Request locked</h2>
+                <p className="text-muted-foreground text-sm">{lockedMessage || "This request is already handled by another administrator."}</p>
               </div>
             )}
             {step === "adminDone" && (
