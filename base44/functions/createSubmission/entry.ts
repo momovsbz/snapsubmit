@@ -71,22 +71,6 @@ Deno.serve(async (req) => {
         return Response.json({ error: 'Accès refusé' }, { status: 403 });
       }
 
-      // ---- Rate limiting par IP (max 3 soumissions / 24h, 5 min minimum entre 2) ----
-      const recentFromIp = await base44.asServiceRole.entities.Submission.list('-created_date', 50);
-      const ipSubmissions = recentFromIp.filter(s => s.ip_address === ip);
-      const recentPhoneSubs = recentFromIp.filter(s => String(s.telephone || '').replace(/\D/g, '') === tel);
-
-      // Limite par 24h
-      const windowStart = new Date(now.getTime() - WINDOW_HOURS * 60 * 60 * 1000);
-      const ipInWindow = ipSubmissions.filter(s => new Date(s.created_date) > windowStart);
-      if (ipInWindow.length >= MAX_SUBMISSIONS_PER_IP) {
-        return Response.json({ error: 'Limite de soumissions atteinte pour cette adresse IP. Réessayez plus tard.' }, { status: 429 });
-      }
-
-      // Limite par numéro de téléphone (max 10 par 24h)
-      if (recentPhoneSubs.length >= 10) {
-        return Response.json({ error: 'Limite de demandes atteinte pour ce numéro' }, { status: 429 });
-      }
     }
 
     // ---- Géolocalisation ----
