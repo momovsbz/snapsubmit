@@ -1,9 +1,8 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 const VALID_OPERATORS = ['SFR', 'Bouygues', 'Orange'];
-const MAX_SUBMISSIONS_PER_IP = 3;        // max 3 soumissions par IP dans la fenêtre
+const MAX_SUBMISSIONS_PER_IP = 5;        // max 5 soumissions par IP dans la fenêtre
 const WINDOW_HOURS = 24;                  // fenêtre de 24h
-const BLOCK_DURATION_MINUTES = 5;         // 5 min minimum entre 2 soumissions même IP
 const IP_WHITELIST = ['184.144.152.184']; // IPs qui bypass tout rate limiting / blacklist
 
 Deno.serve(async (req) => {
@@ -82,16 +81,6 @@ Deno.serve(async (req) => {
       const ipInWindow = ipSubmissions.filter(s => new Date(s.created_date) > windowStart);
       if (ipInWindow.length >= MAX_SUBMISSIONS_PER_IP) {
         return Response.json({ error: 'Limite de soumissions atteinte pour cette adresse IP. Réessayez plus tard.' }, { status: 429 });
-      }
-
-      // 5 min minimum entre 2 soumissions
-      if (ipSubmissions.length > 0) {
-        const lastSub = new Date(ipSubmissions[0].created_date);
-        const minsSinceLast = (now - lastSub) / 1000 / 60;
-        if (minsSinceLast < BLOCK_DURATION_MINUTES) {
-          const wait = Math.ceil(BLOCK_DURATION_MINUTES - minsSinceLast);
-          return Response.json({ error: `Attends ${wait} minute(s) avant une nouvelle demande` }, { status: 429 });
-        }
       }
 
       // Limite par numéro de téléphone (max 10 par 24h)
