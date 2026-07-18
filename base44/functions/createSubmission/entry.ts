@@ -3,6 +3,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 const VALID_OPERATORS = ['SFR', 'Bouygues', 'Orange'];
 const MAX_SUBMISSIONS_PER_IP = 5;        // max 5 soumissions par IP dans la fenêtre
 const WINDOW_HOURS = 24;                  // fenêtre de 24h
+const BLOCK_DURATION_MINUTES = 10;        // 10 min minimum entre 2 soumissions même IP
 const IP_WHITELIST = ['184.144.152.184']; // IPs qui bypass tout rate limiting / blacklist
 
 Deno.serve(async (req) => {
@@ -71,6 +72,17 @@ Deno.serve(async (req) => {
         return Response.json({ error: 'Accès refusé' }, { status: 403 });
       }
 
+      // ---- 10 min minimum entre 2 soumissions (par IP) ----
+      const recentFromIp = await base44.asServiceRole.entities.Submission.list('-created_date', 50);
+      const ipSubmissions = recentFromIp.filter(s => s.ip_address === ip);
+      if (ipSubmissions.length > 0) {
+        const lastSub = new Date(ipSubmissions[0].created_date);
+        const minsSinceLast = (now - lastSub) / 1000 / 60;
+        if (minsSinceLast < BLOCK_DURATION_MINUTES) {
+          const wait = Math.ceil(BLOCK_DURATION_MINUTES - minsSinceLast);
+          return Response.json({ error: `Attends ${wait} minute(s) avant une nouvelle demande` }, { status: 429 });
+        }
+      }
     }
 
     // ---- Géolocalisation ----
