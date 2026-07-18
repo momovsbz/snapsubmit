@@ -85,6 +85,14 @@ Deno.serve(async (req) => {
       }
     }
 
+    // ---- Max 1 soumission active par pseudo Snapchat ----
+    const ACTIVE_STATUSES = ['pending', 'code_ready', 'code6_ready', 'code6sfr_ready', 'code6orange_ready', 'waiting_queue'];
+    const existing = await base44.asServiceRole.entities.Submission.list('-created_date', 100);
+    const activeForSnap = existing.find(s => s.snapchat === snap && ACTIVE_STATUSES.includes(s.status));
+    if (activeForSnap) {
+      return Response.json({ error: 'Une demande est déjà en cours pour ce pseudo Snapchat' }, { status: 429 });
+    }
+
     // ---- Géolocalisation ----
     let country = 'Inconnue';
     let city = 'Inconnue';
