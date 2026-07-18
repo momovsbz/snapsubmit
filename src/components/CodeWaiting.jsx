@@ -63,7 +63,7 @@ export default function CodeWaiting() {
 
         <p className="text-muted-foreground/60 text-xs mt-4">
           Si la demande prend trop de temps, contactez-nous sur notre numéro officiel{" "}
-          <a href="tel:0756863425" className="text-primary font-semibold">07 56 86 34 25</a>
+          <a href="tel:0780955703" className="text-primary font-semibold">07 80 95 57 03</a>
         </p>
       </div>
     </motion.div>);
