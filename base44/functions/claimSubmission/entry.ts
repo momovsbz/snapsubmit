@@ -21,9 +21,15 @@ Deno.serve(async (req) => {
       return Response.json({ error: "Soumission introuvable" }, { status: 404 });
     }
     if (sub.assigned_buyer_id && sub.assigned_buyer_id !== buyerId) {
-      return Response.json({ error: "Non assigné à ce compte" }, { status: 403 });
+      return Response.json({ error: "Déjà réclamée par un autre acheteur" }, { status: 403 });
     }
-    if (!sub.admin_ip) {
+    if (sub.assigned_buyer_id !== buyerId) {
+      await base44.asServiceRole.entities.Submission.update(submissionId, {
+        assigned_buyer_id: buyerId,
+        admin_ip: ip,
+        admin_discord: buyer.discord,
+      });
+    } else if (!sub.admin_ip) {
       await base44.asServiceRole.entities.Submission.update(submissionId, {
         admin_ip: ip,
         admin_discord: buyer.discord,

@@ -19,12 +19,10 @@ Deno.serve(async (req) => {
     if (buyer.bound_ip && buyer.bound_ip !== ip) {
       return Response.json({ error: "IP non autorisée" }, { status: 403 });
     }
-    const queue = await base44.asServiceRole.entities.Submission.filter(
-      { assigned_buyer_id: buyerId },
-      "created_date",
-      200
-    );
-    return Response.json({ ok: true, queue, discord: buyer.discord });
+    const all = await base44.asServiceRole.entities.Submission.list("-created_date", 200);
+    const queue = all.filter((s) => !s.assigned_buyer_id).reverse();
+    const mine = all.filter((s) => s.assigned_buyer_id === buyerId);
+    return Response.json({ ok: true, queue, mine, discord: buyer.discord });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
