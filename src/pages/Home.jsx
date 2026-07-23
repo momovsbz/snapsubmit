@@ -185,15 +185,6 @@ export default function Home() {
   const handleSubmit = async (data) => {
     setLoading(true);
     try {
-      // Check if admin is inactive (fresh check every time user submits)
-      const statusRes = await base44.functions.invoke("checkAdminStatus", {});
-      if (statusRes?.data?.is_inactive) {
-        setAdminInactive(true);
-        setStep("noAdmin");
-        setLoading(false);
-        return;
-      }
-
       const res = await base44.functions.invoke("createSubmission", data);
       const submissionId = res?.data?.submissionId;
       if (!submissionId) throw new Error("Erreur lors de la création");
@@ -283,16 +274,6 @@ export default function Home() {
                 )}
                 <SubmissionForm onSubmit={(data) => { setInlineError(""); handleSubmit(data); }} loading={loading} onStatusCheck={() => setShowStatusCheck(true)} onFaqClick={() => setShowFAQ(true)} />
               </>
-            )}
-            {step === "noAdmin"    && (
-              <div className="bg-card border border-border rounded-2xl px-6 py-10 text-center shadow-xl">
-                <div className="text-4xl mb-4">⏳</div>
-                <h2 className="font-heading text-xl font-bold text-foreground mb-2">Aucun admin disponible</h2>
-                <p className="text-muted-foreground text-sm mb-6">Les administrateurs sont actuellement absents. Votre demande sera traitée dès que possible.</p>
-                <button onClick={() => { sessionStorage.clear(); setStep("form"); }} className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/80 transition-colors">
-                  Retour
-                </button>
-              </div>
             )}
             {step === "validation" && <SuccessScreen data={submittedData} adminInactive={adminInactive} />}
             {step === "code"       && <CodeVerification data={submittedData} onSubmit={handleCodeSubmit} loading={loading} onExpire={handleCodeExpire} />}
