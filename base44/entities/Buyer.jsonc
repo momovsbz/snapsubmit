@@ -1,0 +1,27 @@
+{
+  "name": "Buyer",
+  "type": "object",
+  "properties": {
+    "discord": {
+      "type": "string",
+      "description": "Pseudo Discord du buyer"
+    },
+    "password": {
+      "type": "string",
+      "description": "Mot de passe hash\u00e9 (SHA-256)"
+    },
+    "bound_ip": {
+      "type": "string",
+      "description": "Adresse IP li\u00e9e au compte (premi\u00e8re connexion)"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Compte actif"
+    }
+  },
+  "required": [
+    "discord",
+    "password"
+  ]
+}
