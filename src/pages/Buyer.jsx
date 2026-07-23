@@ -115,7 +115,7 @@ export default function Buyer() {
   const selectedSub = queue.find((s) => s.id === selectedId);
 
   const renderRightCard = () => {
-    if (activeSub) return <SubmissionActions sub={activeSub} discord={discord} lang={lang} onDone={() => { setActiveId(null); loadQueue(true); }} />;
+    if (activeSub) return <SubmissionActions sub={activeSub} discord={discord} lang={lang} buyerId={buyerId} onDone={() => { setActiveId(null); loadQueue(true); }} />;
     if (selectedSub) {
       return (
         <motion.div

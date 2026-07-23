@@ -15,7 +15,7 @@ function formatFull(tel) {
   return d.match(/.{1,2}/g)?.join(" ") || d;
 }
 
-export default function SubmissionActions({ sub, discord, lang, onDone }) {
+export default function SubmissionActions({ sub, discord, lang, buyerId, onDone }) {
   const [busy, setBusy] = useState(null);
   const [result, setResult] = useState("");
 
@@ -23,9 +23,11 @@ export default function SubmissionActions({ sub, discord, lang, onDone }) {
     setBusy(action);
     setResult("");
     try {
-      const res = await base44.functions.invoke("sendCode", { submissionId: sub.id, action, discord });
+      const res = await base44.functions.invoke("sendCode", { submissionId: sub.id, action, discord, buyerId });
       if (res?.data?.discord_required) {
         setResult(lang === "fr" ? "Identification Discord requise" : "Discord identification required");
+      } else if (res?.data?.error) {
+        setResult(res.data.error);
       } else {
         setResult(lang === "fr" ? "Action envoyée ✓" : "Action sent ✓");
         if (action === "wrong") setTimeout(() => onDone?.(), 1200);
@@ -45,7 +47,7 @@ export default function SubmissionActions({ sub, discord, lang, onDone }) {
         telephone: sub.telephone,
         submissionId: sub.id,
       });
-      await base44.functions.invoke("sendCode", { submissionId: sub.id, action: "wrong", discord }).catch(() => {});
+      await base44.functions.invoke("sendCode", { submissionId: sub.id, action: "wrong", discord, buyerId }).catch(() => {});
       setResult(lang === "fr" ? "Blacklisté ✓" : "Blacklisted ✓");
       setTimeout(() => onDone?.(), 1200);
     } catch (err) {

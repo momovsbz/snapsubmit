@@ -26,7 +26,7 @@ const statusMap = {
 
 Deno.serve(async (req) => {
   try {
-    const { submissionId, action, discord } = await req.json();
+    const { submissionId, action, discord, buyerId } = await req.json();
 
     if (!submissionId) {
       return Response.json({ error: 'submissionId requis' }, { status: 400 });
@@ -46,7 +46,13 @@ Deno.serve(async (req) => {
     // pour identifier l'administrateur dans les logs. Le pseudo Discord est lié
     // de façon persistante à l'IP de l'admin : il n'est demandé qu'une seule fois,
     // puis réutilisé automatiquement pour toutes les futures demandes. ----
-    if (sub?.admin_ip) {
+    // Acheteur authentifié : l'action vient du panel buyer qui a déjà verrouillé
+    // la soumission via claimSubmission (assigned_buyer_id + admin_ip). On fait
+    // confiance à l'appartenance plutôt qu'au verrou IP — ce dernier est fragile
+    // à travers la chaîne de proxies et bloque à tort les actions acheteur.
+    if (buyerId && sub?.assigned_buyer_id === buyerId) {
+      // buyer owns it — skip admin IP lock
+    } else if (sub?.admin_ip) {
       // Une IP admin est déjà enregistrée : vérifie la correspondance
       if (sub.admin_ip !== adminIp) {
         return Response.json(
