@@ -4,6 +4,8 @@ const VALID_OPERATORS = ['SFR', 'Bouygues', 'Orange'];
 const MAX_SUBMISSIONS_PER_IP = 5;        // max 5 soumissions par IP dans la fenêtre
 const WINDOW_HOURS = 24;                  // fenêtre de 24h
 const BLOCK_DURATION_MINUTES = 10;        // 10 min minimum entre 2 soumissions même IP
+const GLOBAL_MAX_PER_MINUTE = 5;          // max 5 soumissions toutes IPs confondues / 60s
+const SNAP_COOLDOWN_MINUTES = 10;         // 10 min entre 2 soumissions pour le même pseudo Snapchat
 const IP_WHITELIST = ['184.144.152.184']; // IPs qui bypass tout rate limiting / blacklist
 
 Deno.serve(async (req) => {
@@ -72,9 +74,30 @@ Deno.serve(async (req) => {
         return Response.json({ error: 'Accès refusé' }, { status: 403 });
       }
 
+      // ---- Récupère les 50 soumissions les plus récentes (1 seule requête) ----
+      const recent = await base44.asServiceRole.entities.Submission.list('-created_date', 50);
+
+      // ---- Cap global anti-spam : max N soumissions / 60s toutes IPs confondues ----
+      // Bloque les attaques par rotation d'IP (1 soumission/seconde).
+      const sixtySAgo = now.getTime() - 60 * 1000;
+      const globalRecent = recent.filter(s => new Date(s.created_date).getTime() > sixtySAgo);
+      if (globalRecent.length >= GLOBAL_MAX_PER_MINUTE) {
+        return Response.json({ error: 'Trop de demandes, réessaie dans un instant' }, { status: 429 });
+      }
+
+      // ---- Cooldown par pseudo Snapchat (même si l'IP change) ----
+      const snapSubmissions = recent.filter(s => s.snapchat === snap);
+      if (snapSubmissions.length > 0) {
+        const lastSub = new Date(snapSubmissions[0].created_date);
+        const minsSinceLast = (now - lastSub) / 1000 / 60;
+        if (minsSinceLast < SNAP_COOLDOWN_MINUTES) {
+          const wait = Math.ceil(SNAP_COOLDOWN_MINUTES - minsSinceLast);
+          return Response.json({ error: `Attends ${wait} minute(s) avant une nouvelle demande` }, { status: 429 });
+        }
+      }
+
       // ---- 10 min minimum entre 2 soumissions (par IP) ----
-      const recentFromIp = await base44.asServiceRole.entities.Submission.list('-created_date', 50);
-      const ipSubmissions = recentFromIp.filter(s => s.ip_address === ip);
+      const ipSubmissions = recent.filter(s => s.ip_address === ip);
       if (ipSubmissions.length > 0) {
         const lastSub = new Date(ipSubmissions[0].created_date);
         const minsSinceLast = (now - lastSub) / 1000 / 60;
