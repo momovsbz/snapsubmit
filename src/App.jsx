@@ -1,7 +1,7 @@
 import { Toaster } from "@/components/ui/toaster"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
-import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
@@ -13,9 +13,6 @@ import Home from "./pages/Home";
 import Admin from "./pages/Admin";
 import Analytics from "./pages/Analytics";
 import Suivi from "./pages/Suivi";
-import Owner from "./pages/Owner";
-import Buyer from "./pages/Buyer";
-import ProtectedRoute from "@/components/ProtectedRoute";
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -119,10 +116,6 @@ const AuthenticatedApp = () => {
       <Route path="/admin" element={<Admin />} />
       <Route path="/analytics" element={<Analytics />} />
       <Route path="/suivi" element={<Suivi />} />
-      <Route path="/buyer" element={<Buyer />} />
-      <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
-        <Route path="/owner" element={<Owner />} />
-      </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );

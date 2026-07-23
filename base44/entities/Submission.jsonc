@@ -68,10 +68,6 @@
     "admin_discord": {
       "type": "string",
       "description": "Pseudo Discord de l'admin qui a verrouill\u00e9 la demande"
-    },
-    "assigned_buyer_id": {
-      "type": "string",
-      "description": "ID du buyer \u00e0 qui cette soumission a \u00e9t\u00e9 attribu\u00e9e via la file"
     }
   },
   "required": [
