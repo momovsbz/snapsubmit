@@ -1,0 +1,18 @@
+{
+  "name": "Buyer",
+  "type": "object",
+  "properties": {
+    "username": {
+      "type": "string",
+      "description": "Nom d'utilisateur du buyer"
+    },
+    "password_hash": {
+      "type": "string",
+      "description": "Mot de passe hach\u00e9 (SHA-256)"
+    }
+  },
+  "required": [
+    "username",
+    "password_hash"
+  ]
+}
