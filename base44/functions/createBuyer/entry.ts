@@ -5,7 +5,7 @@ const ADMIN_PASSWORD = Deno.env.get("ADMIN_PASSWORD");
 
 Deno.serve(async (req) => {
   try {
-    const { ownerPassword, discord, password } = await req.json();
+    const { ownerPassword, discord, password, duration } = await req.json();
     if (ownerPassword !== ADMIN_PASSWORD) {
       return Response.json({ error: "Non autorisé" }, { status: 403 });
     }
@@ -21,11 +21,15 @@ Deno.serve(async (req) => {
     if (existing.length > 0) {
       return Response.json({ error: "Ce pseudo Discord existe déjà" }, { status: 409 });
     }
+    const DURATION_DAYS = { day: 1, week: 7, month: 30 };
+    const days = DURATION_DAYS[duration] || 30;
+    const expires_at = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
     const hashed = await hashPassword(password);
     const buyer = await base44.asServiceRole.entities.Buyer.create({
       discord: discordClean,
       password: hashed,
       is_active: true,
+      expires_at,
     });
     return Response.json({ ok: true, buyerId: buyer.id });
   } catch (error) {

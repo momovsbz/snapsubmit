@@ -18,6 +18,11 @@
       "type": "boolean",
       "default": true,
       "description": "Compte actif"
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Date d'expiration de l'acc\u00e8s (dur\u00e9e d'abonnement)"
     }
   },
   "required": [

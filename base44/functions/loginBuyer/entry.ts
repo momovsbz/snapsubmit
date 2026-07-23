@@ -17,6 +17,9 @@ Deno.serve(async (req) => {
     if (buyer.is_active === false) {
       return Response.json({ error: "Compte désactivé" }, { status: 403 });
     }
+    if (buyer.expires_at && new Date(buyer.expires_at).getTime() < Date.now()) {
+      return Response.json({ error: "Subscription expired" }, { status: 403 });
+    }
     const hashed = await hashPassword(password);
     if (buyer.password !== hashed) {
       return Response.json({ error: "Mot de passe incorrect" }, { status: 401 });

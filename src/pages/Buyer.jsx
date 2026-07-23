@@ -5,11 +5,12 @@ import { base44 } from "@/api/base44Client";
 import BuyerLogin from "@/components/buyer/BuyerLogin";
 import SubmissionActions from "@/components/buyer/SubmissionActions";
 import BuyerHistory from "@/components/buyer/BuyerHistory";
+import { t, getStoredLang, setStoredLang } from "@/components/buyer/i18n";
 
 const opPill = {
-  SFR: { bg: "#FDECEA", fg: "#C0392B" },
-  Bouygues: { bg: "#CDE8F0", fg: "#0869A6" },
-  Orange: { bg: "#FDEBD0", fg: "#B9770E" },
+  SFR: "bg-red-500/15 text-red-400 border border-red-500/30",
+  Bouygues: "bg-blue-500/15 text-blue-400 border border-blue-500/30",
+  Orange: "bg-orange-400/15 text-orange-400 border border-orange-400/30",
 };
 
 const maskSnap = (s) => {
@@ -28,6 +29,7 @@ const maskPhone = (tel) => {
 export default function Buyer() {
   const [buyerId, setBuyerId] = useState(() => sessionStorage.getItem("buyerId"));
   const [discord, setDiscord] = useState(() => sessionStorage.getItem("buyerDiscord"));
+  const [lang, setLang] = useState(getStoredLang());
   const [queue, setQueue] = useState([]);
   const [mine, setMine] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -38,6 +40,8 @@ export default function Buyer() {
   const [tab, setTab] = useState("file");
   const pollRef = useRef(null);
 
+  const switchLang = (l) => { setLang(l); setStoredLang(l); };
+
   const loadQueue = async (silent = false) => {
     if (!buyerId) return;
     if (document.hidden) return;
@@ -47,11 +51,18 @@ export default function Buyer() {
         setQueue(res.data.queue || []);
         setMine(res.data.mine || []);
         if (!silent) setError("");
-      } else if (!silent) {
-        setError(res?.data?.error || "Erreur");
+      } else {
+        const msg = res?.data?.error || "Erreur";
+        if (msg === "Subscription expired") {
+          handleLogout();
+          return;
+        }
+        if (!silent) setError(msg === "Subscription expired" ? t(lang, "expiredErr") : msg);
       }
     } catch (err) {
-      if (!silent) setError(err?.response?.data?.error || "Erreur de chargement");
+      const msg = err?.response?.data?.error || "Erreur de chargement";
+      if (msg === "Subscription expired") { handleLogout(); return; }
+      if (!silent) setError(msg);
     }
     setLoading(false);
   };
@@ -60,9 +71,7 @@ export default function Buyer() {
     if (!buyerId) return;
     loadQueue();
     pollRef.current = setInterval(() => loadQueue(true), 10000);
-    const onVisible = () => {
-      if (!document.hidden) loadQueue(true);
-    };
+    const onVisible = () => { if (!document.hidden) loadQueue(true); };
     document.addEventListener("visibilitychange", onVisible);
     return () => {
       clearInterval(pollRef.current);
@@ -106,85 +115,84 @@ export default function Buyer() {
   const selectedSub = queue.find((s) => s.id === selectedId);
 
   const renderRightCard = () => {
-    if (activeSub) return <SubmissionActions sub={activeSub} discord={discord} onDone={() => { setActiveId(null); loadQueue(true); }} />;
+    if (activeSub) return <SubmissionActions sub={activeSub} discord={discord} lang={lang} onDone={() => { setActiveId(null); loadQueue(true); }} />;
     if (selectedSub) {
-      const op = opPill[selectedSub.operateur] || opPill.Bouygues;
       return (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-2xl p-5 shadow-sm border"
-          style={{ borderColor: "#DFE6E9" }}
+          className="bg-card border border-border rounded-2xl p-5 shadow-xl shadow-black/40"
         >
           <div className="flex flex-wrap items-center gap-2 mb-4">
-            <span className="px-2.5 py-1 rounded-md text-[11px] font-semibold" style={{ background: "#CDE8F0", color: "#0869A6" }}>
-              En file
+            <span className="px-2.5 py-1 rounded-md text-[11px] font-semibold bg-blue-500/15 text-blue-400 border border-blue-500/30">
+              {t(lang, "queued")}
             </span>
-            <span className="px-2.5 py-1 rounded-md text-[11px] font-semibold" style={{ background: op.bg, color: op.fg }}>
+            <span className={`px-2.5 py-1 rounded-md text-[11px] font-semibold ${opPill[selectedSub.operateur] || opPill.Bouygues}`}>
               {selectedSub.operateur}
             </span>
           </div>
           <div className="space-y-2 mb-5">
             <div className="flex items-center gap-2">
-              <Ghost className="w-4 h-4" style={{ color: "#636E72" }} />
-              <span className="text-base font-bold tracking-wide" style={{ color: "#2D3436" }}>{maskSnap(selectedSub.snapchat)}</span>
+              <Ghost className="w-4 h-4 text-muted-foreground" />
+              <span className="text-base font-bold tracking-wide text-foreground">{maskSnap(selectedSub.snapchat)}</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-base font-mono" style={{ color: "#2D3436" }}>{maskPhone(selectedSub.telephone)}</span>
+              <span className="text-base font-mono text-foreground">{maskPhone(selectedSub.telephone)}</span>
             </div>
           </div>
           <button
             onClick={() => handleClaim(selectedSub.id)}
             disabled={claimingId === selectedSub.id}
-            className="w-full font-bold py-3.5 rounded-xl text-sm text-white transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
-            style={{ background: "#0D7061" }}
+            className="w-full bg-primary text-primary-foreground font-bold py-3.5 rounded-xl text-sm transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
           >
             {claimingId === selectedSub.id ? (
-              <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+              <span className="w-4 h-4 border-2 border-primary-foreground/40 border-t-primary-foreground rounded-full animate-spin" />
             ) : (
               <Lock className="w-4 h-4" />
             )}
-            Claim & lock for me
+            {t(lang, "claimLock")}
           </button>
-          <p className="text-[11px] text-center mt-3" style={{ color: "#636E72" }}>
-            Le numéro et le pseudo seront dévoilés après réclamation.
-          </p>
+          <p className="text-[11px] text-center text-muted-foreground mt-3">{t(lang, "revealHint")}</p>
         </motion.div>
       );
     }
     return (
-      <div className="bg-white rounded-2xl p-8 text-center border" style={{ borderColor: "#DFE6E9" }}>
-        <Inbox className="w-10 h-10 mx-auto mb-3" style={{ color: "#B2BEC3" }} />
-        <p className="text-sm" style={{ color: "#636E72" }}>Sélectionnez un numéro dans la file pour le réclamer.</p>
+      <div className="bg-card border border-border rounded-2xl p-8 text-center">
+        <Inbox className="w-10 h-10 text-muted-foreground/40 mx-auto mb-3" />
+        <p className="text-sm text-muted-foreground">{t(lang, "selectHint")}</p>
       </div>
     );
   };
 
   return (
-    <div className="min-h-screen px-4 py-6 md:py-8" style={{ background: "#F9F9FB" }}>
-      <div className="max-w-5xl mx-auto">
+    <div className="min-h-screen bg-background px-4 py-6 md:py-8 relative overflow-hidden">
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-primary/8 rounded-full blur-[150px] pointer-events-none" />
+      <div className="max-w-5xl mx-auto relative z-10">
         {/* Header */}
         <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
           <div>
-            <h1 className="font-heading text-xl font-bold tracking-tight" style={{ color: "#2D3436" }}>
-              SNAPCHAT+ <span style={{ color: "#0D7061" }}>OPS</span>
+            <h1 className="font-heading text-xl font-bold tracking-tight text-foreground">
+              SNAPCHAT+ <span className="text-primary">OPS</span>
             </h1>
-            <p className="text-xs" style={{ color: "#636E72" }}>Client workspace</p>
+            <p className="text-xs text-muted-foreground">{t(lang, "workspace")}</p>
           </div>
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: "#636E72" }}>
-              <span className="w-2 h-2 rounded-full" style={{ background: "#0D7061" }} />
-              On
+            <div className="flex bg-secondary/40 border border-border rounded-lg overflow-hidden text-[11px] font-bold">
+              <button onClick={() => switchLang("en")} className={`px-2.5 py-1.5 ${lang === "en" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}>EN</button>
+              <button onClick={() => switchLang("fr")} className={`px-2.5 py-1.5 ${lang === "fr" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}>FR</button>
             </div>
-            <span className="text-xs font-semibold px-2.5 py-1.5 rounded-lg" style={{ background: "#E6F2EF", color: "#0D7061" }}>
-              customer @{discord}
+            <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
+              <span className="w-2 h-2 rounded-full bg-green-500" />
+              {t(lang, "on")}
+            </div>
+            <span className="text-xs font-semibold px-2.5 py-1.5 rounded-lg bg-primary/15 text-primary border border-primary/30">
+              {t(lang, "customer")} @{discord}
             </span>
             <button
               onClick={handleLogout}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border transition-colors"
-              style={{ borderColor: "#DFE6E9", color: "#2D3436", background: "#fff" }}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border border-border text-foreground bg-card hover:bg-secondary/40 transition-colors"
             >
-              <LogOut className="w-3.5 h-3.5" /> Log out
+              <LogOut className="w-3.5 h-3.5" /> {t(lang, "logOut")}
             </button>
           </div>
         </div>
@@ -193,77 +201,72 @@ export default function Buyer() {
         <div className="flex gap-2 mb-6">
           <button
             onClick={() => setTab("file")}
-            className="flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-sm font-bold transition-colors"
-            style={tab === "file" ? { background: "#0D7061", color: "#fff" } : { background: "#fff", color: "#636E72", border: "1px solid #DFE6E9" }}
+            className={`flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-sm font-bold transition-colors ${
+              tab === "file" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground border border-border hover:text-foreground"
+            }`}
           >
-            <Inbox className="w-4 h-4" /> Active queue
+            <Inbox className="w-4 h-4" /> {t(lang, "activeQueue")}
           </button>
           <button
             onClick={() => setTab("history")}
-            className="flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-sm font-bold transition-colors"
-            style={tab === "history" ? { background: "#0D7061", color: "#fff" } : { background: "#fff", color: "#636E72", border: "1px solid #DFE6E9" }}
+            className={`flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-sm font-bold transition-colors ${
+              tab === "history" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground border border-border hover:text-foreground"
+            }`}
           >
-            <History className="w-4 h-4" /> My history ({mine.length})
+            <History className="w-4 h-4" /> {t(lang, "myHistory")} ({mine.length})
           </button>
         </div>
 
         {error && (
-          <div className="rounded-xl px-4 py-3 mb-4 text-xs font-medium" style={{ background: "#FDECEA", color: "#C0392B", border: "1px solid #F5C6CB" }}>
-            {error}
-          </div>
+          <div className="bg-destructive/10 border border-destructive/30 rounded-xl px-4 py-3 mb-4 text-destructive text-xs font-medium">{error}</div>
         )}
 
         {tab === "file" ? (
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
-            {/* Live queue table */}
-            <div className="lg:col-span-3 bg-white rounded-2xl border overflow-hidden" style={{ borderColor: "#DFE6E9" }}>
-              <div className="px-5 py-4 border-b" style={{ borderColor: "#DFE6E9" }}>
-                <h3 className="text-sm font-bold" style={{ color: "#2D3436" }}>Live queue</h3>
-                <p className="text-[11px] mt-0.5" style={{ color: "#636E72" }}>Numbers stay masked until you claim them.</p>
+            <div className="lg:col-span-3 bg-card border border-border rounded-2xl overflow-hidden shadow-xl shadow-black/40">
+              <div className="px-5 py-4 border-b border-border">
+                <h3 className="text-sm font-bold text-foreground">{t(lang, "liveQueue")}</h3>
+                <p className="text-[11px] text-muted-foreground mt-0.5">{t(lang, "maskedHint")}</p>
               </div>
               {loading ? (
                 <div className="flex items-center justify-center py-16">
-                  <div className="w-7 h-7 border-2 rounded-full animate-spin" style={{ borderColor: "#DFE6E9", borderTopColor: "#0D7061" }} />
+                  <div className="w-7 h-7 border-2 border-border border-t-primary rounded-full animate-spin" />
                 </div>
               ) : queue.length === 0 ? (
                 <div className="py-16 text-center">
-                  <CheckCircle2 className="w-10 h-10 mx-auto mb-3" style={{ color: "#0D7061" }} />
-                  <p className="text-sm" style={{ color: "#636E72" }}>File vide — aucune soumission à réclamer.</p>
+                  <CheckCircle2 className="w-10 h-10 mx-auto mb-3 text-primary" />
+                  <p className="text-sm text-muted-foreground">{t(lang, "emptyQueue")}</p>
                 </div>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr style={{ borderBottom: "1px solid #DFE6E9" }}>
-                        {["USER", "PHONE", "OPERATOR", "STATUS"].map((h) => (
-                          <th key={h} className="text-left px-5 py-2.5 text-[10px] font-bold uppercase tracking-wider" style={{ color: "#636E72" }}>{h}</th>
+                      <tr className="border-b border-border">
+                        {[t(lang, "user"), t(lang, "phone"), t(lang, "operator"), t(lang, "status")].map((h) => (
+                          <th key={h} className="text-left px-5 py-2.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{h}</th>
                         ))}
                       </tr>
                     </thead>
                     <tbody>
                       {queue.map((sub) => {
-                        const op = opPill[sub.operateur] || opPill.Bouygues;
                         const isSel = sub.id === selectedId;
                         return (
                           <tr
                             key={sub.id}
                             onClick={() => setSelectedId(sub.id)}
-                            className="cursor-pointer transition-colors"
-                            style={{
-                              borderBottom: "1px solid #F2F4F4",
-                              background: isSel ? "#EAF4F1" : "transparent",
-                            }}
+                            className="cursor-pointer transition-colors hover:bg-secondary/30"
+                            style={{ borderBottom: "1px solid hsl(var(--border))", background: isSel ? "hsl(var(--primary) / 0.12)" : "transparent" }}
                           >
-                            <td className="px-5 py-3 font-medium" style={{ color: "#2D3436" }}>{maskSnap(sub.snapchat)}</td>
-                            <td className="px-5 py-3 font-mono" style={{ color: "#2D3436" }}>{maskPhone(sub.telephone)}</td>
+                            <td className="px-5 py-3 font-medium text-foreground">{maskSnap(sub.snapchat)}</td>
+                            <td className="px-5 py-3 font-mono text-foreground">{maskPhone(sub.telephone)}</td>
                             <td className="px-5 py-3">
-                              <span className="px-2 py-0.5 rounded-md text-[11px] font-semibold" style={{ background: op.bg, color: op.fg }}>
+                              <span className={`px-2 py-0.5 rounded-md text-[11px] font-semibold ${opPill[sub.operateur] || opPill.Bouygues}`}>
                                 {sub.operateur}
                               </span>
                             </td>
                             <td className="px-5 py-3">
-                              <span className="px-2 py-0.5 rounded-md text-[11px] font-semibold" style={{ background: "#CDE8F0", color: "#0869A6" }}>
-                                Queued
+                              <span className="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-blue-500/15 text-blue-400 border border-blue-500/30">
+                                {t(lang, "queued")}
                               </span>
                             </td>
                           </tr>
@@ -274,14 +277,12 @@ export default function Buyer() {
                 </div>
               )}
             </div>
-
-            {/* Right action card */}
             <div className="lg:col-span-2">
               <div className="lg:sticky lg:top-6">{renderRightCard()}</div>
             </div>
           </div>
         ) : (
-          <BuyerHistory mine={mine} />
+          <BuyerHistory mine={mine} lang={lang} />
         )}
       </div>
     </div>
