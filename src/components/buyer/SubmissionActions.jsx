@@ -28,7 +28,7 @@ export default function SubmissionActions({ sub, discord, lang, onDone }) {
         setResult(lang === "fr" ? "Identification Discord requise" : "Discord identification required");
       } else {
         setResult(lang === "fr" ? "Action envoyée ✓" : "Action sent ✓");
-        setTimeout(() => onDone?.(), 1200);
+        if (action === "wrong") setTimeout(() => onDone?.(), 1200);
       }
     } catch (err) {
       setResult(err?.response?.data?.error || (lang === "fr" ? "Échec" : "Failed"));
