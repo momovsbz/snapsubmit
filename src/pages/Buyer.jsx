@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Loader2, LogIn, LogOut, Clock, CheckCircle2, Smartphone, Hash, Globe } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import Logo from "@/components/Logo";
+import BuyerActions from "@/components/BuyerActions";
 
 export default function Buyer() {
   const [buyer, setBuyer] = useState(() => {
@@ -180,6 +181,7 @@ export default function Buyer() {
               <h2 className="font-heading text-lg font-semibold text-foreground">Soumission attribuée</h2>
             </div>
             <SubmissionCard sub={claimedSub} />
+            <BuyerActions submission={claimedSub} buyer={buyer} />
             <p className="text-muted-foreground text-xs mt-3 text-center">
               Tu as été servi. Reconnecte-toi pour recevoir une nouvelle soumission.
             </p>
