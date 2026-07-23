@@ -212,6 +212,9 @@ export default function SubmissionForm({ onSubmit, loading, onStatusCheck, onFaq
           </div>
 
           {/* Cloudflare Turnstile anti-bot */}
+          <p className="text-muted-foreground/70 text-xs text-center mb-2">
+            C'est pour savoir si vous êtes un humain 🤖
+          </p>
           <Turnstile
             onVerify={(token) => { setTurnstileToken(token); setTurnstileError(""); }}
             onExpire={() => setTurnstileToken("")}
