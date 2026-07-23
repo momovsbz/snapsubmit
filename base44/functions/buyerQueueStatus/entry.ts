@@ -43,7 +43,7 @@ Deno.serve(async (req) => {
 
     let currentSubmission = null;
     if (isFront) {
-      const pending = await base44.asServiceRole.entities.Submission.list("created_date", 50);
+      const pending = await base44.asServiceRole.entities.Submission.list("-created_date", 50);
       currentSubmission =
         pending.find((s) => !s.assigned_buyer_id && s.status === "pending") || null;
     }
