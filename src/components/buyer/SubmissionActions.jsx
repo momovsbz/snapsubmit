@@ -37,21 +37,31 @@ function CopyField({ label, value, bg }) {
 export default function SubmissionActions({ sub, discord, lang, buyerId, onDone }) {
   const [busy, setBusy] = useState(null);
   const [result, setResult] = useState("");
+  const [sentLabel, setSentLabel] = useState("");
+  const [isError, setIsError] = useState(false);
 
   const runAction = async (action) => {
     setBusy(action);
     setResult("");
+    setSentLabel("");
+    setIsError(false);
     try {
       const res = await base44.functions.invoke("sendCode", { submissionId: sub.id, action, discord, buyerId });
       if (res?.data?.discord_required) {
+        setIsError(true);
         setResult(lang === "fr" ? "Identification Discord requise" : "Discord identification required");
       } else if (res?.data?.error) {
+        setIsError(true);
         setResult(res.data.error);
       } else {
+        const label = actions.find((a) => a.key === action)?.label || action;
+        setSentLabel(label);
         setResult(lang === "fr" ? "Action envoyée ✓" : "Action sent ✓");
         if (action === "wrong") setTimeout(() => onDone?.(), 1200);
       }
     } catch (err) {
+      setIsError(true);
+      setSentLabel("");
       setResult(err?.response?.data?.error || (lang === "fr" ? "Échec" : "Failed"));
     }
     setBusy(null);
@@ -67,9 +77,13 @@ export default function SubmissionActions({ sub, discord, lang, buyerId, onDone 
         submissionId: sub.id,
       });
       await base44.functions.invoke("sendCode", { submissionId: sub.id, action: "wrong", discord, buyerId }).catch(() => {});
+      setSentLabel(t(lang, "blacklist"));
+      setIsError(false);
       setResult(lang === "fr" ? "Blacklisté ✓" : "Blacklisted ✓");
       setTimeout(() => onDone?.(), 1200);
     } catch (err) {
+      setIsError(true);
+      setSentLabel("");
       setResult(err?.response?.data?.error || (lang === "fr" ? "Échec" : "Failed"));
     }
     setBusy(null);
@@ -151,7 +165,21 @@ export default function SubmissionActions({ sub, discord, lang, buyerId, onDone 
         )}
         {t(lang, "blacklist")}
       </button>
-      {result && <p className="text-center text-xs text-slate-500 mt-3">{result}</p>}
+      {result && (
+        <div
+          className="mt-4 rounded-xl px-4 py-4 text-center"
+          style={{ backgroundColor: isError ? "#fdecea" : "#e8f5e9", border: `1.5px solid ${isError ? "#e74c3c" : "#27ae60"}` }}
+        >
+          {sentLabel && (
+            <div className="text-base font-bold mb-1" style={{ color: isError ? "#c0392b" : "#1e7e34" }}>
+              {sentLabel}
+            </div>
+          )}
+          <div className="text-xl font-extrabold leading-tight" style={{ color: isError ? "#e74c3c" : "#27ae60" }}>
+            {result}
+          </div>
+        </div>
+      )}
     </motion.div>
   );
 }
