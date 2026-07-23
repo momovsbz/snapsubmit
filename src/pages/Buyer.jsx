@@ -22,18 +22,19 @@ export default function Buyer() {
   const [claimingId, setClaimingId] = useState(null);
   const pollRef = useRef(null);
 
-  const loadQueue = async () => {
+  const loadQueue = async (silent = false) => {
     if (!buyerId) return;
+    if (document.hidden) return;
     try {
       const res = await base44.functions.invoke("getBuyerQueue", { buyerId });
       if (res?.data?.ok) {
         setQueue(res.data.queue || []);
-        setError("");
-      } else {
+        if (!silent) setError("");
+      } else if (!silent) {
         setError(res?.data?.error || "Erreur");
       }
     } catch (err) {
-      setError(err?.response?.data?.error || "Erreur de chargement");
+      if (!silent) setError(err?.response?.data?.error || "Erreur de chargement");
     }
     setLoading(false);
   };
@@ -41,8 +42,13 @@ export default function Buyer() {
   useEffect(() => {
     if (!buyerId) return;
     loadQueue();
-    pollRef.current = setInterval(loadQueue, 3000);
-    return () => clearInterval(pollRef.current);
+    pollRef.current = setInterval(() => loadQueue(true), 10000);
+    const onVisible = () => { if (!document.hidden) loadQueue(true); };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      clearInterval(pollRef.current);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
   }, [buyerId]);
 
   const handleClaim = async (id) => {
