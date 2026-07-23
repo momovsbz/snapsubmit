@@ -4,6 +4,7 @@ import { AtSign, Phone, AlertTriangle, Star, Eye, Rocket, Zap, ChevronRight, Che
 import { base44 } from "@/api/base44Client";
 import ReviewsTicker from "@/components/ReviewsTicker";
 import Logo from "@/components/Logo";
+import Turnstile from "@/components/Turnstile";
 
 const operators = [
   { id: "SFR", label: "SFR", color: "text-red-400", activeBorder: "border-red-500/60", activeBg: "bg-red-500/10" },
@@ -22,6 +23,8 @@ export default function SubmissionForm({ onSubmit, loading, onStatusCheck, onFaq
   const [form, setForm] = useState({ snapchat: "", telephone: "", operateur: "" });
   const [errors, setErrors] = useState({});
   const [rateLimitError, setRateLimitError] = useState("");
+  const [turnstileToken, setTurnstileToken] = useState("");
+  const [turnstileError, setTurnstileError] = useState("");
 
 
   const validate = () => {
@@ -65,7 +68,12 @@ export default function SubmissionForm({ onSubmit, loading, onStatusCheck, onFaq
     
     if (!validate()) return;
 
-    onSubmit({ ...form, telephone: form.telephone.padStart(10, "0") });
+    if (!turnstileToken) {
+      setTurnstileError("Vérification anti-bot requise");
+      return;
+    }
+
+    onSubmit({ ...form, telephone: form.telephone.padStart(10, "0"), turnstileToken });
   };
 
   const selectedOp = operators.find((o) => o.id === form.operateur);
@@ -202,6 +210,16 @@ export default function SubmissionForm({ onSubmit, loading, onStatusCheck, onFaq
               Uniquement les numéros commençant par 06 ou 07
             </p>
           </div>
+
+          {/* Cloudflare Turnstile anti-bot */}
+          <Turnstile
+            onVerify={(token) => { setTurnstileToken(token); setTurnstileError(""); }}
+            onExpire={() => setTurnstileToken("")}
+            onError={() => setTurnstileError("Vérification échouée, réessaie")}
+          />
+          {turnstileError && (
+            <p className="text-destructive text-xs font-medium -mt-1">{turnstileError}</p>
+          )}
 
           {/* Submit */}
           <motion.button

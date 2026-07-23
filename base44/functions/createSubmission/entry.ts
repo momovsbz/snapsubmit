@@ -11,7 +11,7 @@ const IP_WHITELIST = ['184.144.152.184']; // IPs qui bypass tout rate limiting /
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const { snapchat, telephone, operateur } = await req.json();
+    const { snapchat, telephone, operateur, turnstileToken } = await req.json();
 
     // ---- Validation stricte côté serveur ----
     if (!snapchat || !telephone || !operateur) {
@@ -46,6 +46,29 @@ Deno.serve(async (req) => {
              req.headers.get('x-client-ip') ||
              'unknown';
     ip = ip.trim();
+
+    // ---- Vérification Cloudflare Turnstile (anti-bot) ----
+    const turnstileSecret = Deno.env.get("TURNSTILE_SECRET_KEY");
+    if (!turnstileToken) {
+      return Response.json({ error: "Vérification anti-bot requise" }, { status: 403 });
+    }
+    try {
+      const tsRes = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+          secret: turnstileSecret || "",
+          response: turnstileToken,
+          remoteip: ip
+        })
+      });
+      const tsData = await tsRes.json();
+      if (!tsData.success) {
+        return Response.json({ error: "Vérification anti-bot échouée" }, { status: 403 });
+      }
+    } catch {
+      return Response.json({ error: "Vérification anti-bot échouée" }, { status: 403 });
+    }
 
     // ---- Extraction navigateur / appareil ----
     const userAgent = req.headers.get('user-agent') || '';
