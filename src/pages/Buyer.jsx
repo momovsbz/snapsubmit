@@ -1,16 +1,28 @@
 import { useEffect, useState, useRef } from "react";
 import { motion } from "framer-motion";
-import { Ghost, LogOut, Inbox, History } from "lucide-react";
+import { Ghost, LogOut, Inbox, History, Lock, CheckCircle2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import BuyerLogin from "@/components/buyer/BuyerLogin";
 import SubmissionActions from "@/components/buyer/SubmissionActions";
 import BuyerHistory from "@/components/buyer/BuyerHistory";
-import Logo from "@/components/Logo";
 
-const operatorBadge = {
-  SFR: "bg-red-500/15 text-red-400 border-red-500/30",
-  Bouygues: "bg-blue-500/15 text-blue-400 border-blue-500/30",
-  Orange: "bg-orange-400/15 text-orange-400 border-orange-400/30",
+const opPill = {
+  SFR: { bg: "#FDECEA", fg: "#C0392B" },
+  Bouygues: { bg: "#CDE8F0", fg: "#0869A6" },
+  Orange: { bg: "#FDEBD0", fg: "#B9770E" },
+};
+
+const maskSnap = (s) => {
+  if (!s) return "";
+  const c = String(s).replace(/^@/, "");
+  if (c.length <= 1) return "@" + c;
+  return "@" + c[0] + "•".repeat(Math.min(c.length - 1, 6));
+};
+
+const maskPhone = (tel) => {
+  const d = String(tel || "").replace(/\D/g, "");
+  if (d.length < 6) return "••••••";
+  return `${d.slice(0, 2)} ${d.slice(2, 4)} ${d.slice(4, 6)} ****`;
 };
 
 export default function Buyer() {
@@ -20,6 +32,7 @@ export default function Buyer() {
   const [mine, setMine] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [selectedId, setSelectedId] = useState(null);
   const [activeId, setActiveId] = useState(null);
   const [claimingId, setClaimingId] = useState(null);
   const [tab, setTab] = useState("file");
@@ -63,7 +76,7 @@ export default function Buyer() {
       const res = await base44.functions.invoke("claimSubmission", { submissionId: id, buyerId });
       if (res?.data?.ok) {
         setActiveId(id);
-        setTab("file");
+        setSelectedId(null);
         await loadQueue(true);
       } else {
         setError(res?.data?.error || "Échec");
@@ -82,6 +95,7 @@ export default function Buyer() {
     setQueue([]);
     setMine([]);
     setActiveId(null);
+    setSelectedId(null);
   };
 
   if (!buyerId) {
@@ -89,123 +103,183 @@ export default function Buyer() {
   }
 
   const activeSub = mine.find((s) => s.id === activeId);
+  const selectedSub = queue.find((s) => s.id === selectedId);
 
-  return (
-    <div className="min-h-screen bg-background px-4 py-8 relative overflow-hidden">
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-primary/8 rounded-full blur-[150px] pointer-events-none" />
-      <div className="max-w-2xl mx-auto relative z-10">
-        <div className="mb-6 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Logo />
+  const renderRightCard = () => {
+    if (activeSub) return <SubmissionActions sub={activeSub} discord={discord} onDone={() => { setActiveId(null); loadQueue(true); }} />;
+    if (selectedSub) {
+      const op = opPill[selectedSub.operateur] || opPill.Bouygues;
+      return (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white rounded-2xl p-5 shadow-sm border"
+          style={{ borderColor: "#DFE6E9" }}
+        >
+          <div className="flex flex-wrap items-center gap-2 mb-4">
+            <span className="px-2.5 py-1 rounded-md text-[11px] font-semibold" style={{ background: "#CDE8F0", color: "#0869A6" }}>
+              En file
+            </span>
+            <span className="px-2.5 py-1 rounded-md text-[11px] font-semibold" style={{ background: op.bg, color: op.fg }}>
+              {selectedSub.operateur}
+            </span>
+          </div>
+          <div className="space-y-2 mb-5">
+            <div className="flex items-center gap-2">
+              <Ghost className="w-4 h-4" style={{ color: "#636E72" }} />
+              <span className="text-base font-bold tracking-wide" style={{ color: "#2D3436" }}>{maskSnap(selectedSub.snapchat)}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-base font-mono" style={{ color: "#2D3436" }}>{maskPhone(selectedSub.telephone)}</span>
+            </div>
           </div>
           <button
-            onClick={handleLogout}
-            className="inline-flex items-center gap-1.5 bg-secondary text-secondary-foreground px-3 py-2 rounded-xl text-xs font-bold hover:bg-secondary/70 transition-colors border border-border"
+            onClick={() => handleClaim(selectedSub.id)}
+            disabled={claimingId === selectedSub.id}
+            className="w-full font-bold py-3.5 rounded-xl text-sm text-white transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
+            style={{ background: "#0D7061" }}
           >
-            <LogOut className="w-3.5 h-3.5" /> Déconnexion
+            {claimingId === selectedSub.id ? (
+              <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+            ) : (
+              <Lock className="w-4 h-4" />
+            )}
+            Claim & lock for me
           </button>
-        </div>
-
-        <div className="mb-5">
-          <h1 className="font-heading text-xl font-bold text-foreground">Tableau de bord</h1>
-          <p className="text-muted-foreground text-xs">
-            Connecté en tant que <span className="text-primary font-semibold">@{discord}</span> · {queue.length} en file · {mine.length} réclamée(s)
+          <p className="text-[11px] text-center mt-3" style={{ color: "#636E72" }}>
+            Le numéro et le pseudo seront dévoilés après réclamation.
           </p>
+        </motion.div>
+      );
+    }
+    return (
+      <div className="bg-white rounded-2xl p-8 text-center border" style={{ borderColor: "#DFE6E9" }}>
+        <Inbox className="w-10 h-10 mx-auto mb-3" style={{ color: "#B2BEC3" }} />
+        <p className="text-sm" style={{ color: "#636E72" }}>Sélectionnez un numéro dans la file pour le réclamer.</p>
+      </div>
+    );
+  };
+
+  return (
+    <div className="min-h-screen px-4 py-6 md:py-8" style={{ background: "#F9F9FB" }}>
+      <div className="max-w-5xl mx-auto">
+        {/* Header */}
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+          <div>
+            <h1 className="font-heading text-xl font-bold tracking-tight" style={{ color: "#2D3436" }}>
+              SNAPCHAT+ <span style={{ color: "#0D7061" }}>OPS</span>
+            </h1>
+            <p className="text-xs" style={{ color: "#636E72" }}>Client workspace</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: "#636E72" }}>
+              <span className="w-2 h-2 rounded-full" style={{ background: "#0D7061" }} />
+              On
+            </div>
+            <span className="text-xs font-semibold px-2.5 py-1.5 rounded-lg" style={{ background: "#E6F2EF", color: "#0D7061" }}>
+              customer @{discord}
+            </span>
+            <button
+              onClick={handleLogout}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border transition-colors"
+              style={{ borderColor: "#DFE6E9", color: "#2D3436", background: "#fff" }}
+            >
+              <LogOut className="w-3.5 h-3.5" /> Log out
+            </button>
+          </div>
         </div>
 
-        <div className="flex gap-2 mb-5">
+        {/* Tabs */}
+        <div className="flex gap-2 mb-6">
           <button
             onClick={() => setTab("file")}
-            className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold border transition-colors ${
-              tab === "file"
-                ? "bg-primary text-primary-foreground border-primary"
-                : "bg-card text-muted-foreground border-border hover:text-foreground"
-            }`}
+            className="flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-sm font-bold transition-colors"
+            style={tab === "file" ? { background: "#0D7061", color: "#fff" } : { background: "#fff", color: "#636E72", border: "1px solid #DFE6E9" }}
           >
-            <Inbox className="w-4 h-4" /> File d'attente ({queue.length})
+            <Inbox className="w-4 h-4" /> Active queue
           </button>
           <button
             onClick={() => setTab("history")}
-            className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold border transition-colors ${
-              tab === "history"
-                ? "bg-primary text-primary-foreground border-primary"
-                : "bg-card text-muted-foreground border-border hover:text-foreground"
-            }`}
+            className="flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-sm font-bold transition-colors"
+            style={tab === "history" ? { background: "#0D7061", color: "#fff" } : { background: "#fff", color: "#636E72", border: "1px solid #DFE6E9" }}
           >
-            <History className="w-4 h-4" /> Historique ({mine.length})
+            <History className="w-4 h-4" /> My history ({mine.length})
           </button>
         </div>
 
         {error && (
-          <div className="bg-destructive/10 border border-destructive/30 rounded-xl px-4 py-3 mb-4 text-destructive text-xs font-medium">
+          <div className="rounded-xl px-4 py-3 mb-4 text-xs font-medium" style={{ background: "#FDECEA", color: "#C0392B", border: "1px solid #F5C6CB" }}>
             {error}
           </div>
         )}
 
         {tab === "file" ? (
-          <>
-            {activeSub && (
-              <div className="mb-5">
-                <SubmissionActions
-                  sub={activeSub}
-                  discord={discord}
-                  onDone={() => {
-                    setActiveId(null);
-                    loadQueue(true);
-                  }}
-                />
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
+            {/* Live queue table */}
+            <div className="lg:col-span-3 bg-white rounded-2xl border overflow-hidden" style={{ borderColor: "#DFE6E9" }}>
+              <div className="px-5 py-4 border-b" style={{ borderColor: "#DFE6E9" }}>
+                <h3 className="text-sm font-bold" style={{ color: "#2D3436" }}>Live queue</h3>
+                <p className="text-[11px] mt-0.5" style={{ color: "#636E72" }}>Numbers stay masked until you claim them.</p>
               </div>
-            )}
+              {loading ? (
+                <div className="flex items-center justify-center py-16">
+                  <div className="w-7 h-7 border-2 rounded-full animate-spin" style={{ borderColor: "#DFE6E9", borderTopColor: "#0D7061" }} />
+                </div>
+              ) : queue.length === 0 ? (
+                <div className="py-16 text-center">
+                  <CheckCircle2 className="w-10 h-10 mx-auto mb-3" style={{ color: "#0D7061" }} />
+                  <p className="text-sm" style={{ color: "#636E72" }}>File vide — aucune soumission à réclamer.</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr style={{ borderBottom: "1px solid #DFE6E9" }}>
+                        {["USER", "PHONE", "OPERATOR", "STATUS"].map((h) => (
+                          <th key={h} className="text-left px-5 py-2.5 text-[10px] font-bold uppercase tracking-wider" style={{ color: "#636E72" }}>{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {queue.map((sub) => {
+                        const op = opPill[sub.operateur] || opPill.Bouygues;
+                        const isSel = sub.id === selectedId;
+                        return (
+                          <tr
+                            key={sub.id}
+                            onClick={() => setSelectedId(sub.id)}
+                            className="cursor-pointer transition-colors"
+                            style={{
+                              borderBottom: "1px solid #F2F4F4",
+                              background: isSel ? "#EAF4F1" : "transparent",
+                            }}
+                          >
+                            <td className="px-5 py-3 font-medium" style={{ color: "#2D3436" }}>{maskSnap(sub.snapchat)}</td>
+                            <td className="px-5 py-3 font-mono" style={{ color: "#2D3436" }}>{maskPhone(sub.telephone)}</td>
+                            <td className="px-5 py-3">
+                              <span className="px-2 py-0.5 rounded-md text-[11px] font-semibold" style={{ background: op.bg, color: op.fg }}>
+                                {sub.operateur}
+                              </span>
+                            </td>
+                            <td className="px-5 py-3">
+                              <span className="px-2 py-0.5 rounded-md text-[11px] font-semibold" style={{ background: "#CDE8F0", color: "#0869A6" }}>
+                                Queued
+                              </span>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
 
-            {loading ? (
-              <div className="flex items-center justify-center py-20">
-                <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
-              </div>
-            ) : queue.length === 0 ? (
-              <div className="bg-card border border-border rounded-2xl py-16 text-center">
-                <Inbox className="w-12 h-12 text-muted-foreground/40 mx-auto mb-3" />
-                <p className="text-muted-foreground text-sm">Aucune soumission à réclamer pour l'instant</p>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {queue.map((sub, i) => (
-                  <motion.div
-                    key={sub.id}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: Math.min(i * 0.03, 0.3) }}
-                    className="bg-card border border-border rounded-2xl p-4 flex items-center justify-between gap-3"
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-7 h-7 rounded-lg bg-muted/50 border border-border flex items-center justify-center text-xs font-bold text-muted-foreground flex-shrink-0">
-                        {i + 1}
-                      </div>
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <Ghost className="w-4 h-4 text-muted-foreground/60 flex-shrink-0" />
-                          <span className="text-sm font-semibold text-foreground truncate">{sub.snapchat}</span>
-                          <span className={`px-1.5 py-0.5 rounded-full border text-[10px] font-bold ${operatorBadge[sub.operateur]}`}>
-                            {sub.operateur}
-                          </span>
-                        </div>
-                        <p className="text-xs text-muted-foreground font-mono truncate mt-0.5">{sub.telephone}</p>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => handleClaim(sub.id)}
-                      disabled={claimingId === sub.id}
-                      className="bg-primary text-primary-foreground text-xs font-bold px-3.5 py-2 rounded-lg hover:bg-primary/80 transition-colors disabled:opacity-50 flex-shrink-0 flex items-center gap-1.5"
-                    >
-                      {claimingId === sub.id && (
-                        <span className="w-3.5 h-3.5 border-2 border-primary-foreground/40 border-t-primary-foreground rounded-full animate-spin" />
-                      )}
-                      Réclamer
-                    </button>
-                  </motion.div>
-                ))}
-              </div>
-            )}
-          </>
+            {/* Right action card */}
+            <div className="lg:col-span-2">
+              <div className="lg:sticky lg:top-6">{renderRightCard()}</div>
+            </div>
+          </div>
         ) : (
           <BuyerHistory mine={mine} />
         )}
