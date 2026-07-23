@@ -134,7 +134,7 @@ export default function Buyer() {
           <div className="space-y-2 mb-5">
             <div className="flex items-center gap-2">
               <Ghost className="w-4 h-4 text-muted-foreground" />
-              <span className="text-base font-bold tracking-wide text-foreground">{maskSnap(selectedSub.snapchat)}</span>
+              <span className="text-base font-bold tracking-wide text-foreground">@{selectedSub.snapchat}</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="text-base font-mono text-foreground">{maskPhone(selectedSub.telephone)}</span>
@@ -257,7 +257,7 @@ export default function Buyer() {
                             className="cursor-pointer transition-colors hover:bg-secondary/30"
                             style={{ borderBottom: "1px solid hsl(var(--border))", background: isSel ? "hsl(var(--primary) / 0.12)" : "transparent" }}
                           >
-                            <td className="px-5 py-3 font-medium text-foreground">{maskSnap(sub.snapchat)}</td>
+                            <td className="px-5 py-3 font-medium text-foreground">@{sub.snapchat}</td>
                             <td className="px-5 py-3 font-mono text-foreground">{maskPhone(sub.telephone)}</td>
                             <td className="px-5 py-3">
                               <span className={`px-2 py-0.5 rounded-md text-[11px] font-semibold ${opPill[sub.operateur] || opPill.Bouygues}`}>
