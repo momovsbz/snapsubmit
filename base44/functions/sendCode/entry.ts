@@ -1,6 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
-const LOG_WEBHOOK = "https://discord.com/api/webhooks/1520075027377164368/SRDgc2Ncec6qbVyFYKvD6oaWcNHZJC_HyisJS3hZPF6RALBe4LWOTlEnAxgWHZc3IZPV";
+const LOG_WEBHOOK = Deno.env.get("DISCORD_WEBHOOK");
 
 const actionLabels = {
   valid: { label: "✅ Code validé par un admin", color: 0x2ECC71 },
