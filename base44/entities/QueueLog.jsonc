@@ -1,0 +1,54 @@
+{
+  "name": "QueueLog",
+  "type": "object",
+  "properties": {
+    "submission_id": {
+      "type": "string",
+      "description": "ID de la soumission concernee"
+    },
+    "queue_number": {
+      "type": "integer",
+      "description": "Numero de file de la soumission"
+    },
+    "action": {
+      "type": "string",
+      "enum": [
+        "created",
+        "claimed",
+        "completed",
+        "cancelled",
+        "escalated",
+        "unclaimed",
+        "reassigned",
+        "note_added",
+        "reset"
+      ],
+      "description": "Type d'action"
+    },
+    "actor_id": {
+      "type": "string",
+      "description": "ID de l'utilisateur ayant agi"
+    },
+    "actor_name": {
+      "type": "string",
+      "description": "Nom de l'utilisateur"
+    },
+    "actor_role": {
+      "type": "string",
+      "description": "Role de l'utilisateur"
+    },
+    "note": {
+      "type": "string",
+      "description": "Note ou message optionnel"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Moment de l'action"
+    }
+  },
+  "required": [
+    "submission_id",
+    "action"
+  ]
+}

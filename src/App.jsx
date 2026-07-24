@@ -13,6 +13,11 @@ import Home from "./pages/Home";
 import Admin from "./pages/Admin";
 import Analytics from "./pages/Analytics";
 import Suivi from "./pages/Suivi";
+import QueueSubmit from "./pages/queue/QueueSubmit";
+import BuyerPanel from "./pages/queue/BuyerPanel";
+import ClaimWorkspace from "./pages/queue/ClaimWorkspace";
+import OwnerPanel from "./pages/queue/OwnerPanel";
+import RoleGuard from "@/components/queue/RoleGuard";
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -116,6 +121,10 @@ const AuthenticatedApp = () => {
       <Route path="/admin" element={<Admin />} />
       <Route path="/analytics" element={<Analytics />} />
       <Route path="/suivi" element={<Suivi />} />
+      <Route path="/queue/submit" element={<QueueSubmit />} />
+      <Route path="/queue/buyer" element={<RoleGuard allowedRoles={["buyer", "admin"]}><BuyerPanel /></RoleGuard>} />
+      <Route path="/queue/buyer/:id" element={<RoleGuard allowedRoles={["buyer", "admin"]}><ClaimWorkspace /></RoleGuard>} />
+      <Route path="/queue/owner" element={<RoleGuard allowedRoles={["admin"]}><OwnerPanel /></RoleGuard>} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );

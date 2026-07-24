@@ -1,0 +1,60 @@
+{
+  "name": "QueueSubmission",
+  "type": "object",
+  "properties": {
+    "queue_number": {
+      "type": "integer",
+      "description": "Numero unique d'ordre dans la file"
+    },
+    "description": {
+      "type": "string",
+      "description": "Description de la demande"
+    },
+    "file_url": {
+      "type": "string",
+      "description": "URL du fichier/image uploade (optionnel)"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "waiting",
+        "claimed",
+        "completed",
+        "cancelled",
+        "escalated"
+      ],
+      "default": "waiting",
+      "description": "Statut de la soumission"
+    },
+    "submitted_by_name": {
+      "type": "string",
+      "description": "Nom du deposant"
+    },
+    "submitted_by_contact": {
+      "type": "string",
+      "description": "Contact du deposant (optionnel)"
+    },
+    "claimed_by_id": {
+      "type": "string",
+      "description": "ID du buyer ayant reclame"
+    },
+    "claimed_by_name": {
+      "type": "string",
+      "description": "Nom du buyer"
+    },
+    "claimed_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Date de claim"
+    },
+    "completed_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Date de completion"
+    }
+  },
+  "required": [
+    "queue_number",
+    "description"
+  ]
+}
