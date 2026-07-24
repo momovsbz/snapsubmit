@@ -46,7 +46,7 @@ export default function ClaimedActions({ submission, onAction, onBlacklist, busy
       </div>
       <p className="text-2xl font-bold text-foreground font-mono tracking-tight mb-5">{formatPhone(sub.telephone)}</p>
 
-      <div className="grid grid-cols-2 gap-2.5 mt-auto">
+      <div className="grid grid-cols-2 gap-2.5 mt-6">
         {actions.map((a) => (
           <button
             key={a.id}
