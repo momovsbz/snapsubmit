@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import BuyerLogin from "@/components/buyer/BuyerLogin";
@@ -43,6 +43,16 @@ export default function Buyer() {
     enabled: !!session,
     refetchInterval: 5000,
   });
+
+  // Realtime: invalidate the list the instant a submission changes (e.g. OTP code
+  // received) so the buyer panel updates without waiting for the 5s poll.
+  useEffect(() => {
+    if (!session) return;
+    const unsubscribe = base44.entities.Submission.subscribe(() => {
+      queryClient.invalidateQueries(["buyer-subs", session.buyerId]);
+    });
+    return unsubscribe;
+  }, [session, queryClient]);
 
   const handleLogin = (buyerId, username) => {
     const s = { buyerId, username };
