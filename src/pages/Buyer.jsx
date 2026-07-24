@@ -1,14 +1,13 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import { Lock, ChevronRight } from "lucide-react";
 import BuyerLogin from "@/components/buyer/BuyerLogin";
 import BuyerHeader from "@/components/buyer/BuyerHeader";
 import BuyerTabs from "@/components/buyer/BuyerTabs";
 import BuyerQueue from "@/components/buyer/BuyerQueue";
 import ClaimedActions from "@/components/buyer/ClaimedActions";
-import BuyerHistory from "@/components/buyer/BuyerHistory";
 import ClaimCard from "@/components/buyer/ClaimCard";
+import BuyerHistory from "@/components/buyer/BuyerHistory";
 
 const TERMINAL = ["code_valid", "code_wrong", "code_expired"];
 
@@ -26,6 +25,15 @@ export default function Buyer() {
   const [busyKey, setBusyKey] = useState(null);
   const [claimingId, setClaimingId] = useState(null);
   const [error, setError] = useState("");
+  const [toggling, setToggling] = useState(false);
+
+  const { data: buyer } = useQuery({
+    queryKey: ["buyer", session?.buyerId],
+    queryFn: () => base44.entities.Buyer.filter({ id: session.buyerId }).then((r) => r[0] || null),
+    enabled: !!session,
+    refetchInterval: 5000,
+  });
+  const active = !!buyer?.active;
 
   const { data: subs = [] } = useQuery({
     queryKey: ["buyer-subs", session?.buyerId],
@@ -45,11 +53,17 @@ export default function Buyer() {
     setSession(null);
   };
 
-  const queue = subs
-    .filter((s) => !s.claimed_by && !TERMINAL.includes(s.status))
-    .sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
-  const claimed = subs.find((s) => s.claimed_by === session.buyerId && !TERMINAL.includes(s.status));
-  const done = subs.filter((s) => TERMINAL.includes(s.status));
+  const handleToggleQueue = async () => {
+    setToggling(true);
+    setError("");
+    try {
+      await base44.functions.invoke("setBuyerActive", { buyerId: session.buyerId, active: !active });
+      queryClient.invalidateQueries(["buyer", session.buyerId]);
+    } catch (e) {
+      setError(e?.response?.data?.error || e?.message || "Erreur");
+    }
+    setToggling(false);
+  };
 
   const handleClaim = async (submissionId) => {
     setClaimingId(submissionId);
@@ -62,6 +76,12 @@ export default function Buyer() {
     }
     setClaimingId(null);
   };
+
+  const queue = subs
+    .filter((s) => !s.claimed_by && !TERMINAL.includes(s.status))
+    .sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
+  const claimed = subs.find((s) => s.claimed_by === session.buyerId && !TERMINAL.includes(s.status));
+  const done = subs.filter((s) => TERMINAL.includes(s.status));
 
   const handleAction = async (action) => {
     if (!claimed) return;
@@ -99,13 +119,19 @@ export default function Buyer() {
   if (!session) return <BuyerLogin onLogin={handleLogin} />;
 
   return (
-    <div className="min-h-screen bg-[#f9fafb] flex flex-col">
-      <BuyerHeader username={session.username} onLogout={handleLogout} />
+    <div className="min-h-screen bg-background flex flex-col">
+      <BuyerHeader
+        username={session.username}
+        active={active}
+        onToggleQueue={handleToggleQueue}
+        toggling={toggling}
+        onLogout={handleLogout}
+      />
       <BuyerTabs tab={tab} setTab={setTab} />
 
       {error && (
-        <div className="mx-6 mt-4 bg-red-50 border border-red-200 rounded-xl px-4 py-2.5">
-          <p className="text-red-600 text-xs font-medium">{error}</p>
+        <div className="mx-6 mt-4 bg-destructive/10 border border-destructive/30 rounded-xl px-4 py-2.5">
+          <p className="text-destructive text-xs font-medium">{error}</p>
         </div>
       )}
 
@@ -121,10 +147,10 @@ export default function Buyer() {
                 busyKey={busyKey}
               />
             ) : queue.length > 0 ? (
-              <ClaimCard submission={queue[0]} onClaim={handleClaim} busy={claimingId === queue[0].id} />
+              <ClaimCard submission={queue[0]} onClaim={handleClaim} busy={claimingId === queue[0].id} active={active} />
             ) : (
-              <div className="bg-white rounded-2xl border border-[#e5e7eb] flex items-center justify-center min-h-[60vh]">
-                <p className="text-[#6b7280] text-sm">No requests to claim right now.</p>
+              <div className="bg-card border border-border rounded-2xl flex items-center justify-center min-h-[60vh]">
+                <p className="text-muted-foreground text-sm">No requests to claim right now.</p>
               </div>
             )}
           </div>

@@ -2,11 +2,11 @@ import { motion } from "framer-motion";
 import { Lock } from "lucide-react";
 
 const opColor = {
-  SFR: { badge: "bg-red-50 text-red-600 border-red-200", btn: "bg-red-500 hover:bg-red-600" },
-  Bouygues: { badge: "bg-blue-50 text-blue-600 border-blue-200", btn: "bg-blue-500 hover:bg-blue-600" },
-  Orange: { badge: "bg-orange-50 text-orange-600 border-orange-200", btn: "bg-orange-500 hover:bg-orange-600" },
+  SFR: { badge: "bg-red-500/10 text-red-400 border-red-500/25", btn: "bg-red-500 hover:bg-red-600 text-white" },
+  Bouygues: { badge: "bg-blue-500/10 text-blue-400 border-blue-500/25", btn: "bg-blue-500 hover:bg-blue-600 text-white" },
+  Orange: { badge: "bg-orange-500/10 text-orange-400 border-orange-500/25", btn: "bg-orange-500 hover:bg-orange-600 text-white" },
 };
-const fallback = { badge: "bg-gray-50 text-gray-600 border-gray-200", btn: "bg-gray-600 hover:bg-gray-700" };
+const fallback = { badge: "bg-secondary/40 text-muted-foreground border-border", btn: "bg-primary hover:bg-primary/90 text-primary-foreground" };
 
 const maskSnap = (snap) => {
   const s = String(snap || "");
@@ -20,7 +20,7 @@ const maskPhone = (tel) => {
   return "•".repeat(t.length - 4) + t.slice(-4);
 };
 
-export default function ClaimCard({ submission, onClaim, busy }) {
+export default function ClaimCard({ submission, onClaim, busy, active }) {
   const sub = submission;
   const c = opColor[sub.operateur] || fallback;
 
@@ -28,10 +28,10 @@ export default function ClaimCard({ submission, onClaim, busy }) {
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white rounded-2xl border border-[#e5e7eb] shadow-sm p-6 flex flex-col min-h-[60vh]"
+      className="bg-card border border-border rounded-2xl p-6 flex flex-col min-h-[60vh]"
     >
       <div className="flex items-center gap-2 mb-6">
-        <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full border border-[#e5e7eb] bg-gray-50 text-[#6b7280]">
+        <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full border border-border bg-secondary/40 text-muted-foreground">
           Queued
         </span>
         <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full border ${c.badge}`}>
@@ -40,8 +40,8 @@ export default function ClaimCard({ submission, onClaim, busy }) {
       </div>
 
       <div className="flex flex-col gap-1.5 mb-4">
-        <span className="text-2xl font-bold text-[#111827] font-mono">{maskSnap(sub.snapchat)}</span>
-        <span className="text-lg text-[#6b7280] font-mono">{maskPhone(sub.telephone)}</span>
+        <span className="text-2xl font-bold text-foreground font-mono">{maskSnap(sub.snapchat)}</span>
+        <span className="text-lg text-muted-foreground font-mono">{maskPhone(sub.telephone)}</span>
         <span className={`mt-2 self-start text-[11px] font-semibold px-2.5 py-1 rounded-full border ${c.badge}`}>
           {sub.operateur}
         </span>
@@ -49,14 +49,16 @@ export default function ClaimCard({ submission, onClaim, busy }) {
 
       <button
         onClick={() => onClaim(sub.id)}
-        disabled={busy}
-        className={`mt-auto w-full text-white font-bold py-3.5 rounded-xl text-sm transition-colors disabled:opacity-50 flex items-center justify-center gap-2 ${c.btn}`}
+        disabled={busy || !active}
+        className={`mt-auto w-full font-bold py-3.5 rounded-xl text-sm transition-colors disabled:opacity-50 flex items-center justify-center gap-2 ${
+          active ? c.btn : "bg-secondary text-muted-foreground"
+        }`}
       >
         {busy ? (
           <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
         ) : (
           <>
-            <Lock className="w-4 h-4" /> Claim & lock for me
+            <Lock className="w-4 h-4" /> {active ? "Claim & lock for me" : "Enter queue to claim"}
           </>
         )}
       </button>

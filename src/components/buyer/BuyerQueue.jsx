@@ -1,9 +1,7 @@
-import { motion } from "framer-motion";
-
 const operatorBadge = {
-  SFR: "bg-red-50 text-red-600 border-red-200",
-  Bouygues: "bg-blue-50 text-blue-600 border-blue-200",
-  Orange: "bg-orange-50 text-orange-600 border-orange-200",
+  SFR: "bg-red-500/10 text-red-400 border-red-500/25",
+  Bouygues: "bg-blue-500/10 text-blue-400 border-blue-500/25",
+  Orange: "bg-orange-500/10 text-orange-400 border-orange-500/25",
 };
 
 const maskSnap = (snap) => {
@@ -20,19 +18,19 @@ const maskPhone = (tel) => {
 
 export default function BuyerQueue({ queue }) {
   return (
-    <div className="bg-white rounded-2xl border border-[#e5e7eb] p-6 flex flex-col min-h-[60vh]">
-      <h2 className="text-lg font-bold text-[#111827]">Live queue</h2>
-      <p className="text-sm text-[#6b7280] mb-5">Numbers stay masked until you claim them</p>
+    <div className="bg-card border border-border rounded-2xl p-6 flex flex-col min-h-[60vh]">
+      <h2 className="text-lg font-bold text-foreground">Live queue</h2>
+      <p className="text-sm text-muted-foreground mb-5">Numbers stay masked until you claim them</p>
 
       {queue.length === 0 ? (
         <div className="flex-1 flex items-center justify-center py-10">
-          <p className="text-[#6b7280] text-sm">All numbers have been claimed for the moment.</p>
+          <p className="text-muted-foreground text-sm">All numbers have been claimed for the moment.</p>
         </div>
       ) : (
         <div className="overflow-x-auto flex-1">
           <table className="w-full text-left">
             <thead>
-              <tr className="text-[11px] font-bold uppercase tracking-wider text-[#6b7280] border-b border-[#e5e7eb]">
+              <tr className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground border-b border-border">
                 <th className="py-2 pr-4 font-bold">User</th>
                 <th className="py-2 pr-4 font-bold">Phone</th>
                 <th className="py-2 pr-4 font-bold">Operator</th>
@@ -41,16 +39,16 @@ export default function BuyerQueue({ queue }) {
             </thead>
             <tbody>
               {queue.map((sub) => (
-                <tr key={sub.id} className="border-b border-[#e5e7eb] last:border-0">
-                  <td className="py-3 pr-4 text-sm font-medium text-[#111827] font-mono">{maskSnap(sub.snapchat)}</td>
-                  <td className="py-3 pr-4 text-sm text-[#6b7280] font-mono">{maskPhone(sub.telephone)}</td>
+                <tr key={sub.id} className="border-b border-border last:border-0">
+                  <td className="py-3 pr-4 text-sm font-medium text-foreground font-mono">{maskSnap(sub.snapchat)}</td>
+                  <td className="py-3 pr-4 text-sm text-muted-foreground font-mono">{maskPhone(sub.telephone)}</td>
                   <td className="py-3 pr-4">
                     <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full border ${operatorBadge[sub.operateur]}`}>
                       {sub.operateur}
                     </span>
                   </td>
                   <td className="py-3">
-                    <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full border border-[#e5e7eb] bg-gray-50 text-[#6b7280]">
+                    <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full border border-border bg-secondary/40 text-muted-foreground">
                       Queued
                     </span>
                   </td>
