@@ -41,5 +41,13 @@ Deno.serve(async (req) => {
     last_ready_status: sub.status,
   }).catch(() => {});
 
+  // Journalise la saisie du code pour l'historique consulté dans le panel acheteur.
+  await base44.asServiceRole.entities.ActionLog.create({
+    submission_id: submissionId,
+    action: "code_entered",
+    details: { code: codeStr, format: sub.status },
+    timestamp: new Date().toISOString(),
+  }).catch(() => {});
+
   return Response.json({ ok: true });
 });

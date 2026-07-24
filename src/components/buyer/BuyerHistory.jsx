@@ -24,7 +24,7 @@ function formatFull(tel) {
   return d.match(/.{1,2}/g)?.join(" ") || d;
 }
 
-export default function BuyerHistory({ mine, lang }) {
+export default function BuyerHistory({ mine, lang, onOpenHistory }) {
   if (mine.length === 0) {
     return (
       <div className="bg-card border border-border rounded-2xl py-16 text-center">
@@ -36,7 +36,7 @@ export default function BuyerHistory({ mine, lang }) {
   return (
     <div className="space-y-2">
       {mine.map((s) => (
-        <div key={s.id} className="bg-card border border-border rounded-2xl p-4">
+        <div key={s.id} onClick={() => onOpenHistory?.(s.id)} className="bg-card border border-border rounded-2xl p-4 cursor-pointer hover:border-primary/40 transition-colors">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 min-w-0">
               <Ghost className="w-4 h-4 text-muted-foreground flex-shrink-0" />

@@ -11,6 +11,7 @@
       "enum": [
         "submitted",
         "code_sent",
+        "code_entered",
         "code_verified",
         "code_wrong",
         "code_expired",
@@ -21,7 +22,7 @@
     },
     "details": {
       "type": "object",
-      "description": "D\u00e9tails additionnels (navigateur, device, IP, etc.)"
+      "description": "D\u00e9tails additionnels (code saisi, format, navigateur, device, IP, etc.)"
     },
     "admin_user": {
       "type": "string",

@@ -5,6 +5,7 @@ import { base44 } from "@/api/base44Client";
 import BuyerLogin from "@/components/buyer/BuyerLogin";
 import SubmissionActions from "@/components/buyer/SubmissionActions";
 import BuyerHistory from "@/components/buyer/BuyerHistory";
+import SubmissionHistory from "@/components/buyer/SubmissionHistory";
 import { t, getStoredLang, setStoredLang } from "@/components/buyer/i18n";
 
 const opPill = {
@@ -38,6 +39,7 @@ export default function Buyer() {
   const [activeId, setActiveId] = useState(null);
   const [claimingId, setClaimingId] = useState(null);
   const [tab, setTab] = useState("file");
+  const [historyId, setHistoryId] = useState(null);
   const pollRef = useRef(null);
 
   const switchLang = (l) => { setLang(l); setStoredLang(l); };
@@ -282,9 +284,12 @@ export default function Buyer() {
             </div>
           </div>
         ) : (
-          <BuyerHistory mine={mine} lang={lang} />
+          <BuyerHistory mine={mine} lang={lang} onOpenHistory={setHistoryId} />
         )}
       </div>
+      {historyId && (
+        <SubmissionHistory submissionId={historyId} buyerId={buyerId} lang={lang} onClose={() => setHistoryId(null)} />
+      )}
     </div>
   );
 }
