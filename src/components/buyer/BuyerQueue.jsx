@@ -1,9 +1,9 @@
 import { motion } from "framer-motion";
 
 const operatorBadge = {
-  SFR: "bg-[#d1f2ef] text-[#0e746a] border-[#0e746a]/20",
-  Bouygues: "bg-[#d1f2ef] text-[#0e746a] border-[#0e746a]/20",
-  Orange: "bg-[#d1f2ef] text-[#0e746a] border-[#0e746a]/20",
+  SFR: "bg-red-50 text-red-600 border-red-200",
+  Bouygues: "bg-blue-50 text-blue-600 border-blue-200",
+  Orange: "bg-orange-50 text-orange-600 border-orange-200",
 };
 
 const maskSnap = (snap) => {
