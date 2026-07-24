@@ -16,7 +16,7 @@ const maskPhone = (tel) => {
   return "•".repeat(t.length - 4) + t.slice(-4);
 };
 
-export default function BuyerQueue({ queue }) {
+export default function BuyerQueue({ queue, selectedId, onSelect }) {
   return (
     <div className="bg-card border border-border rounded-2xl p-6 flex flex-col min-h-[60vh]">
       <h2 className="text-lg font-bold text-foreground">Live queue</h2>
@@ -27,6 +27,7 @@ export default function BuyerQueue({ queue }) {
           <p className="text-muted-foreground text-sm">All numbers have been claimed for the moment.</p>
         </div>
       ) : (
+      
         <div className="overflow-x-auto flex-1">
           <table className="w-full text-left">
             <thead>
@@ -38,22 +39,33 @@ export default function BuyerQueue({ queue }) {
               </tr>
             </thead>
             <tbody>
-              {queue.map((sub) => (
-                <tr key={sub.id} className="border-b border-border last:border-0">
-                  <td className="py-3 pr-4 text-sm font-medium text-foreground font-mono">{sub.snapchat ? `@${sub.snapchat}` : "—"}</td>
-                  <td className="py-3 pr-4 text-sm text-muted-foreground font-mono">{maskPhone(sub.telephone)}</td>
-                  <td className="py-3 pr-4">
-                    <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full border ${operatorBadge[sub.operateur]}`}>
-                      {sub.operateur}
-                    </span>
-                  </td>
-                  <td className="py-3">
-                    <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full border border-border bg-secondary/40 text-muted-foreground">
-                      Queued
-                    </span>
-                  </td>
-                </tr>
-              ))}
+              {queue.map((sub) => {
+                const isSel = sub.id === selectedId;
+                return (
+                  <tr
+                    key={sub.id}
+                    onClick={() => onSelect?.(sub.id)}
+                    className={`border-b border-border last:border-0 cursor-pointer transition-colors ${
+                      isSel ? "bg-primary/10" : "hover:bg-secondary/40"
+                    }`}
+                  >
+                    <td className="py-3 pr-4 text-sm font-medium text-foreground font-mono">
+                      {sub.snapchat ? `@${sub.snapchat}` : "—"}
+                    </td>
+                    <td className="py-3 pr-4 text-sm text-muted-foreground font-mono">{maskPhone(sub.telephone)}</td>
+                    <td className="py-3 pr-4">
+                      <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full border ${operatorBadge[sub.operateur]}`}>
+                        {sub.operateur}
+                      </span>
+                    </td>
+                    <td className="py-3">
+                      <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full border ${isSel ? "border-primary bg-primary/15 text-primary" : "border-border bg-secondary/40 text-muted-foreground"}`}>
+                        {isSel ? "Selected" : "Queued"}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

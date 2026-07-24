@@ -26,6 +26,7 @@ export default function Buyer() {
   const [claimingId, setClaimingId] = useState(null);
   const [error, setError] = useState("");
   const [toggling, setToggling] = useState(false);
+  const [selectedId, setSelectedId] = useState(null);
 
   const { data: buyer } = useQuery({
     queryKey: ["buyer", session?.buyerId],
@@ -83,6 +84,8 @@ export default function Buyer() {
   const claimed = subs.find((s) => s.claimed_by === session.buyerId && !TERMINAL.includes(s.status));
   const done = subs.filter((s) => TERMINAL.includes(s.status) && s.claimed_by === session.buyerId);
 
+  const target = queue.find((s) => s.id === selectedId) || queue[0] || null;
+
   const handleAction = async (action) => {
     if (!claimed) return;
     setBusyKey(action);
@@ -138,7 +141,7 @@ export default function Buyer() {
       <main className="flex-1 px-6 py-5">
         {tab === "queue" ? (
           <div className="grid md:grid-cols-[1.8fr_1fr] gap-5">
-            <BuyerQueue queue={queue} />
+            <BuyerQueue queue={queue} selectedId={target?.id} onSelect={setSelectedId} />
             {claimed ? (
               <ClaimedActions
                 submission={claimed}
@@ -146,8 +149,8 @@ export default function Buyer() {
                 onBlacklist={handleBlacklist}
                 busyKey={busyKey}
               />
-            ) : queue.length > 0 ? (
-              <ClaimCard submission={queue[0]} onClaim={handleClaim} busy={claimingId === queue[0].id} active={active} />
+            ) : target ? (
+              <ClaimCard submission={target} onClaim={handleClaim} busy={claimingId === target.id} active={active} />
             ) : (
               <div className="bg-card border border-border rounded-2xl flex items-center justify-center min-h-[60vh]">
                 <p className="text-muted-foreground text-sm">No requests to claim right now.</p>
