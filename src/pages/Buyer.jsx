@@ -79,7 +79,7 @@ export default function Buyer() {
 
   const queue = subs
     .filter((s) => !s.claimed_by && !TERMINAL.includes(s.status))
-    .sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
+    .sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
   const claimed = subs.find((s) => s.claimed_by === session.buyerId && !TERMINAL.includes(s.status));
   const done = subs.filter((s) => TERMINAL.includes(s.status) && s.claimed_by === session.buyerId);
 
