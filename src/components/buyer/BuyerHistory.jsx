@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import HistoryItem from "@/components/buyer/HistoryItem";
 
-export default function BuyerHistory({ items }) {
+export default function BuyerHistory({ items, onRemove }) {
   const sorted = [...items].sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
 
   return (
@@ -22,7 +22,7 @@ export default function BuyerHistory({ items }) {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: Math.min(i * 0.03, 0.3) }}
             >
-              <HistoryItem sub={sub} index={i} />
+              <HistoryItem sub={sub} index={i} onRemove={onRemove} />
             </motion.div>
           ))}
         </div>

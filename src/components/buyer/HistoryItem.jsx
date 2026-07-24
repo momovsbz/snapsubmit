@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, Copy, Check, KeyRound, CheckCircle2, XCircle, Clock } from "lucide-react";
+import { ChevronDown, Copy, Check, KeyRound, CheckCircle2, XCircle, Clock, X } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 
 const statusMeta = {
@@ -27,14 +27,14 @@ const actionLabels = {
 
 const formatPhone = (tel) => String(tel || "").replace(/\D/g, "").replace(/(\d{2})(?=\d)/g, "$1 ").trim();
 
-export default function HistoryItem({ sub, index }) {
+export default function HistoryItem({ sub, index, onRemove }) {
   const [open, setOpen] = useState(false);
   const [logs, setLogs] = useState(null);
   const [loadingLogs, setLoadingLogs] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [removing, setRemoving] = useState(false);
 
   const meta = statusMeta[sub.status] || statusMeta.code_valid;
-  const Icon = meta.icon;
 
   const toggle = async () => {
     if (!open && logs === null) {
@@ -65,11 +65,19 @@ export default function HistoryItem({ sub, index }) {
 
   return (
     <div className="rounded-xl border border-border bg-secondary/20 overflow-hidden">
-      <button
+      <div
         onClick={toggle}
-        className={`w-full flex items-center gap-3 p-3 text-left transition-colors ${open ? "bg-secondary/40" : "hover:bg-secondary/30"}`}
+        role="button"
+        className={`w-full flex items-center gap-3 p-3 text-left cursor-pointer transition-colors ${open ? "bg-secondary/40" : "hover:bg-secondary/30"}`}
       >
-        <Icon className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+        <button
+          onClick={(e) => { e.stopPropagation(); setRemoving(true); onRemove?.(sub.id); }}
+          disabled={removing}
+          title="Supprimer de l'historique"
+          className="w-7 h-7 rounded-full bg-destructive/10 hover:bg-destructive/20 border border-destructive/25 text-destructive flex items-center justify-center flex-shrink-0 transition-colors disabled:opacity-50"
+        >
+          {removing ? <span className="w-3 h-3 border-2 border-current/30 border-t-current rounded-full animate-spin" /> : <X className="w-3.5 h-3.5" />}
+        </button>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <span className="text-sm font-semibold text-foreground truncate">{sub.snapchat}</span>
@@ -83,7 +91,7 @@ export default function HistoryItem({ sub, index }) {
           {meta.label}
         </span>
         <ChevronDown className={`w-4 h-4 text-muted-foreground flex-shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />
-      </button>
+      </div>
 
       <AnimatePresence initial={false}>
         {open && (

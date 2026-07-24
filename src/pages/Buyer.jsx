@@ -106,6 +106,18 @@ export default function Buyer() {
     setBusyKey(null);
   };
 
+  const handleRemove = async (submissionId) => {
+    setError("");
+    try {
+      await base44.functions.invoke("removeSubmission", { submissionId, buyerId: session.buyerId });
+      queryClient.invalidateQueries(["buyer-subs", session.buyerId]);
+      setSuccess("Supprimé de l'historique");
+      setTimeout(() => setSuccess(""), 2500);
+    } catch (e) {
+      setError(e?.response?.data?.error || e?.message || "Erreur");
+    }
+  };
+
   const handleBlacklist = async () => {
     if (!claimed) return;
     setBusyKey("blacklist");
@@ -168,7 +180,7 @@ export default function Buyer() {
             )}
           </div>
         ) : (
-          <BuyerHistory items={done} />
+          <BuyerHistory items={done} onRemove={handleRemove} />
         )}
       </main>
     </div>
