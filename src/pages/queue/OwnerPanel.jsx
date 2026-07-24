@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   ShieldCheck, Loader2, Users, Activity, Inbox, Trash2,
-  ArrowUp, Unlock, RefreshCw, UserPlus, Filter,
+  ArrowUp, Unlock, RefreshCw, UserPlus, Filter, UserCheck,
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { addLog, queueId, formatTime, ACTION_META } from "@/lib/queueHelpers";
@@ -12,6 +12,7 @@ import StatusBadge from "@/components/queue/StatusBadge";
 
 const FILTERS = [
   { id: "all", label: "Toutes" },
+  { id: "unassigned", label: "Non assignées" },
   { id: "waiting", label: "En attente" },
   { id: "claimed", label: "Réclamées" },
   { id: "completed", label: "Terminées" },
@@ -25,10 +26,11 @@ export default function OwnerPanel() {
   const [buyers, setBuyers] = useState([]);
   const [me, setMe] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState("all");
+  const [filter, setFilter] = useState("unassigned");
   const [busy, setBusy] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteMsg, setInviteMsg] = useState("");
+  const [assignPick, setAssignPick] = useState({});
 
   const load = async () => {
     try {
@@ -54,15 +56,32 @@ export default function OwnerPanel() {
 
   const actor = () => ({ id: me?.id, name: me?.full_name || me?.email, role: me?.role });
 
+  const assign = async (s, buyerId) => {
+    if (!buyerId) return;
+    setBusy(true);
+    try {
+      const buyer = buyers.find((b) => b.id === buyerId);
+      const a = actor();
+      await base44.entities.QueueSubmission.update(s.id, {
+        assigned_to_id: buyerId,
+        assigned_to_name: buyer?.full_name || buyer?.email || "Buyer",
+      });
+      await addLog({
+        submission_id: s.id, queue_number: s.queue_number, action: "assigned",
+        actor_id: a.id, actor_name: a.name, actor_role: a.role,
+        note: `Assignée à ${buyer?.full_name || buyer?.email || "buyer"}`,
+      });
+      setAssignPick({ ...assignPick, [s.id]: "" });
+    } catch {}
+    setBusy(false);
+  };
+
   const unclaim = async (s) => {
     setBusy(true);
     try {
       const a = actor();
       await base44.entities.QueueSubmission.update(s.id, {
-        status: "waiting",
-        claimed_by_id: "",
-        claimed_by_name: "",
-        claimed_date: "",
+        status: "waiting", claimed_by_id: "", claimed_by_name: "", claimed_date: "",
       });
       await addLog({ submission_id: s.id, queue_number: s.queue_number, action: "unclaimed", actor_id: a.id, actor_name: a.name, actor_role: a.role, note: "Libérée par l'admin" });
     } catch {}
@@ -112,12 +131,16 @@ export default function OwnerPanel() {
     }
   };
 
-  const filtered = filter === "all" ? subs : subs.filter((s) => s.status === filter);
+  const filtered = filter === "all" ? subs
+    : filter === "unassigned" ? subs.filter((s) => !s.assigned_to_id)
+    : subs.filter((s) => s.status === filter);
+
   const stats = {
     waiting: subs.filter((s) => s.status === "waiting").length,
     claimed: subs.filter((s) => s.status === "claimed").length,
     completed: subs.filter((s) => s.status === "completed").length,
     escalated: subs.filter((s) => s.status === "escalated").length,
+    unassigned: subs.filter((s) => !s.assigned_to_id && s.status === "waiting").length,
   };
 
   if (loading) {
@@ -137,7 +160,7 @@ export default function OwnerPanel() {
             <h1 className="font-heading text-2xl font-bold flex items-center gap-2">
               <ShieldCheck className="w-6 h-6 text-primary" /> Owner Panel
             </h1>
-            <p className="text-muted-foreground text-sm">Pilotage complet de la file et des buyers.</p>
+            <p className="text-muted-foreground text-sm">Pilotage de la file, buyers et assignations.</p>
           </div>
           <button onClick={resetAll} disabled={busy}
             className="flex items-center gap-2 bg-destructive/10 border border-destructive/30 text-destructive rounded-xl px-4 py-2.5 text-sm font-medium hover:bg-destructive/20 transition-colors disabled:opacity-50">
@@ -145,9 +168,9 @@ export default function OwnerPanel() {
           </button>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
           {[
+            { label: "Non assignées", value: stats.unassigned, color: "text-red-400", icon: UserCheck },
             { label: "En attente", value: stats.waiting, color: "text-amber-400", icon: Inbox },
             { label: "Réclamées", value: stats.claimed, color: "text-blue-400", icon: Users },
             { label: "Terminées", value: stats.completed, color: "text-emerald-400", icon: ShieldCheck },
@@ -169,34 +192,33 @@ export default function OwnerPanel() {
         {/* Buyers management */}
         <div className="bg-card border border-border rounded-2xl p-5 mb-6">
           <h2 className="font-heading text-lg font-semibold mb-3 flex items-center gap-2">
-            <Users className="w-5 h-5 text-primary" /> Buyers
+            <Users className="w-5 h-5 text-primary" /> Buyers ({buyers.length})
           </h2>
           <form onSubmit={inviteBuyer} className="flex gap-2 mb-3">
-            <input
-              type="email"
-              placeholder="email du buyer à inviter"
-              value={inviteEmail}
+            <input type="email" placeholder="email du buyer à inviter" value={inviteEmail}
               onChange={(e) => setInviteEmail(e.target.value)}
-              className="flex-1 bg-secondary/30 border border-border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
-            />
+              className="flex-1 bg-secondary/30 border border-border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40" />
             <button type="submit" className="bg-primary text-primary-foreground rounded-xl px-4 flex items-center gap-1.5 text-sm font-medium hover:opacity-90">
               <UserPlus className="w-4 h-4" /> Inviter
             </button>
           </form>
           {inviteMsg && <p className="text-xs text-muted-foreground mb-3">{inviteMsg}</p>}
           {buyers.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Aucun buyer pour le moment.</p>
+            <p className="text-sm text-muted-foreground">Aucun buyer pour le moment. Ajoutez-en un pour assigner les demandes.</p>
           ) : (
             <div className="space-y-2">
-              {buyers.map((b) => (
-                <div key={b.id} className="flex items-center justify-between bg-secondary/20 rounded-xl px-4 py-2.5">
-                  <div>
-                    <div className="text-sm font-medium">{b.full_name || b.email}</div>
-                    <div className="text-xs text-muted-foreground">{b.email}</div>
+              {buyers.map((b) => {
+                const count = subs.filter((s) => s.assigned_to_id === b.id && s.status === "waiting").length;
+                return (
+                  <div key={b.id} className="flex items-center justify-between bg-secondary/20 rounded-xl px-4 py-2.5">
+                    <div>
+                      <div className="text-sm font-medium">{b.full_name || b.email}</div>
+                      <div className="text-xs text-muted-foreground">{b.email}</div>
+                    </div>
+                    <span className="text-xs text-amber-400 font-medium">{count} en attente</span>
                   </div>
-                  <span className="text-xs text-primary font-medium">buyer</span>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
@@ -205,19 +227,14 @@ export default function OwnerPanel() {
         <div className="bg-card border border-border rounded-2xl p-5 mb-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-heading text-lg font-semibold">Soumissions</h2>
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <Filter className="w-3.5 h-3.5" />
-            </div>
+            <Filter className="w-4 h-4 text-muted-foreground" />
           </div>
           <div className="flex flex-wrap gap-1.5 mb-4">
             {FILTERS.map((f) => (
-              <button
-                key={f.id}
-                onClick={() => setFilter(f.id)}
+              <button key={f.id} onClick={() => setFilter(f.id)}
                 className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                   filter === f.id ? "bg-primary text-primary-foreground" : "bg-secondary/30 text-muted-foreground hover:text-foreground"
-                }`}
-              >
+                }`}>
                 {f.label}
               </button>
             ))}
@@ -228,38 +245,70 @@ export default function OwnerPanel() {
           ) : (
             <div className="space-y-2">
               {filtered.map((s) => (
-                <div key={s.id} className="bg-secondary/20 rounded-xl p-3 flex items-center gap-3">
-                  <span className="font-heading font-bold text-primary w-14 flex-shrink-0">{queueId(s.queue_number)}</span>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <StatusBadge status={s.status} />
-                      {s.claimed_by_name && <span className="text-xs text-muted-foreground">par {s.claimed_by_name}</span>}
+                <div key={s.id} className="bg-secondary/20 rounded-xl p-3">
+                  <div className="flex items-center gap-3 mb-2">
+                    <span className="font-heading font-bold text-primary w-14 flex-shrink-0">{queueId(s.queue_number)}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <StatusBadge status={s.status} />
+                        {s.assigned_to_name
+                          ? <span className="text-xs text-blue-400">→ {s.assigned_to_name}</span>
+                          : <span className="text-xs text-red-400 font-medium">Non assignée</span>}
+                        {s.claimed_by_name && <span className="text-xs text-muted-foreground">· {s.claimed_by_name}</span>}
+                      </div>
+                      <div className="flex flex-wrap items-center gap-x-3 text-sm text-foreground/80">
+                        <span>@{s.snapchat || "—"}</span>
+                        <span className="text-muted-foreground">{s.telephone ? s.telephone.replace(/(\d{2})(?=\d)/g, "$1 ") : ""}</span>
+                        {s.operateur && <span className="text-xs px-2 py-0.5 rounded-full bg-secondary/40 text-muted-foreground">{s.operateur}</span>}
+                      </div>
                     </div>
-                    <p className="text-sm text-foreground/80 truncate">{s.description}</p>
-                    <p className="text-xs text-muted-foreground">{s.submitted_by_name || "Anonyme"} · {formatTime(s.created_date)}</p>
-                  </div>
-                  <div className="flex items-center gap-1.5 flex-shrink-0">
-                    <Link to={`/queue/buyer/${s.id}`}
-                      className="p-2 rounded-lg bg-secondary/40 hover:bg-secondary/60 text-muted-foreground hover:text-foreground transition-colors" title="Ouvrir">
-                      <ShieldCheck className="w-4 h-4" />
-                    </Link>
-                    {s.status === "waiting" && (
-                      <button onClick={() => moveTop(s)} disabled={busy} title="Mettre en tête"
-                        className="p-2 rounded-lg bg-secondary/40 hover:bg-secondary/60 text-muted-foreground hover:text-primary transition-colors">
-                        <ArrowUp className="w-4 h-4" />
+                    <div className="flex items-center gap-1.5 flex-shrink-0">
+                      <Link to={`/queue/buyer/${s.id}`} title="Ouvrir"
+                        className="p-2 rounded-lg bg-secondary/40 hover:bg-secondary/60 text-muted-foreground hover:text-foreground transition-colors">
+                        <ShieldCheck className="w-4 h-4" />
+                      </Link>
+                      {s.status === "waiting" && (
+                        <button onClick={() => moveTop(s)} disabled={busy} title="Mettre en tête"
+                          className="p-2 rounded-lg bg-secondary/40 hover:bg-secondary/60 text-muted-foreground hover:text-primary transition-colors">
+                          <ArrowUp className="w-4 h-4" />
+                        </button>
+                      )}
+                      {(s.status === "claimed" || s.status === "escalated") && (
+                        <button onClick={() => unclaim(s)} disabled={busy} title="Libérer"
+                          className="p-2 rounded-lg bg-secondary/40 hover:bg-secondary/60 text-muted-foreground hover:text-amber-400 transition-colors">
+                          <Unlock className="w-4 h-4" />
+                        </button>
+                      )}
+                      <button onClick={() => remove(s)} disabled={busy} title="Supprimer"
+                        className="p-2 rounded-lg bg-secondary/40 hover:bg-destructive/20 text-muted-foreground hover:text-destructive transition-colors">
+                        <Trash2 className="w-4 h-4" />
                       </button>
-                    )}
-                    {(s.status === "claimed" || s.status === "escalated") && (
-                      <button onClick={() => unclaim(s)} disabled={busy} title="Libérer"
-                        className="p-2 rounded-lg bg-secondary/40 hover:bg-secondary/60 text-muted-foreground hover:text-amber-400 transition-colors">
-                        <Unlock className="w-4 h-4" />
-                      </button>
-                    )}
-                    <button onClick={() => remove(s)} disabled={busy} title="Supprimer"
-                      className="p-2 rounded-lg bg-secondary/40 hover:bg-destructive/20 text-muted-foreground hover:text-destructive transition-colors">
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    </div>
                   </div>
+
+                  {/* Assignment control */}
+                  {!s.assigned_to_id && s.status === "waiting" && (
+                    <div className="flex items-center gap-2 mt-2 pl-14">
+                      <UserCheck className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                      <select
+                        value={assignPick[s.id] || ""}
+                        onChange={(e) => setAssignPick({ ...assignPick, [s.id]: e.target.value })}
+                        className="flex-1 bg-secondary/30 border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+                      >
+                        <option value="">Choisir un buyer…</option>
+                        {buyers.map((b) => (
+                          <option key={b.id} value={b.id}>{b.full_name || b.email}</option>
+                        ))}
+                      </select>
+                      <button
+                        onClick={() => assign(s, assignPick[s.id])}
+                        disabled={busy || !assignPick[s.id]}
+                        className="bg-primary text-primary-foreground text-sm font-medium px-3 py-2 rounded-lg hover:opacity-90 disabled:opacity-50"
+                      >
+                        Assigner
+                      </button>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

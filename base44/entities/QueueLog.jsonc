@@ -14,6 +14,7 @@
       "type": "string",
       "enum": [
         "created",
+        "assigned",
         "claimed",
         "completed",
         "cancelled",
@@ -21,7 +22,16 @@
         "unclaimed",
         "reassigned",
         "note_added",
-        "reset"
+        "reset",
+        "code_ready",
+        "code6",
+        "code6sfr",
+        "code6orange",
+        "code_wrong",
+        "code_expired",
+        "code_valid",
+        "waiting_queue",
+        "blacklist"
       ],
       "description": "Type d'action"
     },

@@ -29,8 +29,22 @@ export default function BuyerPanel() {
     return unsub;
   }, []);
 
-  const waiting = subs.filter((s) => s.status === "waiting").sort((a, b) => a.queue_number - b.queue_number);
-  const mine = subs.filter((s) => (s.status === "claimed" || s.status === "escalated") && s.claimed_by_id === me?.id);
+  const isAdmin = me?.role === "admin";
+
+  // Per-buyer queue: buyers only see submissions assigned to them (or unassigned? No — only assigned).
+  // Admin sees everything.
+  const visible = isAdmin
+    ? subs
+    : subs.filter((s) => s.assigned_to_id === me?.id);
+
+  const waiting = visible
+    .filter((s) => s.status === "waiting")
+    .sort((a, b) => a.queue_number - b.queue_number);
+
+  const mine = visible.filter(
+    (s) => (s.status === "claimed" || s.status === "escalated") && s.claimed_by_id === me?.id
+  );
+
   const firstWaiting = waiting[0];
   const actor = () => ({ id: me?.id, name: me?.full_name || me?.email, role: me?.role });
 
@@ -66,9 +80,13 @@ export default function BuyerPanel() {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="font-heading text-2xl font-bold flex items-center gap-2">
-              <ListOrdered className="w-6 h-6 text-primary" /> File d'attente
+              <ListOrdered className="w-6 h-6 text-primary" /> Ma file
             </h1>
-            <p className="text-muted-foreground text-sm">Réclamez la première demande disponible (FIFO).</p>
+            <p className="text-muted-foreground text-sm">
+              {isAdmin
+                ? "Vue admin — toutes les soumissions assignées."
+                : "Vos demandes assignées, réclamez la première (FIFO)."}
+            </p>
           </div>
           <div className="flex gap-2">
             <div className="bg-card border border-border rounded-xl px-4 py-2 text-center">
@@ -97,7 +115,10 @@ export default function BuyerPanel() {
                       <span className="font-heading text-lg font-bold text-primary">#{String(s.queue_number).padStart(3, "0")}</span>
                       <StatusBadge status={s.status} />
                     </div>
-                    <p className="text-sm text-foreground/80 line-clamp-2">{s.description}</p>
+                    <div className="flex items-center gap-3 text-sm text-foreground/80">
+                      <span>@{s.snapchat}</span>
+                      <span className="text-muted-foreground">{s.operateur}</span>
+                    </div>
                   </motion.div>
                 </Link>
               ))}
@@ -110,7 +131,9 @@ export default function BuyerPanel() {
           {waiting.length === 0 ? (
             <div className="bg-card border border-border rounded-2xl p-10 text-center">
               <Inbox className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-              <p className="text-muted-foreground">File vide — aucune demande en attente.</p>
+              <p className="text-muted-foreground">
+                {isAdmin ? "Aucune demande en attente." : "Aucune demande vous est assignée pour le moment."}
+              </p>
             </div>
           ) : (
             <div className="grid gap-3">
@@ -128,7 +151,7 @@ export default function BuyerPanel() {
         </div>
 
         <p className="text-xs text-muted-foreground/50 text-center mt-8 flex items-center justify-center gap-1.5">
-          <Hand className="w-3.5 h-3.5" /> Seule la première demande de la file peut être réclamée.
+          <Hand className="w-3.5 h-3.5" /> Seule la première demande de votre file peut être réclamée.
         </p>
       </div>
     </div>
