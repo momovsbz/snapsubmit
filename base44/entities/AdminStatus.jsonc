@@ -6,11 +6,6 @@
       "type": "boolean",
       "default": false,
       "description": "Si l'admin est absent"
-    },
-    "queue_cutoff": {
-      "type": "string",
-      "format": "date-time",
-      "description": "Date de remise \u00e0 z\u00e9ro de la file acheteur : seules les demandes cr\u00e9\u00e9es apr\u00e8s cette date apparaissent dans la file partag\u00e9e"
     }
   },
   "required": []

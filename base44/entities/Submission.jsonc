@@ -27,7 +27,6 @@
         "code6_ready",
         "code6sfr_ready",
         "code6orange_ready",
-        "otp_submitted",
         "code_valid",
         "code_wrong",
         "code_expired",
@@ -35,14 +34,6 @@
       ],
       "default": "pending",
       "description": "Statut de la demande"
-    },
-    "entered_code": {
-      "type": "string",
-      "description": "Code OTP saisi par l'utilisateur (affich\u00e9 dans le panel acheteur)"
-    },
-    "last_ready_status": {
-      "type": "string",
-      "description": "Statut code_ready pr\u00e9c\u00e9dent, pour autoriser un renvoi apr\u00e8s OTP invalide"
     },
     "code_sent_at": {
       "type": "string",
@@ -77,10 +68,6 @@
     "admin_discord": {
       "type": "string",
       "description": "Pseudo Discord de l'admin qui a verrouill\u00e9 la demande"
-    },
-    "assigned_buyer_id": {
-      "type": "string",
-      "description": "ID du buyer \u00e0 qui cette soumission est assign\u00e9e (file d'attente)"
     }
   },
   "required": [

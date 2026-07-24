@@ -13,8 +13,6 @@ import Home from "./pages/Home";
 import Admin from "./pages/Admin";
 import Analytics from "./pages/Analytics";
 import Suivi from "./pages/Suivi";
-import Owner from "./pages/Owner";
-import Buyer from "./pages/Buyer";
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -118,8 +116,6 @@ const AuthenticatedApp = () => {
       <Route path="/admin" element={<Admin />} />
       <Route path="/analytics" element={<Analytics />} />
       <Route path="/suivi" element={<Suivi />} />
-      <Route path="/owner" element={<Owner />} />
-      <Route path="/buyer" element={<Buyer />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
