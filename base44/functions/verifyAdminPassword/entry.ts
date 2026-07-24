@@ -1,6 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
-const ADMIN_PASSWORD = Deno.env.get("ADMIN_PASSWORD");
 const MAX_ATTEMPTS = 5;
 const LOCKOUT_MS = 10 * 60 * 1000; // 10 minutes
 
@@ -17,6 +16,9 @@ function getClientIP(req) {
 
 Deno.serve(async (req) => {
   try {
+    // Read fresh per-request so it always matches the current secret value
+    // (createBuyer reads fresh too — this keeps both functions consistent).
+    const ADMIN_PASSWORD = Deno.env.get("ADMIN_PASSWORD");
     const ip = getClientIP(req);
 
     // Whitelisted IPs bypass rate limiting entirely
