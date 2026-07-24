@@ -21,7 +21,7 @@ export default function BuyerHeader({ username, onLogout }) {
         <button
           onClick={() => setNotif((v) => !v)}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-            notif ? "bg-[#e0f2f1] text-[#00695c]" : "bg-gray-100 text-gray-500"
+            notif ? "bg-[#d1f2ef] text-[#0e746a]" : "bg-gray-100 text-gray-500"
           }`}
         >
           <Bell className="w-3.5 h-3.5 text-orange-500" />

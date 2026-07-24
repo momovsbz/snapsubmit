@@ -8,6 +8,7 @@ import BuyerTabs from "@/components/buyer/BuyerTabs";
 import BuyerQueue from "@/components/buyer/BuyerQueue";
 import ClaimedActions from "@/components/buyer/ClaimedActions";
 import BuyerHistory from "@/components/buyer/BuyerHistory";
+import ClaimCard from "@/components/buyer/ClaimCard";
 
 const TERMINAL = ["code_valid", "code_wrong", "code_expired"];
 
@@ -98,7 +99,7 @@ export default function Buyer() {
   if (!session) return <BuyerLogin onLogin={handleLogin} />;
 
   return (
-    <div className="min-h-screen bg-[#f9f9f9] flex flex-col">
+    <div className="min-h-screen bg-[#f9fafb] flex flex-col">
       <BuyerHeader username={session.username} onLogout={handleLogout} />
       <BuyerTabs tab={tab} setTab={setTab} />
 
@@ -110,8 +111,8 @@ export default function Buyer() {
 
       <main className="flex-1 px-6 py-5">
         {tab === "queue" ? (
-          <div className="grid md:grid-cols-2 gap-5">
-            <BuyerQueue queue={queue} onClaim={handleClaim} busyId={claimingId} />
+          <div className="grid md:grid-cols-[1.8fr_1fr] gap-5">
+            <BuyerQueue queue={queue} />
             {claimed ? (
               <ClaimedActions
                 submission={claimed}
@@ -119,9 +120,11 @@ export default function Buyer() {
                 onBlacklist={handleBlacklist}
                 busyKey={busyKey}
               />
+            ) : queue.length > 0 ? (
+              <ClaimCard submission={queue[0]} onClaim={handleClaim} busy={claimingId === queue[0].id} />
             ) : (
-              <div className="bg-white rounded-2xl border border-gray-200 flex items-center justify-center min-h-[60vh]">
-                <p className="text-gray-400 text-sm">Select a request to manage it.</p>
+              <div className="bg-white rounded-2xl border border-[#e5e7eb] flex items-center justify-center min-h-[60vh]">
+                <p className="text-[#6b7280] text-sm">No requests to claim right now.</p>
               </div>
             )}
           </div>

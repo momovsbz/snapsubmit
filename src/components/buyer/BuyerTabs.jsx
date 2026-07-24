@@ -11,7 +11,7 @@ export default function BuyerTabs({ tab, setTab }) {
           key={t.id}
           onClick={() => setTab(t.id)}
           className={`px-4 py-2 rounded-full text-sm font-semibold transition-colors ${
-            tab === t.id ? "bg-[#00695c] text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+            tab === t.id ? "bg-[#0e746a] text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
           }`}
         >
           {t.label}
