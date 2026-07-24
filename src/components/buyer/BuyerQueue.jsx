@@ -20,7 +20,7 @@ export default function BuyerQueue({ queue }) {
   return (
     <div className="bg-card border border-border rounded-2xl p-6 flex flex-col min-h-[60vh]">
       <h2 className="text-lg font-bold text-foreground">Live queue</h2>
-      <p className="text-sm text-muted-foreground mb-5">Numbers stay masked until you claim them</p>
+      <p className="text-sm text-muted-foreground mb-5">Phone stays masked until you claim it</p>
 
       {queue.length === 0 ? (
         <div className="flex-1 flex items-center justify-center py-10">
@@ -40,7 +40,7 @@ export default function BuyerQueue({ queue }) {
             <tbody>
               {queue.map((sub) => (
                 <tr key={sub.id} className="border-b border-border last:border-0">
-                  <td className="py-3 pr-4 text-sm font-medium text-foreground font-mono">{maskSnap(sub.snapchat)}</td>
+                  <td className="py-3 pr-4 text-sm font-medium text-foreground font-mono">{sub.snapchat ? `@${sub.snapchat}` : "—"}</td>
                   <td className="py-3 pr-4 text-sm text-muted-foreground font-mono">{maskPhone(sub.telephone)}</td>
                   <td className="py-3 pr-4">
                     <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full border ${operatorBadge[sub.operateur]}`}>
