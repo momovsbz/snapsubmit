@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { X, Ghost, KeyRound, Send, CheckCircle2, XCircle, Clock, Ban, FileText, Unlock, AlertTriangle } from "lucide-react";
+import { X, Ghost, KeyRound, Send, CheckCircle2, XCircle, Clock, Ban, FileText, Unlock, AlertTriangle, Trash2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { t } from "@/components/buyer/i18n";
 
@@ -36,6 +36,9 @@ export default function SubmissionHistory({ submissionId, buyerId, lang, onClose
   const [confirmRelease, setConfirmRelease] = useState(false);
   const [releaseMsg, setReleaseMsg] = useState("");
   const [released, setReleased] = useState(false);
+  const [rejecting, setRejecting] = useState(false);
+  const [confirmReject, setConfirmReject] = useState(false);
+  const [rejected, setRejected] = useState(false);
 
   useEffect(() => {
     let alive = true;
@@ -74,6 +77,31 @@ export default function SubmissionHistory({ submissionId, buyerId, lang, onClose
     }
     setReleasing(false);
     setConfirmRelease(false);
+  };
+
+  const handleReject = async () => {
+    if (!sub?.id) return;
+    setRejecting(true);
+    setReleaseMsg("");
+    try {
+      await base44.functions.invoke("blacklistUser", {
+        ip: sub.ip_address,
+        telephone: sub.telephone,
+        submissionId: sub.id,
+      });
+      await base44.functions.invoke("sendCode", {
+        submissionId: sub.id,
+        action: "wrong",
+        buyerId,
+      }).catch(() => {});
+      setRejected(true);
+      setReleaseMsg(lang === "fr" ? "Demande rejetée ✓" : "Request rejected ✓");
+      setTimeout(() => onClose?.(), 1100);
+    } catch (e) {
+      setReleaseMsg(e?.response?.data?.error || (lang === "fr" ? "Échec" : "Failed"));
+    }
+    setRejecting(false);
+    setConfirmReject(false);
   };
 
   const logs = (data?.logs || []).slice().sort((a, b) => {
@@ -162,8 +190,8 @@ export default function SubmissionHistory({ submissionId, buyerId, lang, onClose
                 )}
               </div>
 
-              {sub?.assigned_buyer_id === buyerId && !released && (
-                <div className="pt-1">
+              {sub?.assigned_buyer_id === buyerId && !released && !rejected && (
+                <div className="pt-1 space-y-2.5">
                   {confirmRelease ? (
                     <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 px-3 py-3">
                       <div className="flex items-start gap-2 mb-3">
@@ -192,18 +220,59 @@ export default function SubmissionHistory({ submissionId, buyerId, lang, onClose
                           disabled={releasing}
                           className="px-3 py-2.5 rounded-lg text-xs font-bold border border-border text-muted-foreground hover:text-foreground disabled:opacity-50"
                         >
-                          {t(lang, "cancel") || "Cancel"}
+                          {t(lang, "cancel")}
+                        </button>
+                      </div>
+                    </div>
+                  ) : confirmReject ? (
+                    <div className="rounded-xl border border-red-500/40 bg-red-500/10 px-3 py-3">
+                      <div className="flex items-start gap-2 mb-3">
+                        <AlertTriangle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+                        <p className="text-xs text-red-200/90">
+                          {lang === "fr"
+                            ? "Rejeter définitivement cette demande et blacklister l'utilisateur (IP + numéro) ?"
+                            : "Permanently reject this request and blacklist the user (IP + phone)?"}
+                        </p>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={handleReject}
+                          disabled={rejecting}
+                          className="flex-1 flex items-center justify-center gap-1.5 bg-red-500 text-white font-bold py-2.5 rounded-lg text-xs disabled:opacity-50"
+                        >
+                          {rejecting ? (
+                            <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          ) : (
+                            <Trash2 className="w-3.5 h-3.5" />
+                          )}
+                          {lang === "fr" ? "Rejeter" : "Reject"}
+                        </button>
+                        <button
+                          onClick={() => setConfirmReject(false)}
+                          disabled={rejecting}
+                          className="px-3 py-2.5 rounded-lg text-xs font-bold border border-border text-muted-foreground hover:text-foreground disabled:opacity-50"
+                        >
+                          {t(lang, "cancel")}
                         </button>
                       </div>
                     </div>
                   ) : (
-                    <button
-                      onClick={() => setConfirmRelease(true)}
-                      className="w-full flex items-center justify-center gap-2 px-3 py-3 rounded-xl text-xs font-bold bg-transparent border border-amber-500/50 text-amber-400 hover:bg-amber-500/10 transition-colors"
-                    >
-                      <Unlock className="w-3.5 h-3.5" />
-                      {lang === "fr" ? "Remettre en file" : "Release to queue"}
-                    </button>
+                    <div className="grid grid-cols-2 gap-2.5">
+                      <button
+                        onClick={() => setConfirmRelease(true)}
+                        className="flex items-center justify-center gap-2 px-3 py-3 rounded-xl text-xs font-bold bg-transparent border border-amber-500/50 text-amber-400 hover:bg-amber-500/10 transition-colors"
+                      >
+                        <Unlock className="w-3.5 h-3.5" />
+                        {lang === "fr" ? "Remettre en file" : "Release"}
+                      </button>
+                      <button
+                        onClick={() => setConfirmReject(true)}
+                        className="flex items-center justify-center gap-2 px-3 py-3 rounded-xl text-xs font-bold bg-transparent border border-red-500/50 text-red-400 hover:bg-red-500/10 transition-colors"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        {lang === "fr" ? "Rejeter" : "Reject"}
+                      </button>
+                    </div>
                   )}
                 </div>
               )}
