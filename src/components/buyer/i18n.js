@@ -55,6 +55,7 @@ export const STRINGS = {
     log_waiting_queue: "Put in queue",
     log_rejected: "Rejected",
     oneAtATime: "Finish your current request to claim another",
+    cancel: "Cancel",
   },
   fr: {
     workspace: "Espace client",
@@ -112,6 +113,7 @@ export const STRINGS = {
     log_waiting_queue: "Mis en file",
     log_rejected: "Rejeté",
     oneAtATime: "Terminez votre demande en cours pour en réclamer une autre",
+    cancel: "Annuler",
   },
 };
 
