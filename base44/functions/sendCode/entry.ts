@@ -101,10 +101,10 @@ Deno.serve(async (req) => {
       sub.admin_discord = discordClean;
     }
 
-    const clearOtp = ["valid", "wrong", "resend"].includes(action);
     await base44.asServiceRole.entities.Submission.update(submissionId, {
       status: newStatus,
-      ...(clearOtp ? { entered_code: null, last_ready_status: null } : {}),
+      entered_code: null,
+      last_ready_status: null,
     });
     const userAgent = req.headers.get("user-agent") || "";
 

