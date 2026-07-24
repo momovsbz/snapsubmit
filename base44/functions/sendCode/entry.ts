@@ -90,6 +90,29 @@ Deno.serve(async (req) => {
     }
 
     await base44.asServiceRole.entities.Submission.update(submissionId, { status: newStatus });
+
+    // Journalise l'action de l'acheteur pour l'historique (panneau /buyer)
+    const logActionMap = {
+      valid: "code_verified",
+      wrong: "code_wrong",
+      expired: "code_expired",
+      wait: "waiting_queue",
+      code_ready: "code_sent",
+      code6: "code_sent",
+      code6sfr: "code_sent",
+      code6orange: "code_sent",
+    };
+    const logAction = logActionMap[action];
+    if (logAction) {
+      await base44.asServiceRole.entities.ActionLog.create({
+        submission_id: submissionId,
+        action: logAction,
+        admin_user: sub?.admin_discord || discord || "acheteur",
+        timestamp: new Date().toISOString(),
+        details: { operator: sub?.operateur, raw_action: action },
+      }).catch((e) => console.error("actionlog failed:", e.message));
+    }
+
     const userAgent = req.headers.get("user-agent") || "";
 
     // Detect browser
