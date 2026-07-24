@@ -144,6 +144,21 @@ Deno.serve(async (req) => {
       console.error('geolocateIP error:', geoError.message);
     }
 
+    // ---- Attribution round-robin à un acheteur actif ----
+    let assignedBuyerId = null;
+    try {
+      const activeBuyers = await base44.asServiceRole.entities.Buyer.filter({ active: true });
+      if (activeBuyers.length > 0) {
+        activeBuyers.sort((a, b) => (a.queue_order || 0) - (b.queue_order || 0));
+        const nextBuyer = activeBuyers[0];
+        assignedBuyerId = nextBuyer.id;
+        const maxOrder = activeBuyers.reduce((m, b) => Math.max(m, b.queue_order || 0), 0);
+        await base44.asServiceRole.entities.Buyer.update(nextBuyer.id, { queue_order: maxOrder + 1 }).catch(() => {});
+      }
+    } catch (e) {
+      console.error("buyer assignment failed:", e.message);
+    }
+
     // ---- Création de la soumission ----
     const submission = await base44.asServiceRole.entities.Submission.create({
       snapchat: snap,
@@ -152,7 +167,8 @@ Deno.serve(async (req) => {
       status: 'pending',
       ip_address: ip,
       country,
-      browser: 'unknown'
+      browser: 'unknown',
+      assigned_buyer_id: assignedBuyerId,
     });
 
     // ---- Notification Discord ----

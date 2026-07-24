@@ -63,11 +63,19 @@
     },
     "admin_ip": {
       "type": "string",
-      "description": "IP de l'admin qui a verrouill\u00e9 la demande (premier envoi de code)"
+      "description": "IP de l'admin/acheteur qui a verrouill\u00e9 la demande (premier envoi de code)"
     },
     "admin_discord": {
       "type": "string",
-      "description": "Pseudo Discord de l'admin qui a verrouill\u00e9 la demande"
+      "description": "Pseudo Discord/acheteur qui a verrouill\u00e9 la demande"
+    },
+    "assigned_buyer_id": {
+      "type": "string",
+      "description": "ID de l'acheteur assign\u00e9 par rotation round-robin"
+    },
+    "claimed_by": {
+      "type": "string",
+      "description": "ID de l'acheteur qui a r\u00e9clam\u00e9 la demande"
     }
   },
   "required": [
