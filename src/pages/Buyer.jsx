@@ -37,7 +37,7 @@ export default function Buyer() {
 
   const { data: subs = [] } = useQuery({
     queryKey: ["buyer-subs", session?.buyerId],
-    queryFn: () => base44.entities.Submission.filter({ assigned_buyer_id: session.buyerId }, "-created_date", 500),
+    queryFn: () => base44.entities.Submission.list("-created_date", 500),
     enabled: !!session,
     refetchInterval: 3000,
   });
@@ -81,7 +81,7 @@ export default function Buyer() {
     .filter((s) => !s.claimed_by && !TERMINAL.includes(s.status))
     .sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
   const claimed = subs.find((s) => s.claimed_by === session.buyerId && !TERMINAL.includes(s.status));
-  const done = subs.filter((s) => TERMINAL.includes(s.status));
+  const done = subs.filter((s) => TERMINAL.includes(s.status) && s.claimed_by === session.buyerId);
 
   const handleAction = async (action) => {
     if (!claimed) return;

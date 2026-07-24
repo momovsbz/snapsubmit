@@ -27,9 +27,10 @@ Deno.serve(async (req) => {
       return Response.json({ error: "Déjà réclamée par un autre acheteur" }, { status: 403 });
     }
 
-    // Vérifie l'assignation round-robin (si assignée, doit correspondre)
-    if (sub.assigned_buyer_id && sub.assigned_buyer_id !== buyerId) {
-      return Response.json({ error: "Cette soumission n'est pas assignée à vous" }, { status: 403 });
+    // On ne peut pas réclamer une demande déjà terminée
+    const TERMINAL = ["code_valid", "code_wrong", "code_expired"];
+    if (TERMINAL.includes(sub.status)) {
+      return Response.json({ error: "Cette demande est déjà traitée" }, { status: 403 });
     }
 
     const buyerIp = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "Inconnue";
