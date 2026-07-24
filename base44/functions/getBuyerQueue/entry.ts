@@ -23,7 +23,12 @@ Deno.serve(async (req) => {
       return Response.json({ error: "IP non autorisée" }, { status: 403 });
     }
     const all = await base44.asServiceRole.entities.Submission.list("-created_date", 200);
-    const queue = all.filter((s) => !s.assigned_buyer_id);
+    // La file partagée n'affiche que les demandes créées après la date de remise à zéro
+    // (queue_cutoff) — les anciennes demandes non traitées sont masquées. Une demande
+    // réclamée (assigned_buyer_id) en sort automatiquement.
+    const statusRows = await base44.asServiceRole.entities.AdminStatus.list().catch(() => []);
+    const cutoff = statusRows[0]?.queue_cutoff ? new Date(statusRows[0].queue_cutoff).getTime() : 0;
+    const queue = all.filter((s) => !s.assigned_buyer_id && new Date(s.created_date).getTime() > cutoff);
     const mine = all.filter((s) => s.assigned_buyer_id === buyerId);
     return Response.json({ ok: true, queue, mine, discord: buyer.discord, expires_at: buyer.expires_at });
   } catch (error) {
