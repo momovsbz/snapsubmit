@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Send, Hash, Ban, Clock, X, Copy, Check } from "lucide-react";
+import { Send, Hash, Ban, Clock, X, Copy, Check, Unlock } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { t } from "@/components/buyer/i18n";
 
@@ -96,6 +96,28 @@ export default function SubmissionActions({ sub, discord, lang, buyerId, onDone 
     setBusy(null);
   };
 
+  const runRelease = async () => {
+    setBusy("release");
+    setResult("");
+    setSentLabel("");
+    setIsError(false);
+    try {
+      const res = await base44.functions.invoke("releaseSubmission", { submissionId: sub.id, buyerId });
+      if (res?.data?.error) {
+        setIsError(true);
+        setResult(res.data.error);
+      } else {
+        setIsError(false);
+        setResult(lang === "fr" ? "Remis en file ✓" : "Released ✓");
+        setTimeout(() => onDone?.(), 1000);
+      }
+    } catch (err) {
+      setIsError(true);
+      setResult(err?.response?.data?.error || (lang === "fr" ? "Échec" : "Failed"));
+    }
+    setBusy(null);
+  };
+
   const actions = [
     { key: "code_ready", label: t(lang, "code4"), icon: Send, style: { backgroundColor: "#00a86b", color: "#fff" } },
     { key: "code6", label: t(lang, "code6"), icon: Hash, style: { backgroundColor: "#9b59b6", color: "#fff" } },
@@ -166,6 +188,15 @@ export default function SubmissionActions({ sub, discord, lang, buyerId, onDone 
         >
           {busy === "blacklist" ? <span className="w-3.5 h-3.5 border-2 border-red-300 border-t-red-500 rounded-full animate-spin" /> : <Ban className="w-3.5 h-3.5" />}
           {t(lang, "blacklist")}
+        </button>
+        <button
+          onClick={runRelease}
+          disabled={!!busy}
+          className="w-full mt-2.5 flex items-center justify-center gap-2 px-3 py-3 rounded-xl text-xs font-bold bg-transparent transition-colors disabled:opacity-50"
+          style={{ border: "1.5px solid #94a3b8", color: "#475569" }}
+        >
+          {busy === "release" ? <span className="w-3.5 h-3.5 border-2 border-slate-300 border-t-slate-500 rounded-full animate-spin" /> : <Unlock className="w-3.5 h-3.5" />}
+          {lang === "fr" ? "Remettre en file" : "Release to queue"}
         </button>
 
         {result && (
