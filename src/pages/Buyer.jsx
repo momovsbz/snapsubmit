@@ -149,11 +149,6 @@ export default function Buyer() {
       />
       <BuyerTabs tab={tab} setTab={setTab} />
 
-      {error && (
-        <div className="mx-6 mt-4 bg-destructive/10 border border-destructive/30 rounded-xl px-4 py-2.5">
-          <p className="text-destructive text-xs font-medium">{error}</p>
-        </div>
-      )}
       {success && (
         <div className="mx-6 mt-4 bg-green-500/10 border border-green-500/30 rounded-xl px-4 py-2.5">
           <p className="text-green-400 text-xs font-medium">{success}</p>
