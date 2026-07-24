@@ -6,6 +6,7 @@ import BuyerLogin from "@/components/buyer/BuyerLogin";
 import SubmissionActions from "@/components/buyer/SubmissionActions";
 import BuyerHistory from "@/components/buyer/BuyerHistory";
 import SubmissionHistory from "@/components/buyer/SubmissionHistory";
+import SubscriptionTimer from "@/components/buyer/SubscriptionTimer";
 import { t, getStoredLang, setStoredLang } from "@/components/buyer/i18n";
 
 const opPill = {
@@ -40,6 +41,7 @@ export default function Buyer() {
   const [claimingId, setClaimingId] = useState(null);
   const [tab, setTab] = useState("file");
   const [historyId, setHistoryId] = useState(null);
+  const [expiresAt, setExpiresAt] = useState(null);
   const pollRef = useRef(null);
 
   const switchLang = (l) => { setLang(l); setStoredLang(l); };
@@ -52,6 +54,7 @@ export default function Buyer() {
       if (res?.data?.ok) {
         setQueue(res.data.queue || []);
         setMine(res.data.mine || []);
+        setExpiresAt(res.data.expires_at || null);
         if (!silent) setError("");
       } else {
         const msg = res?.data?.error || "Erreur";
@@ -115,6 +118,7 @@ export default function Buyer() {
 
   const activeSub = mine.find((s) => s.id === activeId);
   const selectedSub = queue.find((s) => s.id === selectedId);
+  const hasActive = mine.some((s) => !["code_valid", "code_wrong", "code_expired"].includes(s.status));
 
   const renderRightCard = () => {
     if (activeSub) return <SubmissionActions sub={activeSub} discord={discord} lang={lang} buyerId={buyerId} onDone={(opts) => { if (!opts?.reloadOnly) setActiveId(null); loadQueue(true); }} />;
@@ -144,7 +148,7 @@ export default function Buyer() {
           </div>
           <button
             onClick={() => handleClaim(selectedSub.id)}
-            disabled={claimingId === selectedSub.id}
+            disabled={claimingId === selectedSub.id || hasActive}
             className="w-full bg-primary text-primary-foreground font-bold py-3.5 rounded-xl text-sm transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
           >
             {claimingId === selectedSub.id ? (
@@ -154,7 +158,9 @@ export default function Buyer() {
             )}
             {t(lang, "claimLock")}
           </button>
-          <p className="text-[11px] text-center text-muted-foreground mt-3">{t(lang, "revealHint")}</p>
+          <p className="text-[11px] text-center text-muted-foreground mt-3">
+            {hasActive ? t(lang, "oneAtATime") : t(lang, "revealHint")}
+          </p>
         </motion.div>
       );
     }
@@ -187,6 +193,7 @@ export default function Buyer() {
               <span className="w-2 h-2 rounded-full bg-green-500" />
               {t(lang, "on")}
             </div>
+            <SubscriptionTimer expiresAt={expiresAt} lang={lang} />
             <span className="text-xs font-semibold px-2.5 py-1.5 rounded-lg bg-primary/15 text-primary border border-primary/30">
               {t(lang, "customer")} @{discord}
             </span>

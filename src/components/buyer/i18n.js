@@ -54,6 +54,7 @@ export const STRINGS = {
     log_code_expired: "Code expired",
     log_waiting_queue: "Put in queue",
     log_rejected: "Rejected",
+    oneAtATime: "Finish your current request to claim another",
   },
   fr: {
     workspace: "Espace client",
@@ -110,6 +111,7 @@ export const STRINGS = {
     log_code_expired: "Code expiré",
     log_waiting_queue: "Mis en file",
     log_rejected: "Rejeté",
+    oneAtATime: "Terminez votre demande en cours pour en réclamer une autre",
   },
 };
 

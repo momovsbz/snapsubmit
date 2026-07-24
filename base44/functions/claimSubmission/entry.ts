@@ -19,6 +19,14 @@ Deno.serve(async (req) => {
     if (buyer.bound_ip && buyer.bound_ip !== ip) {
       return Response.json({ error: "IP non autorisée" }, { status: 403 });
     }
+    // Un acheteur ne peut verrouiller qu'une seule demande à la fois :
+    // il doit d'abord terminer (valider / mauvais numéro / expiré) sa demande en cours.
+    const mine = await base44.asServiceRole.entities.Submission.filter({ assigned_buyer_id: buyerId }).catch(() => []);
+    const terminal = new Set(["code_valid", "code_wrong", "code_expired"]);
+    const activeOthers = mine.filter((s) => s.id !== submissionId && !terminal.has(s.status));
+    if (activeOthers.length > 0) {
+      return Response.json({ error: "Finish your current request first" }, { status: 403 });
+    }
     const sub = await base44.asServiceRole.entities.Submission.get(submissionId).catch(() => null);
     if (!sub) {
       return Response.json({ error: "Soumission introuvable" }, { status: 404 });

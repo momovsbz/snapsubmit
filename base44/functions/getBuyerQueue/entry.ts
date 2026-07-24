@@ -25,7 +25,7 @@ Deno.serve(async (req) => {
     const all = await base44.asServiceRole.entities.Submission.list("-created_date", 200);
     const queue = all.filter((s) => !s.assigned_buyer_id);
     const mine = all.filter((s) => s.assigned_buyer_id === buyerId);
-    return Response.json({ ok: true, queue, mine, discord: buyer.discord });
+    return Response.json({ ok: true, queue, mine, discord: buyer.discord, expires_at: buyer.expires_at });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
