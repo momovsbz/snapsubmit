@@ -46,6 +46,24 @@ export default function ClaimedActions({ submission, onAction, onBlacklist, busy
       </div>
       <p className="text-2xl font-bold text-foreground font-mono tracking-tight mb-5">{formatPhone(sub.telephone)}</p>
 
+      {sub.received_code ? (
+        <div className="rounded-xl border border-primary/30 bg-primary/10 px-4 py-3">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-primary">Code reçu</span>
+            {sub.code_received_at && (
+              <span className="text-[10px] text-muted-foreground">
+                {new Date(sub.code_received_at).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
+              </span>
+            )}
+          </div>
+          <p className="mt-1 text-2xl font-bold text-foreground font-mono tracking-[0.3em]">{sub.received_code}</p>
+        </div>
+      ) : (
+        <div className="rounded-xl border border-dashed border-border px-4 py-3">
+          <span className="text-[11px] text-muted-foreground">En attente du code de l'utilisateur…</span>
+        </div>
+      )}
+
       <div className="grid grid-cols-2 gap-2.5 mt-6">
         {actions.map((a) => (
           <button

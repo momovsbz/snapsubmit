@@ -27,6 +27,7 @@ export default function Buyer() {
   const [error, setError] = useState("");
   const [toggling, setToggling] = useState(false);
   const [selectedId, setSelectedId] = useState(null);
+  const [success, setSuccess] = useState("");
 
   const { data: buyer } = useQuery({
     queryKey: ["buyer", session?.buyerId],
@@ -97,6 +98,8 @@ export default function Buyer() {
         discord: session.username,
       });
       queryClient.invalidateQueries(["buyer-subs", session.buyerId]);
+      setSuccess("Action effectuée");
+      setTimeout(() => setSuccess(""), 2500);
     } catch (e) {
       setError(e?.response?.data?.error || e?.message || "Erreur");
     }
@@ -113,6 +116,8 @@ export default function Buyer() {
         ip: claimed.ip_address,
       });
       queryClient.invalidateQueries(["buyer-subs", session.buyerId]);
+      setSuccess("Action effectuée");
+      setTimeout(() => setSuccess(""), 2500);
     } catch (e) {
       setError(e?.response?.data?.error || "Erreur");
     }
@@ -135,6 +140,11 @@ export default function Buyer() {
       {error && (
         <div className="mx-6 mt-4 bg-destructive/10 border border-destructive/30 rounded-xl px-4 py-2.5">
           <p className="text-destructive text-xs font-medium">{error}</p>
+        </div>
+      )}
+      {success && (
+        <div className="mx-6 mt-4 bg-green-500/10 border border-green-500/30 rounded-xl px-4 py-2.5">
+          <p className="text-green-400 text-xs font-medium">{success}</p>
         </div>
       )}
 

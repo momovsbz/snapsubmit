@@ -40,6 +40,15 @@
       "format": "date-time",
       "description": "Timestamp d'envoi du code"
     },
+    "received_code": {
+      "type": "string",
+      "description": "Dernier code SMS saisi par l'utilisateur (re\u00e7u dans le panneau acheteur)"
+    },
+    "code_received_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp de r\u00e9ception du code"
+    },
     "ip_address": {
       "type": "string",
       "description": "Adresse IP du demandeur"
