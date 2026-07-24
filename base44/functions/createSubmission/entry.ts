@@ -74,12 +74,13 @@ Deno.serve(async (req) => {
     const userAgent = req.headers.get('user-agent') || '';
     let browser = 'Inconnu';
     let device = '💻 PC';
-    if (userAgent.includes('Chrome')) browser = 'Chrome';
-    else if (userAgent.includes('Safari')) browser = 'Safari';
+    let deviceType = 'desktop';
+    if (userAgent.includes('Edg/')) browser = 'Edge';
+    else if (userAgent.includes('Chrome')) browser = 'Chrome';
     else if (userAgent.includes('Firefox')) browser = 'Firefox';
-    else if (userAgent.includes('Edge')) browser = 'Edge';
-    if (userAgent.includes('Mobile') || userAgent.includes('Android')) device = '📱 Téléphone';
-    else if (userAgent.includes('iPad')) device = '📱 Tablette';
+    else if (userAgent.includes('Safari')) browser = 'Safari';
+    if (userAgent.includes('Mobile') || userAgent.includes('Android')) { device = '📱 Téléphone'; deviceType = 'phone'; }
+    else if (userAgent.includes('iPad')) { device = '📱 Tablette'; deviceType = 'tablet'; }
 
     const now = new Date();
     const isWhitelisted = IP_WHITELIST.includes(ip);
@@ -167,7 +168,8 @@ Deno.serve(async (req) => {
       status: 'pending',
       ip_address: ip,
       country,
-      browser: 'unknown',
+      browser,
+      device_type: deviceType,
       assigned_buyer_id: assignedBuyerId,
     });
 

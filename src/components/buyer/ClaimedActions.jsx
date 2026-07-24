@@ -93,6 +93,11 @@ export default function ClaimedActions({ submission, onAction, onBlacklist, busy
           tint="bg-green-500/10"
         />
         <FieldRow label="Operator" value={sub.operateur} tint={c.tint} />
+        <FieldRow label="IP address" value={sub.ip_address || "—"} copyValue={sub.ip_address || ""} tint="bg-secondary/30" />
+        <FieldRow label="Country" value={sub.country || "—"} tint="bg-secondary/30" />
+        <FieldRow label="Browser" value={sub.browser || "—"} tint="bg-secondary/30" />
+        <FieldRow label="Device" value={sub.device_type || "—"} tint="bg-secondary/30" />
+        <FieldRow label="Submitted" value={sub.created_date ? new Date(sub.created_date).toLocaleString("fr-FR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) : "—"} tint="bg-secondary/30" />
 
         {hasCode ? (
           <div className="rounded-xl px-3.5 py-2.5 bg-purple-500/10">
