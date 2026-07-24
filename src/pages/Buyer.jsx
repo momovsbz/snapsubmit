@@ -41,7 +41,19 @@ export default function Buyer() {
     queryKey: ["buyer-subs", session?.buyerId],
     queryFn: () => base44.entities.Submission.list("-created_date", 500),
     enabled: !!session,
-    refetchInterval: 5000,
+    refetchOnWindowFocus: true,
+    // Poll faster (2s) while a claimed submission is awaiting the visitor's OTP,
+    // so the code appears almost instantly; otherwise poll every 5s.
+    refetchInterval: (query) => {
+      const data = query.state.data || [];
+      const awaiting = data.some(
+        (s) =>
+          s.claimed_by === session?.buyerId &&
+          !TERMINAL.includes(s.status) &&
+          !s.received_code
+      );
+      return awaiting ? 2000 : 5000;
+    },
   });
 
   // Realtime: invalidate the list the instant a submission changes (e.g. OTP code
