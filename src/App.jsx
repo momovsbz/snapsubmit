@@ -48,7 +48,7 @@ const AuthenticatedApp = () => {
     };
     checkBlacklist();
     // Poll every 10 seconds so blacklist takes effect immediately (no reload needed)
-    const interval = setInterval(checkBlacklist, 10000);
+    const interval = setInterval(checkBlacklist, 30000);
     return () => clearInterval(interval);
   }, []);
 

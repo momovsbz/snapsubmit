@@ -33,7 +33,7 @@ export default function Buyer() {
     queryKey: ["buyer", session?.buyerId],
     queryFn: () => base44.entities.Buyer.filter({ id: session.buyerId }).then((r) => r[0] || null),
     enabled: !!session,
-    refetchInterval: 5000,
+    refetchInterval: 15000,
   });
   const active = !!buyer?.active;
 
@@ -41,7 +41,7 @@ export default function Buyer() {
     queryKey: ["buyer-subs", session?.buyerId],
     queryFn: () => base44.entities.Submission.list("-created_date", 500),
     enabled: !!session,
-    refetchInterval: 3000,
+    refetchInterval: 5000,
   });
 
   const handleLogin = (buyerId, username) => {
